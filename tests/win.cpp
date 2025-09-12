@@ -7,6 +7,9 @@
 #include <format>
 #include <unordered_map>
 
+constexpr std::string_view GET_OPTION = "GET ";
+constexpr std::string_view PUT_OPTION = "PUT ";
+
 class KVStore {
 public:
     explicit KVStore(kosio::fs::File&& wal_file)
@@ -23,6 +26,7 @@ public:
     auto put(std::string key, std::string value) -> kosio::async::Task<void> {
         co_await mutex_.lock();
         std::lock_guard lock{mutex_, std::adopt_lock};
+        kosio::log::console.info("PUT {} {}", key, value);
         co_await wal_file_.write_all(
             std::format("PUT {} {}\n", key, value)
         );
@@ -32,19 +36,21 @@ public:
     auto get(std::string_view key) -> kosio::async::Task<std::string> {
         co_await mutex_.lock();
         std::lock_guard lock{mutex_, std::adopt_lock};
-        if (auto it = data_.find(key.data()); it != data_.end()) {
+        kosio::log::console.info("{}", key);
+        if (auto it = data_.find(std::string{key}); it != data_.end()) {
             co_return it->second;
         }
-        co_return "nil\n";
+        co_return "nil";
     }
 
 public:
     static auto open(std::string_view path) -> kosio::async::Task<kosio::Result<KVStore, kosio::IoError>> {
-        if (auto has_file = co_await kosio::fs::File::options()
-                                                                                                .write(true)
-                                                                                                .create(true)
-                                                                                                .permission(0600)
-                                                                                                .open(path); has_file) {
+        if (auto has_file = co_await
+        kosio::fs::File::options()
+        .write(true)
+        .create(true)
+        .permission(0600)
+        .open(path); has_file) {
             co_return KVStore{std::move(has_file.value())};
         } else {
             co_return std::unexpected{has_file.error()};
@@ -70,7 +76,27 @@ auto process(kosio::net::TcpStream stream, KVStore& store) -> kosio::async::Task
             break;
         }
 
+        std::string_view sv{buf};
 
+        // 去除换行符
+        if (auto pos = sv.find('\n'); pos != std::string_view::npos) {
+            sv = sv.substr(0, pos);
+        }
+
+        if (sv.starts_with(GET_OPTION)) {
+            auto key = sv.substr(GET_OPTION.size());
+            auto value = co_await store.get(key);
+            co_await stream.write_all(value+'\n');
+        } else if (sv.starts_with(PUT_OPTION)) {
+            auto space_ops = sv.find(' ', PUT_OPTION.size());
+            if (space_ops == std::string_view::npos) {
+                co_await stream.write_all("nil\n");
+            }
+            auto key = sv.substr(PUT_OPTION.size(), space_ops - PUT_OPTION.size());
+            auto value = sv.substr(space_ops+1);
+            co_await store.put(std::string{key}, std::string{value});
+            co_await stream.write_all("OK\n");
+        }
     }
 }
 
