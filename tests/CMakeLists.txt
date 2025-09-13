@@ -1,4 +1,4 @@
-file(GLOB TEST_FILES PRIVATE ./*.cpp)
+file(GLOB TEST_FILES PRIVATE *.cpp)
 
 foreach (file ${TEST_FILES})
     get_filename_component(basename ${file} NAME_WE)
