@@ -1,29 +1,10 @@
 #include "foskv/rpc/provider.hpp"
 
-void foskv::rpc::RpcProvider::register_handler(
+void foskv::rpc::RpcProvider::register_invoke(
     const std::string& service_name,
     const std::string& method_name,
-    const Handler &handler) {
-    invokers_[service_name][method_name] = handler;
-}
-
-auto foskv::rpc::RpcProvider::invoke(
-    const std::string& service_name,
-    const std::string& method_name,
-    std::string_view args,
-    std::string& response) -> RpcResult<void> {
-    auto invoker = invokers_.find(service_name);
-    if (invoker == invokers_.end()) {
-        return std::unexpected{make_rpc_error(RpcError::kServiceNotFound)};
-    }
-
-    auto handler = invoker->second.find(method_name);
-    if (handler == invoker->second.end()) {
-        return std::unexpected{make_rpc_error(RpcError::kMethodNotFound)};
-    }
-
-    handler->second(args, response);
-    return {};
+    const Invoke &invoke) {
+    invokes_[service_name][method_name] = invoke;
 }
 
 void foskv::rpc::RpcProvider::run() {
@@ -39,10 +20,11 @@ void foskv::rpc::RpcProvider::run() {
             co_return;
         }
         auto listener = std::move(has_listener.value());
+        LOG_INFO("Listening on {}...", listener.local_addr().value());
         while (true) {
             auto has_stream = co_await listener.accept();
             if (!has_stream) [[unlikely]] {
-                LOG_ERROR("{}", ret.error());
+                LOG_ERROR("{}", has_stream.error());
                 break;
             }
             auto& [stream, peer_addr] = has_stream.value();
@@ -55,60 +37,79 @@ void foskv::rpc::RpcProvider::run() {
 auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
 -> kosio::async::Task<> {
     while (true) {
-        // Read RpcHeader length
-        uint32_t header_len_net;
-        auto has_header_len = co_await stream.read_exact(
-            {reinterpret_cast<char*>(&header_len_net), sizeof(uint32_t)});
-        if (!has_header_len) [[unlikely]] {
-            LOG_ERROR("{}", has_header_len.error());
+        // Read request length
+        uint32_t request_len_net;
+        auto has_request_len = co_await stream.read_exact(
+            {reinterpret_cast<char*>(&request_len_net), sizeof(uint32_t)});
+        if (!has_request_len) [[unlikely]] {
+            LOG_ERROR("{}", has_request_len.error());
             break;
         }
 
-        uint32_t header_len = ntohl(header_len_net);
+        uint32_t request_len = ntohl(request_len_net);
 
-        // Read RpcHeader
-        std::string header_str;
-        header_str.resize(header_len);
-        auto has_header = co_await stream.read_exact({
-            header_str.data(), header_str.size()});
-        if (!has_header) [[unlikely]] {
-            LOG_ERROR("{}", has_header.error());
+        // Read request
+        if (request_str_.size() < request_len) {
+            request_str_.resize(request_len);
+        }
+        auto has_request = co_await stream.read_exact({
+            request_str_.data(), request_len});
+        if (!has_request) [[unlikely]] {
+            LOG_ERROR("{}", has_request.error());
             break;
         }
 
-        // Parse RpcHeader
-        RpcHeader header;
-        if (!header.ParseFromString(header_str)) {
-            LOG_ERROR("{}", header.error());
+        // Parse request
+        RpcRequest request;
+        if (!request.ParseFromArray(request_str_.data(), request_len)) {
+            LOG_ERROR("Failed to parse rpc header");
             break;
         }
 
-        auto service_name = header.service_name();
-        auto method_name = header.method_name();
-        auto args_length = header.args_length();
-        // Read Args
-        std::string args_str;
-        args_str.resize(args_length);
-        auto has_args = co_await stream.read_exact({
-            args_str.data(), args_str.size()});
-        if (!has_args) [[unlikely]] {
-            LOG_ERROR("{}", has_args.error());
-            break;
-        }
+        auto service_name = request.service_name();
+        auto method_name = request.method_name();
+        auto payload = request.payload();
 
         // Invoke
-        std::string response;
-        auto has_invoke = invoke(service_name, method_name, args_str, response);
-        if (!has_invoke) [[unlikely]] {
-            LOG_ERROR("{}", has_invoke.error());
+        auto has_response = invoke(service_name, method_name, payload);
+        if (!has_response) [[unlikely]] {
+            LOG_ERROR("{}", has_response.error());
+            continue;
+        }
+
+        // Write Response length
+        uint32_t response_len_net = ntohl(has_response.value().size());
+        auto ret = co_await stream.write_all(
+            {reinterpret_cast<char*>(&response_len_net), sizeof(uint32_t)});
+        if (!ret) [[unlikely]] {
+            LOG_ERROR("{}", ret.error());
             continue;
         }
 
         // Write Response
-        auto ret = co_await stream.write_all(response);
+        ret = co_await stream.write_all(has_response.value());
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             continue;
         }
     }
+}
+
+auto foskv::rpc::RpcProvider::invoke(
+    const std::string& service_name,
+    const std::string& method_name,
+    std::string_view payload) -> RpcResult<std::string> {
+    auto service = invokes_.find(service_name);
+    if (service == invokes_.end()) {
+        return std::unexpected{make_rpc_error(RpcError::kServiceNotFound)};
+    }
+
+    auto invoke = service->second.find(method_name);
+    if (invoke == service->second.end()) {
+        return std::unexpected{make_rpc_error(RpcError::kMethodNotFound)};
+    }
+
+    std::string response_str;
+    invoke->second(payload, response_str);
+    return response_str;
 }

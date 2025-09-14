@@ -1,3 +1,2 @@
-file(GLOB STORAGE_FILES "*.cpp")
-add_library(foskv-storage STATIC ${STORAGE_FILES})
-set(FOSKV_STORAGE_TARGET foskv-storage PARENT_SCOPE)
+file(GLOB SRC_FILES "*.cpp" "*.cc")
+set(STORAGE_FILES ${SRC_FILES} PARENT_SCOPE)

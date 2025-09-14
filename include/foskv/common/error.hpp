@@ -66,6 +66,8 @@ public:
         kUnknown = detail::RpcErrorCodeBase,
         kServiceNotFound,
         kMethodNotFound,
+        kSerializeFailed,
+        kSendFailed,
     };
 
 public:
@@ -82,6 +84,10 @@ public:
                 return "Service not found.";
             case kMethodNotFound:
                 return "Method not found.";
+            case kSerializeFailed:
+                return "Failed to serialize message.";
+            case kSendFailed:
+                return "Failed to send message.";
             default:
                 return strerror(error_code_);
         }
@@ -93,6 +99,7 @@ class StorageError : public detail::BaseError<StorageError> {
 public:
     enum Code {
         kUnknown = detail::StorageErrorCodeBase,
+        kDBOpenFailed,
     };
 public:
     explicit StorageError(Code error_code)
@@ -104,6 +111,8 @@ public:
         switch (static_cast<Code>(error_code_)) {
             case kUnknown:
                 return "Unknown io error.";
+            case kDBOpenFailed:
+                return "Failed to open database.";
             default:
                 return strerror(error_code_);
         }

@@ -4,7 +4,7 @@ project(FOSKV VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# add_compile_definitions(NEED_KOSIO_LOG)
+add_compile_definitions(NEED_KOSIO_LOG)
 
 message(STATUS "Version: " "${CMAKE_PROJECT_VERSION}")
 message(STATUS "C++ standard: " "${CMAKE_CXX_STANDARD}")
@@ -38,16 +38,15 @@ set(ROCKSDB_LIBRARIES
         zstd
 )
 
+set(DEPEND_LIBS
+        pthread
+        ${PROTOBUF_LIBRARIES}
+        ${LIBURING_LIBRARIES}
+        ${ROCKSDB_LIBRARIES}
+)
+
 add_subdirectory(src/rpc)
 add_subdirectory(src/storage)
 
-set(DEPEND_LIBS
-        pthread
-        ${LIBURING_LIBRARIES}
-        ${Protobuf_LIBRARIES}
-        ${ROCKSDB_LIBRARIES}
-        ${FOSKV_STORAGE_TARGET}
-        ${FOSKV_RPC_TARGET}
-)
 # ====== TEST ======
 add_subdirectory(tests)

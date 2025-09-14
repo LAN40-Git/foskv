@@ -1,7 +1,7 @@
 #include "foskv/storage/storage.hpp"
 #include <kosio/common/debug.hpp>
 
-auto foskv::storage::KVStorage::Open(const std::string &db_path) -> std::optional<KVStorage> {
+auto foskv::storage::KVStorage::Open(const std::string &db_path) -> StorageResult<KVStorage> {
     rocksdb::Options options;
     options.create_if_missing = true;
     options.error_if_exists = false;
@@ -13,8 +13,7 @@ auto foskv::storage::KVStorage::Open(const std::string &db_path) -> std::optiona
     rocksdb::Status status = rocksdb::DB::Open(options, db_path, &db);
 
     if (!status.ok()) {
-        LOG_ERROR("DB open failed: {} (path: {})", status.ToString(), db_path);
-        return std::nullopt;
+        return std::unexpected{make_storage_error(StorageError::kDBOpenFailed)};
     }
 
     return KVStorage(db);
@@ -38,6 +37,94 @@ auto foskv::storage::KVStorage::Delete(std::string_view key) const
     rocksdb::Slice key_slice(key.data(), key.size());
     auto status = db_->Delete(rocksdb::WriteOptions(), key_slice);
     return status;
+}
+
+void foskv::storage::KVStorage::RpcPut(std::string_view payload, std::string &response) {
+    PutRequest req;
+    PutResponse resp;
+
+    auto* resp_header = resp.mutable_header();
+    if (!req.ParseFromArray(payload.data(), payload.size())) {
+        resp_header->set_success(false);
+        resp_header->set_error("Invalid put request");
+        response.resize(resp.ByteSizeLong());
+        resp.SerializeToArray(response.data(), response.size());
+        return;
+    }
+
+    auto key = req.key();
+    auto value = req.value();
+    auto status = Put(key, value);
+    if (!status.ok()) {
+        resp_header->set_success(false);
+        resp_header->set_error(status.ToString());
+        response.resize(resp.ByteSizeLong());
+        resp.SerializeToArray(response.data(), response.size());
+        return;
+    }
+
+    resp_header->set_success(true);
+    response.resize(resp.ByteSizeLong());
+    resp.SerializeToArray(response.data(), response.size());
+    return;
+}
+
+void foskv::storage::KVStorage::RpcGet(std::string_view payload, std::string &response) {
+    GetRequest req;
+    GetResponse resp;
+
+    auto* resp_header = resp.mutable_header();
+    if (!req.ParseFromArray(payload.data(), payload.size())) {
+        resp_header->set_success(false);
+        resp_header->set_error("Invalid get request");
+        response.resize(resp.ByteSizeLong());
+        resp.SerializeToArray(response.data(), response.size());
+        return;
+    }
+
+    auto key = req.key();
+    auto status = Get(key, resp.mutable_value());
+    if (!status.ok()) {
+        resp_header->set_success(false);
+        resp_header->set_error(status.ToString());
+        response.resize(resp.ByteSizeLong());
+        resp.SerializeToArray(response.data(), response.size());
+        return;
+    }
+
+    resp_header->set_success(true);
+    response.resize(resp.ByteSizeLong());
+    resp.SerializeToArray(response.data(), response.size());
+    return;
+}
+
+void foskv::storage::KVStorage::RpcDelete(std::string_view payload, std::string &response) {
+    DeleteRequest req;
+    DeleteResponse resp;
+
+    auto* resp_header = resp.mutable_header();
+    if (!req.ParseFromArray(payload.data(), payload.size())) {
+        resp_header->set_success(false);
+        resp_header->set_error("Invalid delete request");
+        response.resize(resp.ByteSizeLong());
+        resp.SerializeToArray(response.data(), response.size());
+        return;
+    }
+
+    auto key = req.key();
+    auto status = Delete(key);
+    if (!status.ok()) {
+        resp_header->set_success(false);
+        resp_header->set_error(status.ToString());
+        response.resize(resp.ByteSizeLong());
+        resp.SerializeToArray(response.data(), response.size());
+        return;
+    }
+
+    resp_header->set_success(true);
+    response.resize(resp.ByteSizeLong());
+    resp.SerializeToArray(response.data(), response.size());
+    return;
 }
 
 auto foskv::storage::KVStorage::BatchWrite(const std::vector<std::pair<std::string, std::string>> &kvs) const
