@@ -1,0 +1,2 @@
+file(GLOB SRC_FILES "*.cpp" "*.cc")
+set(RAFT_FILES ${SRC_FILES} PARENT_SCOPE)

@@ -45,15 +45,17 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             LOG_ERROR("{}", has_request_len.error());
             break;
         }
-
         uint32_t request_len = ntohl(request_len_net);
 
         // Read request
         if (request_str_.size() < request_len) {
             request_str_.resize(request_len);
         }
+        auto start = std::chrono::system_clock::now();
         auto has_request = co_await stream.read_exact({
             request_str_.data(), request_len});
+        auto end = std::chrono::system_clock::now();
+        kosio::log::console.info("Read request take {} ns, len {}", std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count(), request_len);
         if (!has_request) [[unlikely]] {
             LOG_ERROR("{}", has_request.error());
             break;

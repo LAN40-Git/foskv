@@ -66,7 +66,6 @@ void foskv::storage::KVStorage::RpcPut(std::string_view payload, std::string &re
     resp_header->set_success(true);
     response.resize(resp.ByteSizeLong());
     resp.SerializeToArray(response.data(), response.size());
-    return;
 }
 
 void foskv::storage::KVStorage::RpcGet(std::string_view payload, std::string &response) {
@@ -95,7 +94,6 @@ void foskv::storage::KVStorage::RpcGet(std::string_view payload, std::string &re
     resp_header->set_success(true);
     response.resize(resp.ByteSizeLong());
     resp.SerializeToArray(response.data(), response.size());
-    return;
 }
 
 void foskv::storage::KVStorage::RpcDelete(std::string_view payload, std::string &response) {
@@ -124,7 +122,6 @@ void foskv::storage::KVStorage::RpcDelete(std::string_view payload, std::string 
     resp_header->set_success(true);
     response.resize(resp.ByteSizeLong());
     resp.SerializeToArray(response.data(), response.size());
-    return;
 }
 
 auto foskv::storage::KVStorage::BatchWrite(const std::vector<std::pair<std::string, std::string>> &kvs) const

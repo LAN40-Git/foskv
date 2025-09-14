@@ -1,11 +1,14 @@
 #include "foskv/rpc/consumer.hpp"
-#include <kosio/signal/signal.hpp>
 #include "foskv/storage/command.hpp"
 #include "foskv/storage/storage.hpp"
+#include <kosio/signal/signal.hpp>
 
 auto process(foskv::rpc::RpcConsumer& consumer) -> kosio::async::Task<> {
+    std::string_view cmd = "Put shit 123";
     while (true) {
-        auto args = co_await foskv::storage::KVCommand::async_parse();
+        kosio::log::console.info("Sleeping for 1s");
+        co_await kosio::time::sleep(1000);
+        auto args = foskv::storage::KVCommand::parse(cmd);
         switch (args.op) {
             case foskv::storage::KVCommand::Op::kPut: {
                 foskv::storage::PutRequest request;
@@ -64,6 +67,8 @@ auto process(foskv::rpc::RpcConsumer& consumer) -> kosio::async::Task<> {
                 break;
             }
         }
+        // auto end = std::chrono::system_clock::now();
+        // kosio::log::console.info("Take {} ns", std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
     }
 }
 

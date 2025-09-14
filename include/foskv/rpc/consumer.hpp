@@ -30,9 +30,9 @@ public:
         request.set_payload(payload);
 
         // Send request length
-        uint32_t header_len_net = htonl(request.ByteSizeLong());
+        uint32_t request_len_net = htonl(static_cast<uint32_t>(request.ByteSizeLong()));
         auto ret = co_await stream_.write_all(
-            {reinterpret_cast<char*>(&header_len_net), sizeof(uint32_t)});
+            {reinterpret_cast<char*>(&request_len_net), sizeof(uint32_t)});
         if (!ret) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
         }
