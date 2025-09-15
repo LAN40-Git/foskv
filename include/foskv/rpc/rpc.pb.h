@@ -46,41 +46,37 @@ struct TableStruct_rpc_2eproto {
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_rpc_2eproto;
 namespace foskv {
 namespace rpc {
-class RpcRequest;
-struct RpcRequestDefaultTypeInternal;
-extern RpcRequestDefaultTypeInternal _RpcRequest_default_instance_;
-class RpcResponse;
-struct RpcResponseDefaultTypeInternal;
-extern RpcResponseDefaultTypeInternal _RpcResponse_default_instance_;
+class RpcHeader;
+struct RpcHeaderDefaultTypeInternal;
+extern RpcHeaderDefaultTypeInternal _RpcHeader_default_instance_;
 }  // namespace rpc
 }  // namespace foskv
 PROTOBUF_NAMESPACE_OPEN
-template<> ::foskv::rpc::RpcRequest* Arena::CreateMaybeMessage<::foskv::rpc::RpcRequest>(Arena*);
-template<> ::foskv::rpc::RpcResponse* Arena::CreateMaybeMessage<::foskv::rpc::RpcResponse>(Arena*);
+template<> ::foskv::rpc::RpcHeader* Arena::CreateMaybeMessage<::foskv::rpc::RpcHeader>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace foskv {
 namespace rpc {
 
 // ===================================================================
 
-class RpcRequest final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.RpcRequest) */ {
+class RpcHeader final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.RpcHeader) */ {
  public:
-  inline RpcRequest() : RpcRequest(nullptr) {}
-  ~RpcRequest() override;
-  explicit PROTOBUF_CONSTEXPR RpcRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+  inline RpcHeader() : RpcHeader(nullptr) {}
+  ~RpcHeader() override;
+  explicit PROTOBUF_CONSTEXPR RpcHeader(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
 
-  RpcRequest(const RpcRequest& from);
-  RpcRequest(RpcRequest&& from) noexcept
-    : RpcRequest() {
+  RpcHeader(const RpcHeader& from);
+  RpcHeader(RpcHeader&& from) noexcept
+    : RpcHeader() {
     *this = ::std::move(from);
   }
 
-  inline RpcRequest& operator=(const RpcRequest& from) {
+  inline RpcHeader& operator=(const RpcHeader& from) {
     CopyFrom(from);
     return *this;
   }
-  inline RpcRequest& operator=(RpcRequest&& from) noexcept {
+  inline RpcHeader& operator=(RpcHeader&& from) noexcept {
     if (this == &from) return *this;
     if (GetOwningArena() == from.GetOwningArena()
   #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
@@ -103,20 +99,20 @@ class RpcRequest final :
   static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const RpcRequest& default_instance() {
+  static const RpcHeader& default_instance() {
     return *internal_default_instance();
   }
-  static inline const RpcRequest* internal_default_instance() {
-    return reinterpret_cast<const RpcRequest*>(
-               &_RpcRequest_default_instance_);
+  static inline const RpcHeader* internal_default_instance() {
+    return reinterpret_cast<const RpcHeader*>(
+               &_RpcHeader_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     0;
 
-  friend void swap(RpcRequest& a, RpcRequest& b) {
+  friend void swap(RpcHeader& a, RpcHeader& b) {
     a.Swap(&b);
   }
-  inline void Swap(RpcRequest* other) {
+  inline void Swap(RpcHeader* other) {
     if (other == this) return;
   #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
     if (GetOwningArena() != nullptr &&
@@ -129,7 +125,7 @@ class RpcRequest final :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(RpcRequest* other) {
+  void UnsafeArenaSwap(RpcHeader* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
     InternalSwap(other);
@@ -137,14 +133,14 @@ class RpcRequest final :
 
   // implements Message ----------------------------------------------
 
-  RpcRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<RpcRequest>(arena);
+  RpcHeader* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<RpcHeader>(arena);
   }
   using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const RpcRequest& from);
+  void CopyFrom(const RpcHeader& from);
   using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const RpcRequest& from) {
-    RpcRequest::MergeImpl(*this, from);
+  void MergeFrom( const RpcHeader& from) {
+    RpcHeader::MergeImpl(*this, from);
   }
   private:
   static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
@@ -162,15 +158,15 @@ class RpcRequest final :
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(RpcRequest* other);
+  void InternalSwap(RpcHeader* other);
 
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "foskv.rpc.RpcRequest";
+    return "foskv.rpc.RpcHeader";
   }
   protected:
-  explicit RpcRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+  explicit RpcHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                        bool is_message_owned = false);
   public:
 
@@ -186,9 +182,9 @@ class RpcRequest final :
   enum : int {
     kServiceNameFieldNumber = 1,
     kMethodNameFieldNumber = 2,
-    kPayloadFieldNumber = 3,
+    kPayloadLengthFieldNumber = 3,
   };
-  // string service_name = 1;
+  // bytes service_name = 1;
   void clear_service_name();
   const std::string& service_name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -202,7 +198,7 @@ class RpcRequest final :
   std::string* _internal_mutable_service_name();
   public:
 
-  // string method_name = 2;
+  // bytes method_name = 2;
   void clear_method_name();
   const std::string& method_name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -216,21 +212,16 @@ class RpcRequest final :
   std::string* _internal_mutable_method_name();
   public:
 
-  // bytes payload = 3;
-  void clear_payload();
-  const std::string& payload() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_payload(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_payload();
-  PROTOBUF_NODISCARD std::string* release_payload();
-  void set_allocated_payload(std::string* payload);
+  // uint32 payload_length = 3;
+  void clear_payload_length();
+  uint32_t payload_length() const;
+  void set_payload_length(uint32_t value);
   private:
-  const std::string& _internal_payload() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_payload(const std::string& value);
-  std::string* _internal_mutable_payload();
+  uint32_t _internal_payload_length() const;
+  void _internal_set_payload_length(uint32_t value);
   public:
 
-  // @@protoc_insertion_point(class_scope:foskv.rpc.RpcRequest)
+  // @@protoc_insertion_point(class_scope:foskv.rpc.RpcHeader)
  private:
   class _Internal;
 
@@ -240,187 +231,7 @@ class RpcRequest final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr service_name_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr method_name_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr payload_;
-    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_rpc_2eproto;
-};
-// -------------------------------------------------------------------
-
-class RpcResponse final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.RpcResponse) */ {
- public:
-  inline RpcResponse() : RpcResponse(nullptr) {}
-  ~RpcResponse() override;
-  explicit PROTOBUF_CONSTEXPR RpcResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  RpcResponse(const RpcResponse& from);
-  RpcResponse(RpcResponse&& from) noexcept
-    : RpcResponse() {
-    *this = ::std::move(from);
-  }
-
-  inline RpcResponse& operator=(const RpcResponse& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline RpcResponse& operator=(RpcResponse&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const RpcResponse& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const RpcResponse* internal_default_instance() {
-    return reinterpret_cast<const RpcResponse*>(
-               &_RpcResponse_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    1;
-
-  friend void swap(RpcResponse& a, RpcResponse& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(RpcResponse* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(RpcResponse* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  RpcResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<RpcResponse>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const RpcResponse& from);
-  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const RpcResponse& from) {
-    RpcResponse::MergeImpl(*this, from);
-  }
-  private:
-  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
-  public:
-  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
-  uint8_t* _InternalSerialize(
-      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(RpcResponse* other);
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "foskv.rpc.RpcResponse";
-  }
-  protected:
-  explicit RpcResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  enum : int {
-    kErrorFieldNumber = 2,
-    kPayloadFieldNumber = 3,
-    kSuccessFieldNumber = 1,
-  };
-  // string error = 2;
-  void clear_error();
-  const std::string& error() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_error(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_error();
-  PROTOBUF_NODISCARD std::string* release_error();
-  void set_allocated_error(std::string* error);
-  private:
-  const std::string& _internal_error() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_error(const std::string& value);
-  std::string* _internal_mutable_error();
-  public:
-
-  // bytes payload = 3;
-  void clear_payload();
-  const std::string& payload() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_payload(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_payload();
-  PROTOBUF_NODISCARD std::string* release_payload();
-  void set_allocated_payload(std::string* payload);
-  private:
-  const std::string& _internal_payload() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_payload(const std::string& value);
-  std::string* _internal_mutable_payload();
-  public:
-
-  // bool success = 1;
-  void clear_success();
-  bool success() const;
-  void set_success(bool value);
-  private:
-  bool _internal_success() const;
-  void _internal_set_success(bool value);
-  public:
-
-  // @@protoc_insertion_point(class_scope:foskv.rpc.RpcResponse)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  struct Impl_ {
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr error_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr payload_;
-    bool success_;
+    uint32_t payload_length_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -435,44 +246,44 @@ class RpcResponse final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// RpcRequest
+// RpcHeader
 
-// string service_name = 1;
-inline void RpcRequest::clear_service_name() {
+// bytes service_name = 1;
+inline void RpcHeader::clear_service_name() {
   _impl_.service_name_.ClearToEmpty();
 }
-inline const std::string& RpcRequest::service_name() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcRequest.service_name)
+inline const std::string& RpcHeader::service_name() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.service_name)
   return _internal_service_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void RpcRequest::set_service_name(ArgT0&& arg0, ArgT... args) {
+void RpcHeader::set_service_name(ArgT0&& arg0, ArgT... args) {
  
- _impl_.service_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcRequest.service_name)
+ _impl_.service_name_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.service_name)
 }
-inline std::string* RpcRequest::mutable_service_name() {
+inline std::string* RpcHeader::mutable_service_name() {
   std::string* _s = _internal_mutable_service_name();
-  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcRequest.service_name)
+  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcHeader.service_name)
   return _s;
 }
-inline const std::string& RpcRequest::_internal_service_name() const {
+inline const std::string& RpcHeader::_internal_service_name() const {
   return _impl_.service_name_.Get();
 }
-inline void RpcRequest::_internal_set_service_name(const std::string& value) {
+inline void RpcHeader::_internal_set_service_name(const std::string& value) {
   
   _impl_.service_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* RpcRequest::_internal_mutable_service_name() {
+inline std::string* RpcHeader::_internal_mutable_service_name() {
   
   return _impl_.service_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* RpcRequest::release_service_name() {
-  // @@protoc_insertion_point(field_release:foskv.rpc.RpcRequest.service_name)
+inline std::string* RpcHeader::release_service_name() {
+  // @@protoc_insertion_point(field_release:foskv.rpc.RpcHeader.service_name)
   return _impl_.service_name_.Release();
 }
-inline void RpcRequest::set_allocated_service_name(std::string* service_name) {
+inline void RpcHeader::set_allocated_service_name(std::string* service_name) {
   if (service_name != nullptr) {
     
   } else {
@@ -484,45 +295,45 @@ inline void RpcRequest::set_allocated_service_name(std::string* service_name) {
     _impl_.service_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcRequest.service_name)
+  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcHeader.service_name)
 }
 
-// string method_name = 2;
-inline void RpcRequest::clear_method_name() {
+// bytes method_name = 2;
+inline void RpcHeader::clear_method_name() {
   _impl_.method_name_.ClearToEmpty();
 }
-inline const std::string& RpcRequest::method_name() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcRequest.method_name)
+inline const std::string& RpcHeader::method_name() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.method_name)
   return _internal_method_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void RpcRequest::set_method_name(ArgT0&& arg0, ArgT... args) {
+void RpcHeader::set_method_name(ArgT0&& arg0, ArgT... args) {
  
- _impl_.method_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcRequest.method_name)
+ _impl_.method_name_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.method_name)
 }
-inline std::string* RpcRequest::mutable_method_name() {
+inline std::string* RpcHeader::mutable_method_name() {
   std::string* _s = _internal_mutable_method_name();
-  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcRequest.method_name)
+  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcHeader.method_name)
   return _s;
 }
-inline const std::string& RpcRequest::_internal_method_name() const {
+inline const std::string& RpcHeader::_internal_method_name() const {
   return _impl_.method_name_.Get();
 }
-inline void RpcRequest::_internal_set_method_name(const std::string& value) {
+inline void RpcHeader::_internal_set_method_name(const std::string& value) {
   
   _impl_.method_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* RpcRequest::_internal_mutable_method_name() {
+inline std::string* RpcHeader::_internal_mutable_method_name() {
   
   return _impl_.method_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* RpcRequest::release_method_name() {
-  // @@protoc_insertion_point(field_release:foskv.rpc.RpcRequest.method_name)
+inline std::string* RpcHeader::release_method_name() {
+  // @@protoc_insertion_point(field_release:foskv.rpc.RpcHeader.method_name)
   return _impl_.method_name_.Release();
 }
-inline void RpcRequest::set_allocated_method_name(std::string* method_name) {
+inline void RpcHeader::set_allocated_method_name(std::string* method_name) {
   if (method_name != nullptr) {
     
   } else {
@@ -534,188 +345,32 @@ inline void RpcRequest::set_allocated_method_name(std::string* method_name) {
     _impl_.method_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcRequest.method_name)
+  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcHeader.method_name)
 }
 
-// bytes payload = 3;
-inline void RpcRequest::clear_payload() {
-  _impl_.payload_.ClearToEmpty();
+// uint32 payload_length = 3;
+inline void RpcHeader::clear_payload_length() {
+  _impl_.payload_length_ = 0u;
 }
-inline const std::string& RpcRequest::payload() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcRequest.payload)
-  return _internal_payload();
+inline uint32_t RpcHeader::_internal_payload_length() const {
+  return _impl_.payload_length_;
 }
-template <typename ArgT0, typename... ArgT>
-inline PROTOBUF_ALWAYS_INLINE
-void RpcRequest::set_payload(ArgT0&& arg0, ArgT... args) {
- 
- _impl_.payload_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcRequest.payload)
+inline uint32_t RpcHeader::payload_length() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.payload_length)
+  return _internal_payload_length();
 }
-inline std::string* RpcRequest::mutable_payload() {
-  std::string* _s = _internal_mutable_payload();
-  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcRequest.payload)
-  return _s;
-}
-inline const std::string& RpcRequest::_internal_payload() const {
-  return _impl_.payload_.Get();
-}
-inline void RpcRequest::_internal_set_payload(const std::string& value) {
+inline void RpcHeader::_internal_set_payload_length(uint32_t value) {
   
-  _impl_.payload_.Set(value, GetArenaForAllocation());
+  _impl_.payload_length_ = value;
 }
-inline std::string* RpcRequest::_internal_mutable_payload() {
-  
-  return _impl_.payload_.Mutable(GetArenaForAllocation());
-}
-inline std::string* RpcRequest::release_payload() {
-  // @@protoc_insertion_point(field_release:foskv.rpc.RpcRequest.payload)
-  return _impl_.payload_.Release();
-}
-inline void RpcRequest::set_allocated_payload(std::string* payload) {
-  if (payload != nullptr) {
-    
-  } else {
-    
-  }
-  _impl_.payload_.SetAllocated(payload, GetArenaForAllocation());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.payload_.IsDefault()) {
-    _impl_.payload_.Set("", GetArenaForAllocation());
-  }
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcRequest.payload)
-}
-
-// -------------------------------------------------------------------
-
-// RpcResponse
-
-// bool success = 1;
-inline void RpcResponse::clear_success() {
-  _impl_.success_ = false;
-}
-inline bool RpcResponse::_internal_success() const {
-  return _impl_.success_;
-}
-inline bool RpcResponse::success() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcResponse.success)
-  return _internal_success();
-}
-inline void RpcResponse::_internal_set_success(bool value) {
-  
-  _impl_.success_ = value;
-}
-inline void RpcResponse::set_success(bool value) {
-  _internal_set_success(value);
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcResponse.success)
-}
-
-// string error = 2;
-inline void RpcResponse::clear_error() {
-  _impl_.error_.ClearToEmpty();
-}
-inline const std::string& RpcResponse::error() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcResponse.error)
-  return _internal_error();
-}
-template <typename ArgT0, typename... ArgT>
-inline PROTOBUF_ALWAYS_INLINE
-void RpcResponse::set_error(ArgT0&& arg0, ArgT... args) {
- 
- _impl_.error_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcResponse.error)
-}
-inline std::string* RpcResponse::mutable_error() {
-  std::string* _s = _internal_mutable_error();
-  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcResponse.error)
-  return _s;
-}
-inline const std::string& RpcResponse::_internal_error() const {
-  return _impl_.error_.Get();
-}
-inline void RpcResponse::_internal_set_error(const std::string& value) {
-  
-  _impl_.error_.Set(value, GetArenaForAllocation());
-}
-inline std::string* RpcResponse::_internal_mutable_error() {
-  
-  return _impl_.error_.Mutable(GetArenaForAllocation());
-}
-inline std::string* RpcResponse::release_error() {
-  // @@protoc_insertion_point(field_release:foskv.rpc.RpcResponse.error)
-  return _impl_.error_.Release();
-}
-inline void RpcResponse::set_allocated_error(std::string* error) {
-  if (error != nullptr) {
-    
-  } else {
-    
-  }
-  _impl_.error_.SetAllocated(error, GetArenaForAllocation());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.error_.IsDefault()) {
-    _impl_.error_.Set("", GetArenaForAllocation());
-  }
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcResponse.error)
-}
-
-// bytes payload = 3;
-inline void RpcResponse::clear_payload() {
-  _impl_.payload_.ClearToEmpty();
-}
-inline const std::string& RpcResponse::payload() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcResponse.payload)
-  return _internal_payload();
-}
-template <typename ArgT0, typename... ArgT>
-inline PROTOBUF_ALWAYS_INLINE
-void RpcResponse::set_payload(ArgT0&& arg0, ArgT... args) {
- 
- _impl_.payload_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcResponse.payload)
-}
-inline std::string* RpcResponse::mutable_payload() {
-  std::string* _s = _internal_mutable_payload();
-  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcResponse.payload)
-  return _s;
-}
-inline const std::string& RpcResponse::_internal_payload() const {
-  return _impl_.payload_.Get();
-}
-inline void RpcResponse::_internal_set_payload(const std::string& value) {
-  
-  _impl_.payload_.Set(value, GetArenaForAllocation());
-}
-inline std::string* RpcResponse::_internal_mutable_payload() {
-  
-  return _impl_.payload_.Mutable(GetArenaForAllocation());
-}
-inline std::string* RpcResponse::release_payload() {
-  // @@protoc_insertion_point(field_release:foskv.rpc.RpcResponse.payload)
-  return _impl_.payload_.Release();
-}
-inline void RpcResponse::set_allocated_payload(std::string* payload) {
-  if (payload != nullptr) {
-    
-  } else {
-    
-  }
-  _impl_.payload_.SetAllocated(payload, GetArenaForAllocation());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.payload_.IsDefault()) {
-    _impl_.payload_.Set("", GetArenaForAllocation());
-  }
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcResponse.payload)
+inline void RpcHeader::set_payload_length(uint32_t value) {
+  _internal_set_payload_length(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.payload_length)
 }
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-// -------------------------------------------------------------------
-
 
 // @@protoc_insertion_point(namespace_scope)
 

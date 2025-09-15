@@ -37,57 +37,67 @@ void foskv::rpc::RpcProvider::run() {
 auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
 -> kosio::async::Task<> {
     while (true) {
-        // Read request length
-        uint32_t request_len_net;
+        // Recv rpc header length
+        uint32_t header_len_net;
         auto has_request_len = co_await stream.read_exact(
-            {reinterpret_cast<char*>(&request_len_net), sizeof(uint32_t)});
+            {reinterpret_cast<char*>(&header_len_net), sizeof(uint32_t)});
         if (!has_request_len) [[unlikely]] {
             LOG_ERROR("{}", has_request_len.error());
             break;
         }
 
-        uint32_t request_len = ntohl(request_len_net);
+        uint32_t header_len = ntohl(header_len_net);
 
-        // Read request
-        std::string request_str;
-        request_str.resize(request_len);
-        auto has_request = co_await stream.read_exact({
-            request_str.data(), request_len});
+        // Recv rpc header
+        std::string header_str;
+        header_str.resize(header_len);
+        auto has_request = co_await stream.read_exact(
+            {header_str.data(), header_len});
         if (!has_request) [[unlikely]] {
             LOG_ERROR("{}", has_request.error());
             break;
         }
 
-        // Parse request
-        RpcRequest request;
-        if (!request.ParseFromArray(request_str.data(), request_str.size())) {
+        // Parse rpc header
+        RpcHeader header;
+        if (!header.ParseFromArray(header_str.data(), header_str.size())) {
             LOG_ERROR("Failed to parse rpc header");
             break;
         }
 
-        auto service_name = request.service_name();
-        auto method_name = request.method_name();
-        auto payload = request.payload();
+        auto service_name = header.service_name();
+        auto method_name = header.method_name();
+        auto payload_length = header.payload_length();
+
+        // Recv payload
+        std::string payload;
+        payload.resize(payload_length);
+        auto has_payload = co_await stream.read_exact(
+            {payload.data(), payload_length});
+        if (!has_payload) [[unlikely]] {
+            LOG_ERROR("{}", has_payload.error());
+            break;
+        }
 
         // Invoke
         auto has_response = invoke(service_name, method_name, payload);
         if (!has_response) [[unlikely]] {
             LOG_ERROR("{}", has_response.error());
-            continue;
+            break;
         }
 
         // Send response
-        auto& response_data = has_response.value();
-        uint32_t response_len_net = htonl(static_cast<uint32_t>(response_data.size()));
+        auto& response_str = has_response.value();
+        uint32_t response_len_net = htonl(static_cast<uint32_t>(response_str.size()));
 
         auto ret = co_await stream.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&response_len_net), sizeof(uint32_t)),
-            std::span<const char>(response_data.data(), response_data.size())
+            std::span<const char>(response_str.data(), response_str.size())
         );
 
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
-            continue;
+            break;
         }
     }
 }

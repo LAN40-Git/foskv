@@ -1,8 +1,8 @@
 syntax = "proto3";
 package foskv.rpc;
 
-message RpcRequest {
-  string service_name = 1;
-  string method_name = 2;
-  bytes payload = 3;
+message RpcHeader {
+  bytes service_name = 1;
+  bytes method_name = 2;
+  uint32 payload_length = 3;
 }
