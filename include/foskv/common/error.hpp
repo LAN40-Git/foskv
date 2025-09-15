@@ -67,7 +67,9 @@ public:
         kServiceNotFound,
         kMethodNotFound,
         kSerializeFailed,
+        kConnectFailed,
         kSendFailed,
+        kReceiveFailed,
     };
 
 public:
@@ -86,8 +88,12 @@ public:
                 return "Method not found.";
             case kSerializeFailed:
                 return "Failed to serialize message.";
+            case kConnectFailed:
+                return "Failed to connect to the rpc server.";
             case kSendFailed:
                 return "Failed to send message.";
+            case kReceiveFailed:
+                return "Failed to receive message.";
             default:
                 return strerror(error_code_);
         }

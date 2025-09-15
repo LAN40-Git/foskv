@@ -13,16 +13,34 @@ public:
 
 public:
     static auto connect(std::string_view host, uint16_t port)
-    -> kosio::async::Task<kosio::Result<RpcConsumer, kosio::IoError>>;
+    -> kosio::async::Task<RpcResult<RpcConsumer>>;
 
 public:
     template <typename Response>
          requires std::is_base_of_v<google::protobuf::Message, Response>
+    auto call(const std::string service_name,
+              const std::string method_name,
+              const std::string payload,
+              std::function<kosio::async::Task<>(RpcResult<Response>)> callback) -> kosio::async::Task<> {
+        co_await callback(co_await internal_call<Response>(service_name, method_name, payload));
+    }
+
+    template <typename Response>
+         requires std::is_base_of_v<google::protobuf::Message, Response>
+    auto call(const std::string service_name,
+              const std::string method_name,
+              const std::string payload,
+              std::function<void(RpcResult<Response>)> callback) -> kosio::async::Task<> {
+        callback(co_await internal_call<Response>(service_name, method_name, payload));
+    }
+
+private:
+    template <typename Response>
+         requires std::is_base_of_v<google::protobuf::Message, Response>
     [[REMEMBER_CO_AWAIT]]
-    auto call(const std::string& service_name,
-              const std::string& method_name,
-              const std::string& payload)
-        -> kosio::async::Task<RpcResult<Response>> {
+    auto internal_call(const std::string& service_name,
+                       const std::string& method_name,
+                       const std::string& payload) -> kosio::async::Task<RpcResult<Response>> {
         // Make request
         RpcRequest request;
         request.set_service_name(service_name);
@@ -42,28 +60,27 @@ public:
             co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
         }
 
-        // Read response length
+        // Recv response length
         uint32_t response_len_net;
         auto has_response_len = co_await stream_.read_exact(
             {reinterpret_cast<char*>(&response_len_net), sizeof(uint32_t)});
         if (!has_response_len) [[unlikely]] {
-            co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
+            co_return std::unexpected{make_rpc_error(RpcError::kReceiveFailed)};
         }
 
         uint32_t response_len = ntohl(response_len_net);
 
-        // Read response
-        if (response_str_.size() < response_len) {
-            response_str_.resize(response_len);
-        }
+        // Recv response
+        std::string response_str;
+        response_str.resize(response_len);
         auto has_response = co_await stream_.read_exact(
-            {response_str_.data(), response_len});
+            {response_str.data(), response_len});
         if (!has_response) [[unlikely]] {
-            co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
+            co_return std::unexpected{make_rpc_error(RpcError::kReceiveFailed)};
         }
 
         Response response;
-        if (!response.ParseFromArray(response_str_.data(), response_len)) {
+        if (!response.ParseFromArray(response_str.data(), response_len)) {
             co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
         co_return response;
@@ -71,6 +88,5 @@ public:
 
 private:
     kosio::net::TcpStream stream_;
-    std::string response_str_;
 };
 } // namespace foskv::rpc

@@ -27,7 +27,6 @@ private:
 private:
     std::string host_;
     uint16_t    port_;
-    std::string request_str_;
     // <service_name, <method_name, Method>>
     std::unordered_map<std::string, std::unordered_map<std::string, Invoke>> invokes_;
 };

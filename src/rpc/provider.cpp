@@ -8,7 +8,7 @@ void foskv::rpc::RpcProvider::register_invoke(
 }
 
 void foskv::rpc::RpcProvider::run() {
-    kosio::runtime::CurrentThreadBuilder::default_create().block_on([this]() -> kosio::async::Task<> {
+    kosio::runtime::MultiThreadBuilder::default_create().block_on([this]() -> kosio::async::Task<> {
         auto has_addr = kosio::net::SocketAddr::parse(host_, port_);
         if (!has_addr) {
             LOG_ERROR("{}", has_addr.error());
@@ -49,11 +49,10 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         uint32_t request_len = ntohl(request_len_net);
 
         // Read request
-        if (request_str_.size() < request_len) {
-            request_str_.resize(request_len);
-        }
+        std::string request_str;
+        request_str.resize(request_len);
         auto has_request = co_await stream.read_exact({
-            request_str_.data(), request_len});
+            request_str.data(), request_len});
         if (!has_request) [[unlikely]] {
             LOG_ERROR("{}", has_request.error());
             break;
@@ -61,7 +60,7 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
 
         // Parse request
         RpcRequest request;
-        if (!request.ParseFromArray(request_str_.data(), request_len)) {
+        if (!request.ParseFromArray(request_str.data(), request_str.size())) {
             LOG_ERROR("Failed to parse rpc header");
             break;
         }
