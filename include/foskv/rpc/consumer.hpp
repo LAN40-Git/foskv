@@ -29,16 +29,15 @@ public:
         request.set_method_name(std::string(method_name));
         request.set_payload(payload);
 
-        // Send request length
-        uint32_t request_len_net = htonl(static_cast<uint32_t>(request.ByteSizeLong()));
-        auto ret = co_await stream_.write_all(
-            {reinterpret_cast<char*>(&request_len_net), sizeof(uint32_t)});
-        if (!ret) [[unlikely]] {
-            co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
-        }
-
         // Send request
-        ret = co_await stream_.write_all(request.SerializeAsString());
+        std::string request_data = request.SerializeAsString();
+        uint32_t request_len_net = htonl(static_cast<uint32_t>(request_data.size()));
+
+        auto ret = co_await stream_.write_vectored(
+            std::span<const char>(reinterpret_cast<char*>(&request_len_net), sizeof(uint32_t)),
+            std::span<const char>(request_data.data(), request_data.size())
+        );
+
         if (!ret) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
         }

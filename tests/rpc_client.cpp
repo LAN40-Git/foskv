@@ -4,11 +4,8 @@
 #include <kosio/signal/signal.hpp>
 
 auto process(foskv::rpc::RpcConsumer& consumer) -> kosio::async::Task<> {
-    std::string_view cmd = "Put shit 123";
     while (true) {
-        kosio::log::console.info("Sleeping for 1s");
-        co_await kosio::time::sleep(1000);
-        auto args = foskv::storage::KVCommand::parse(cmd);
+        auto args = co_await foskv::storage::KVCommand::async_parse();
         switch (args.op) {
             case foskv::storage::KVCommand::Op::kPut: {
                 foskv::storage::PutRequest request;
@@ -19,7 +16,7 @@ auto process(foskv::rpc::RpcConsumer& consumer) -> kosio::async::Task<> {
                 if (!has_response) {
                     kosio::log::console.error("{}", has_response.error());
                 } else {
-                    auto response = has_response.value();
+                    const auto& response = has_response.value();
                     if (response.header().success()) {
                         kosio::log::console.info("Success");
                     } else {
@@ -36,7 +33,7 @@ auto process(foskv::rpc::RpcConsumer& consumer) -> kosio::async::Task<> {
                 if (!has_response) {
                     kosio::log::console.error("{}", has_response.error());
                 } else {
-                    auto response = has_response.value();
+                    const auto& response = has_response.value();
                     if (response.header().success()) {
                         kosio::log::console.info("{}", response.value());
                     } else {
@@ -53,7 +50,7 @@ auto process(foskv::rpc::RpcConsumer& consumer) -> kosio::async::Task<> {
                 if (!has_response) {
                     kosio::log::console.error("{}", has_response.error());
                 } else {
-                    auto response = has_response.value();
+                    const auto& response = has_response.value();
                     if (response.header().success()) {
                         kosio::log::console.info("Success");
                     } else {
@@ -67,8 +64,6 @@ auto process(foskv::rpc::RpcConsumer& consumer) -> kosio::async::Task<> {
                 break;
             }
         }
-        // auto end = std::chrono::system_clock::now();
-        // kosio::log::console.info("Take {} ns", std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
     }
 }
 
@@ -83,5 +78,5 @@ auto main_loop() -> kosio::async::Task<> {
 }
 
 auto main() -> int {
-    kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
+    kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
 }

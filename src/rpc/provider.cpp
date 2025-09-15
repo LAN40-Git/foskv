@@ -8,7 +8,7 @@ void foskv::rpc::RpcProvider::register_invoke(
 }
 
 void foskv::rpc::RpcProvider::run() {
-    kosio::runtime::MultiThreadBuilder::default_create().block_on([this]() -> kosio::async::Task<> {
+    kosio::runtime::CurrentThreadBuilder::default_create().block_on([this]() -> kosio::async::Task<> {
         auto has_addr = kosio::net::SocketAddr::parse(host_, port_);
         if (!has_addr) {
             LOG_ERROR("{}", has_addr.error());
@@ -45,17 +45,15 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             LOG_ERROR("{}", has_request_len.error());
             break;
         }
+
         uint32_t request_len = ntohl(request_len_net);
 
         // Read request
         if (request_str_.size() < request_len) {
             request_str_.resize(request_len);
         }
-        auto start = std::chrono::system_clock::now();
         auto has_request = co_await stream.read_exact({
             request_str_.data(), request_len});
-        auto end = std::chrono::system_clock::now();
-        kosio::log::console.info("Read request take {} ns, len {}", std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count(), request_len);
         if (!has_request) [[unlikely]] {
             LOG_ERROR("{}", has_request.error());
             break;
@@ -79,17 +77,15 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             continue;
         }
 
-        // Write Response length
-        uint32_t response_len_net = ntohl(has_response.value().size());
-        auto ret = co_await stream.write_all(
-            {reinterpret_cast<char*>(&response_len_net), sizeof(uint32_t)});
-        if (!ret) [[unlikely]] {
-            LOG_ERROR("{}", ret.error());
-            continue;
-        }
+        // Send response
+        auto& response_data = has_response.value();
+        uint32_t response_len_net = htonl(static_cast<uint32_t>(response_data.size()));
 
-        // Write Response
-        ret = co_await stream.write_all(has_response.value());
+        auto ret = co_await stream.write_vectored(
+            std::span<const char>(reinterpret_cast<char*>(&response_len_net), sizeof(uint32_t)),
+            std::span<const char>(response_data.data(), response_data.size())
+        );
+
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             continue;
