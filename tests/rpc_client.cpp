@@ -12,11 +12,15 @@ auto process(std::unique_ptr<foskv::rpc::RpcConsumer> consumer) -> kosio::async:
                 request.set_key(args.key);
                 request.set_value(args.value);
                 co_await consumer->call("KVStorage", "Put", request.SerializeAsString(),
-                [](const std::string& response) -> void {
+                [](foskv::RpcResult<std::string_view> has_response) -> kosio::async::Task<> {
+                    if (!has_response) {
+                        kosio::log::console.error("{}", has_response.error());
+                        co_return;
+                    }
                     foskv::storage::PutResponse put_response;
-                    if (!put_response.ParseFromString(response)) {
+                    if (!put_response.ParseFromArray(has_response.value().data(), has_response.value().size())) {
                         kosio::log::console.error("Failed to parse response");
-                        return;
+                        co_return;
                     }
                     if (put_response.header().success()) {
                         kosio::log::console.info("Success");
@@ -30,11 +34,15 @@ auto process(std::unique_ptr<foskv::rpc::RpcConsumer> consumer) -> kosio::async:
                 foskv::storage::GetRequest request;
                 request.set_key(args.key);
                 co_await consumer->call("KVStorage", "Get", request.SerializeAsString(),
-                [](const std::string& response) -> void {
+                [](foskv::RpcResult<std::string_view> has_response) -> kosio::async::Task<> {
+                    if (!has_response) {
+                        kosio::log::console.error("{}", has_response.error());
+                        co_return;
+                    }
                     foskv::storage::GetResponse get_response;
-                    if (!get_response.ParseFromString(response)) {
+                    if (!get_response.ParseFromArray(has_response.value().data(), has_response.value().size())) {
                         kosio::log::console.error("Failed to parse response");
-                        return;
+                        co_return;
                     }
                     if (get_response.header().success()) {
                         kosio::log::console.info("{}", get_response.value());
@@ -48,16 +56,20 @@ auto process(std::unique_ptr<foskv::rpc::RpcConsumer> consumer) -> kosio::async:
                 foskv::storage::GetRequest request;
                 request.set_key(args.key);
                 co_await consumer->call("KVStorage", "Delete", request.SerializeAsString(),
-                [](const std::string& response) -> void {
+                [](foskv::RpcResult<std::string_view> has_response) -> kosio::async::Task<> {
+                    if (!has_response) {
+                        kosio::log::console.error("{}", has_response.error());
+                        co_return;
+                    }
                     foskv::storage::DeleteResponse delete_response;
-                    if (!delete_response.ParseFromString(response)) {
+                    if (!delete_response.ParseFromArray(has_response.value().data(), has_response.value().size())) {
                         kosio::log::console.error("Failed to parse response");
-                        return;
+                        co_return;
                     }
                     if (delete_response.header().success()) {
-                        //kosio::log::console.info("Success");
+                        kosio::log::console.info("Success");
                     } else {
-                        //kosio::log::console.error("{}", delete_response.header().error());
+                        kosio::log::console.error("{}", delete_response.header().error());
                     }
                 });
                 break;

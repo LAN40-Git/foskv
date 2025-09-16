@@ -14,28 +14,31 @@ auto foskv::rpc::RpcConsumer::connect(std::string_view host, uint16_t port)
 }
 
 auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&method_name, std::string &&payload,
-    const std::function<void(const std::string &)> &callback) -> kosio::async::Task<> {
+    detail::RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>> {
     co_await mutex_.lock();
     std::lock_guard lock(mutex_, std::adopt_lock);
-    rpc_tasks_.push(RpcTask{std::move(service_name), std::move(method_name), std::move(payload), callback});
-    cv_.notify_one();
-}
+    // Make request header
+    RequestHeader req_header;
+    req_header.set_request_id(request_id_);
+    req_header.set_service_name(std::move(service_name));
+    req_header.set_method_name(std::move(method_name));
+    req_header.set_payload_size(payload.size());
 
-auto foskv::rpc::RpcConsumer::call_internal(const std::string &service_name, const std::string &method_name,
-    const std::string &payload) -> kosio::async::Task<RpcResult<std::string>> {
-    // Make rpc header
-    RpcHeader header;
-    header.set_service_name(service_name);
-    header.set_method_name(std::string(method_name));
-    header.set_payload_length(payload.size());
+    // Send [request header size -> request header -> request payload]
+    auto req_header_size = req_header.ByteSizeLong();
+    if (req_header_size > buffer_.capacity()) [[unlikely]] {
+        co_return std::unexpected{make_rpc_error(RpcError::kMessageTooLarge)};
+    }
+    req_header.SerializeToArray(buffer_.data(), static_cast<int>(req_header_size));
+    uint32_t req_header_size_net = htonl(static_cast<uint32_t>(req_header_size));
 
-    // Send [header length -> rpc header -> payload]
-    std::string header_str = header.SerializeAsString();
-    uint32_t header_len_net = htonl(static_cast<uint32_t>(header_str.size()));
+    // Although it is not possible, the first insertion here is to
+    // avoid receiving a reply and the callback has not been inserted yet.
+    callbacks_.emplace(request_id_, std::move(callback));
 
     auto ret = co_await stream_.write_vectored(
-        std::span<const char>(reinterpret_cast<char*>(&header_len_net), sizeof(uint32_t)),
-        std::span<const char>(header_str.data(), header_str.size()),
+        std::span<const char>(reinterpret_cast<char*>(&req_header_size_net), sizeof(uint32_t)),
+        std::span<const char>(buffer_.data(), req_header_size),
         std::span<const char>(payload.data(), payload.size())
     );
 
@@ -43,23 +46,79 @@ auto foskv::rpc::RpcConsumer::call_internal(const std::string &service_name, con
         co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
     }
 
-    // Recv response length
-    uint32_t response_len_net;
-    auto has_response_len = co_await stream_.read_exact(
-        {reinterpret_cast<char*>(&response_len_net), sizeof(uint32_t)});
-    if (!has_response_len) [[unlikely]] {
-        co_return std::unexpected{make_rpc_error(RpcError::kReceiveFailed)};
-    }
+    // It only increments when the request is successfully sent.
+    request_id_ += 1;
+    co_return RpcResult<void>{};
+}
 
-    uint32_t response_len = ntohl(response_len_net);
-
-    // Recv response
-    std::string response_str;
-    response_str.resize(response_len);
-    auto has_response = co_await stream_.read_exact(
-        {response_str.data(), response_len});
-    if (!has_response) [[unlikely]] {
-        co_return std::unexpected{make_rpc_error(RpcError::kReceiveFailed)};
+auto foskv::rpc::RpcConsumer::reconnect() -> kosio::async::Task<bool> {
+    auto ret = co_await kosio::net::TcpStream::connect(server_addr_);
+    if (!ret) [[unlikely]] {
+        LOG_ERROR("Failed to reconnect to the server {}.", server_addr_);
+        co_return false;
     }
-    co_return response_str;
+    // The old stream will close automatically
+    stream_ = std::move(ret.value());
+    co_return true;
+}
+
+auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
+    std::vector<char> buffer(4 * 1024 * 1024); // 4MB
+    // Break if failed to reconnect to the rpc server or receive invalid message
+    while (true) {
+        // Recv response header size
+        uint32_t resp_header_size_net;
+        auto ret = co_await stream_.read_exact(
+            {reinterpret_cast<char*>(&resp_header_size_net), sizeof(uint32_t)});
+        if (!ret && !co_await reconnect()) [[unlikely]] {
+            LOG_ERROR("{}", ret.error());
+            break;
+        }
+
+        uint32_t resp_header_size = ntohl(resp_header_size_net);
+        if (resp_header_size > buffer.capacity()) [[unlikely]] {
+            LOG_ERROR("Response header too large.");
+            break;
+        }
+
+        // Recv response header
+        ret = co_await stream_.read_exact(
+            {buffer.data(), resp_header_size});
+        if (!ret && !co_await reconnect()) [[unlikely]] {
+            LOG_ERROR("{}", ret.error());
+            break;
+        }
+
+        ResponseHeader header;
+        if (!header.ParseFromArray(buffer.data(), static_cast<int>(resp_header_size))) {
+            LOG_ERROR("Failed to parse response header.");
+            break;
+        }
+        auto request_id = header.request_id();
+        auto payload_size = header.payload_size();
+        if (payload_size > buffer.capacity()) [[unlikely]] {
+            LOG_ERROR("Response payload too large.");
+            break;
+        }
+
+        // Recv response payload
+        ret = co_await stream_.read_exact(
+            {buffer.data(), payload_size});
+        if (!ret && !co_await reconnect()) [[unlikely]] {
+            LOG_ERROR("{}", ret.error());
+            break;
+        }
+
+        if (callbacks_.contains(request_id)) {
+            co_await callbacks_[request_id](std::string_view{buffer.data(), payload_size});
+            // Since request_id is monotonically incrementing, it is thread safe here.
+            callbacks_.unsafe_erase(request_id);
+        }
+    }
+    latch_.count_down();
+}
+
+auto foskv::rpc::RpcConsumer::close() -> kosio::async::Task<> {
+    co_await stream_.close();
+    co_await latch_.wait();
 }

@@ -46,37 +46,41 @@ struct TableStruct_rpc_2eproto {
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_rpc_2eproto;
 namespace foskv {
 namespace rpc {
-class RpcHeader;
-struct RpcHeaderDefaultTypeInternal;
-extern RpcHeaderDefaultTypeInternal _RpcHeader_default_instance_;
+class RequestHeader;
+struct RequestHeaderDefaultTypeInternal;
+extern RequestHeaderDefaultTypeInternal _RequestHeader_default_instance_;
+class ResponseHeader;
+struct ResponseHeaderDefaultTypeInternal;
+extern ResponseHeaderDefaultTypeInternal _ResponseHeader_default_instance_;
 }  // namespace rpc
 }  // namespace foskv
 PROTOBUF_NAMESPACE_OPEN
-template<> ::foskv::rpc::RpcHeader* Arena::CreateMaybeMessage<::foskv::rpc::RpcHeader>(Arena*);
+template<> ::foskv::rpc::RequestHeader* Arena::CreateMaybeMessage<::foskv::rpc::RequestHeader>(Arena*);
+template<> ::foskv::rpc::ResponseHeader* Arena::CreateMaybeMessage<::foskv::rpc::ResponseHeader>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace foskv {
 namespace rpc {
 
 // ===================================================================
 
-class RpcHeader final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.RpcHeader) */ {
+class RequestHeader final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.RequestHeader) */ {
  public:
-  inline RpcHeader() : RpcHeader(nullptr) {}
-  ~RpcHeader() override;
-  explicit PROTOBUF_CONSTEXPR RpcHeader(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+  inline RequestHeader() : RequestHeader(nullptr) {}
+  ~RequestHeader() override;
+  explicit PROTOBUF_CONSTEXPR RequestHeader(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
 
-  RpcHeader(const RpcHeader& from);
-  RpcHeader(RpcHeader&& from) noexcept
-    : RpcHeader() {
+  RequestHeader(const RequestHeader& from);
+  RequestHeader(RequestHeader&& from) noexcept
+    : RequestHeader() {
     *this = ::std::move(from);
   }
 
-  inline RpcHeader& operator=(const RpcHeader& from) {
+  inline RequestHeader& operator=(const RequestHeader& from) {
     CopyFrom(from);
     return *this;
   }
-  inline RpcHeader& operator=(RpcHeader&& from) noexcept {
+  inline RequestHeader& operator=(RequestHeader&& from) noexcept {
     if (this == &from) return *this;
     if (GetOwningArena() == from.GetOwningArena()
   #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
@@ -99,20 +103,20 @@ class RpcHeader final :
   static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const RpcHeader& default_instance() {
+  static const RequestHeader& default_instance() {
     return *internal_default_instance();
   }
-  static inline const RpcHeader* internal_default_instance() {
-    return reinterpret_cast<const RpcHeader*>(
-               &_RpcHeader_default_instance_);
+  static inline const RequestHeader* internal_default_instance() {
+    return reinterpret_cast<const RequestHeader*>(
+               &_RequestHeader_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     0;
 
-  friend void swap(RpcHeader& a, RpcHeader& b) {
+  friend void swap(RequestHeader& a, RequestHeader& b) {
     a.Swap(&b);
   }
-  inline void Swap(RpcHeader* other) {
+  inline void Swap(RequestHeader* other) {
     if (other == this) return;
   #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
     if (GetOwningArena() != nullptr &&
@@ -125,7 +129,7 @@ class RpcHeader final :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(RpcHeader* other) {
+  void UnsafeArenaSwap(RequestHeader* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
     InternalSwap(other);
@@ -133,14 +137,14 @@ class RpcHeader final :
 
   // implements Message ----------------------------------------------
 
-  RpcHeader* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<RpcHeader>(arena);
+  RequestHeader* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<RequestHeader>(arena);
   }
   using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const RpcHeader& from);
+  void CopyFrom(const RequestHeader& from);
   using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const RpcHeader& from) {
-    RpcHeader::MergeImpl(*this, from);
+  void MergeFrom( const RequestHeader& from) {
+    RequestHeader::MergeImpl(*this, from);
   }
   private:
   static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
@@ -158,15 +162,15 @@ class RpcHeader final :
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(RpcHeader* other);
+  void InternalSwap(RequestHeader* other);
 
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "foskv.rpc.RpcHeader";
+    return "foskv.rpc.RequestHeader";
   }
   protected:
-  explicit RpcHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+  explicit RequestHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                        bool is_message_owned = false);
   public:
 
@@ -180,11 +184,12 @@ class RpcHeader final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kServiceNameFieldNumber = 1,
-    kMethodNameFieldNumber = 2,
-    kPayloadLengthFieldNumber = 3,
+    kServiceNameFieldNumber = 2,
+    kMethodNameFieldNumber = 3,
+    kRequestIdFieldNumber = 1,
+    kPayloadSizeFieldNumber = 4,
   };
-  // bytes service_name = 1;
+  // bytes service_name = 2;
   void clear_service_name();
   const std::string& service_name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -198,7 +203,7 @@ class RpcHeader final :
   std::string* _internal_mutable_service_name();
   public:
 
-  // bytes method_name = 2;
+  // bytes method_name = 3;
   void clear_method_name();
   const std::string& method_name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -212,16 +217,25 @@ class RpcHeader final :
   std::string* _internal_mutable_method_name();
   public:
 
-  // uint32 payload_length = 3;
-  void clear_payload_length();
-  uint32_t payload_length() const;
-  void set_payload_length(uint32_t value);
+  // uint64 request_id = 1;
+  void clear_request_id();
+  uint64_t request_id() const;
+  void set_request_id(uint64_t value);
   private:
-  uint32_t _internal_payload_length() const;
-  void _internal_set_payload_length(uint32_t value);
+  uint64_t _internal_request_id() const;
+  void _internal_set_request_id(uint64_t value);
   public:
 
-  // @@protoc_insertion_point(class_scope:foskv.rpc.RpcHeader)
+  // uint32 payload_size = 4;
+  void clear_payload_size();
+  uint32_t payload_size() const;
+  void set_payload_size(uint32_t value);
+  private:
+  uint32_t _internal_payload_size() const;
+  void _internal_set_payload_size(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:foskv.rpc.RequestHeader)
  private:
   class _Internal;
 
@@ -231,7 +245,167 @@ class RpcHeader final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr service_name_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr method_name_;
-    uint32_t payload_length_;
+    uint64_t request_id_;
+    uint32_t payload_size_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_rpc_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ResponseHeader final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.ResponseHeader) */ {
+ public:
+  inline ResponseHeader() : ResponseHeader(nullptr) {}
+  ~ResponseHeader() override;
+  explicit PROTOBUF_CONSTEXPR ResponseHeader(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ResponseHeader(const ResponseHeader& from);
+  ResponseHeader(ResponseHeader&& from) noexcept
+    : ResponseHeader() {
+    *this = ::std::move(from);
+  }
+
+  inline ResponseHeader& operator=(const ResponseHeader& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ResponseHeader& operator=(ResponseHeader&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ResponseHeader& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ResponseHeader* internal_default_instance() {
+    return reinterpret_cast<const ResponseHeader*>(
+               &_ResponseHeader_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    1;
+
+  friend void swap(ResponseHeader& a, ResponseHeader& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ResponseHeader* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ResponseHeader* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ResponseHeader* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ResponseHeader>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ResponseHeader& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ResponseHeader& from) {
+    ResponseHeader::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ResponseHeader* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "foskv.rpc.ResponseHeader";
+  }
+  protected:
+  explicit ResponseHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kRequestIdFieldNumber = 1,
+    kPayloadSizeFieldNumber = 2,
+  };
+  // uint64 request_id = 1;
+  void clear_request_id();
+  uint64_t request_id() const;
+  void set_request_id(uint64_t value);
+  private:
+  uint64_t _internal_request_id() const;
+  void _internal_set_request_id(uint64_t value);
+  public:
+
+  // uint32 payload_size = 2;
+  void clear_payload_size();
+  uint32_t payload_size() const;
+  void set_payload_size(uint32_t value);
+  private:
+  uint32_t _internal_payload_size() const;
+  void _internal_set_payload_size(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:foskv.rpc.ResponseHeader)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint64_t request_id_;
+    uint32_t payload_size_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -246,44 +420,64 @@ class RpcHeader final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// RpcHeader
+// RequestHeader
 
-// bytes service_name = 1;
-inline void RpcHeader::clear_service_name() {
+// uint64 request_id = 1;
+inline void RequestHeader::clear_request_id() {
+  _impl_.request_id_ = uint64_t{0u};
+}
+inline uint64_t RequestHeader::_internal_request_id() const {
+  return _impl_.request_id_;
+}
+inline uint64_t RequestHeader::request_id() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.RequestHeader.request_id)
+  return _internal_request_id();
+}
+inline void RequestHeader::_internal_set_request_id(uint64_t value) {
+  
+  _impl_.request_id_ = value;
+}
+inline void RequestHeader::set_request_id(uint64_t value) {
+  _internal_set_request_id(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.RequestHeader.request_id)
+}
+
+// bytes service_name = 2;
+inline void RequestHeader::clear_service_name() {
   _impl_.service_name_.ClearToEmpty();
 }
-inline const std::string& RpcHeader::service_name() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.service_name)
+inline const std::string& RequestHeader::service_name() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.RequestHeader.service_name)
   return _internal_service_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void RpcHeader::set_service_name(ArgT0&& arg0, ArgT... args) {
+void RequestHeader::set_service_name(ArgT0&& arg0, ArgT... args) {
  
  _impl_.service_name_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.service_name)
+  // @@protoc_insertion_point(field_set:foskv.rpc.RequestHeader.service_name)
 }
-inline std::string* RpcHeader::mutable_service_name() {
+inline std::string* RequestHeader::mutable_service_name() {
   std::string* _s = _internal_mutable_service_name();
-  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcHeader.service_name)
+  // @@protoc_insertion_point(field_mutable:foskv.rpc.RequestHeader.service_name)
   return _s;
 }
-inline const std::string& RpcHeader::_internal_service_name() const {
+inline const std::string& RequestHeader::_internal_service_name() const {
   return _impl_.service_name_.Get();
 }
-inline void RpcHeader::_internal_set_service_name(const std::string& value) {
+inline void RequestHeader::_internal_set_service_name(const std::string& value) {
   
   _impl_.service_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* RpcHeader::_internal_mutable_service_name() {
+inline std::string* RequestHeader::_internal_mutable_service_name() {
   
   return _impl_.service_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* RpcHeader::release_service_name() {
-  // @@protoc_insertion_point(field_release:foskv.rpc.RpcHeader.service_name)
+inline std::string* RequestHeader::release_service_name() {
+  // @@protoc_insertion_point(field_release:foskv.rpc.RequestHeader.service_name)
   return _impl_.service_name_.Release();
 }
-inline void RpcHeader::set_allocated_service_name(std::string* service_name) {
+inline void RequestHeader::set_allocated_service_name(std::string* service_name) {
   if (service_name != nullptr) {
     
   } else {
@@ -295,45 +489,45 @@ inline void RpcHeader::set_allocated_service_name(std::string* service_name) {
     _impl_.service_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcHeader.service_name)
+  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RequestHeader.service_name)
 }
 
-// bytes method_name = 2;
-inline void RpcHeader::clear_method_name() {
+// bytes method_name = 3;
+inline void RequestHeader::clear_method_name() {
   _impl_.method_name_.ClearToEmpty();
 }
-inline const std::string& RpcHeader::method_name() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.method_name)
+inline const std::string& RequestHeader::method_name() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.RequestHeader.method_name)
   return _internal_method_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void RpcHeader::set_method_name(ArgT0&& arg0, ArgT... args) {
+void RequestHeader::set_method_name(ArgT0&& arg0, ArgT... args) {
  
  _impl_.method_name_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.method_name)
+  // @@protoc_insertion_point(field_set:foskv.rpc.RequestHeader.method_name)
 }
-inline std::string* RpcHeader::mutable_method_name() {
+inline std::string* RequestHeader::mutable_method_name() {
   std::string* _s = _internal_mutable_method_name();
-  // @@protoc_insertion_point(field_mutable:foskv.rpc.RpcHeader.method_name)
+  // @@protoc_insertion_point(field_mutable:foskv.rpc.RequestHeader.method_name)
   return _s;
 }
-inline const std::string& RpcHeader::_internal_method_name() const {
+inline const std::string& RequestHeader::_internal_method_name() const {
   return _impl_.method_name_.Get();
 }
-inline void RpcHeader::_internal_set_method_name(const std::string& value) {
+inline void RequestHeader::_internal_set_method_name(const std::string& value) {
   
   _impl_.method_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* RpcHeader::_internal_mutable_method_name() {
+inline std::string* RequestHeader::_internal_mutable_method_name() {
   
   return _impl_.method_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* RpcHeader::release_method_name() {
-  // @@protoc_insertion_point(field_release:foskv.rpc.RpcHeader.method_name)
+inline std::string* RequestHeader::release_method_name() {
+  // @@protoc_insertion_point(field_release:foskv.rpc.RequestHeader.method_name)
   return _impl_.method_name_.Release();
 }
-inline void RpcHeader::set_allocated_method_name(std::string* method_name) {
+inline void RequestHeader::set_allocated_method_name(std::string* method_name) {
   if (method_name != nullptr) {
     
   } else {
@@ -345,32 +539,78 @@ inline void RpcHeader::set_allocated_method_name(std::string* method_name) {
     _impl_.method_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcHeader.method_name)
+  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RequestHeader.method_name)
 }
 
-// uint32 payload_length = 3;
-inline void RpcHeader::clear_payload_length() {
-  _impl_.payload_length_ = 0u;
+// uint32 payload_size = 4;
+inline void RequestHeader::clear_payload_size() {
+  _impl_.payload_size_ = 0u;
 }
-inline uint32_t RpcHeader::_internal_payload_length() const {
-  return _impl_.payload_length_;
+inline uint32_t RequestHeader::_internal_payload_size() const {
+  return _impl_.payload_size_;
 }
-inline uint32_t RpcHeader::payload_length() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.payload_length)
-  return _internal_payload_length();
+inline uint32_t RequestHeader::payload_size() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.RequestHeader.payload_size)
+  return _internal_payload_size();
 }
-inline void RpcHeader::_internal_set_payload_length(uint32_t value) {
+inline void RequestHeader::_internal_set_payload_size(uint32_t value) {
   
-  _impl_.payload_length_ = value;
+  _impl_.payload_size_ = value;
 }
-inline void RpcHeader::set_payload_length(uint32_t value) {
-  _internal_set_payload_length(value);
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.payload_length)
+inline void RequestHeader::set_payload_size(uint32_t value) {
+  _internal_set_payload_size(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.RequestHeader.payload_size)
+}
+
+// -------------------------------------------------------------------
+
+// ResponseHeader
+
+// uint64 request_id = 1;
+inline void ResponseHeader::clear_request_id() {
+  _impl_.request_id_ = uint64_t{0u};
+}
+inline uint64_t ResponseHeader::_internal_request_id() const {
+  return _impl_.request_id_;
+}
+inline uint64_t ResponseHeader::request_id() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.request_id)
+  return _internal_request_id();
+}
+inline void ResponseHeader::_internal_set_request_id(uint64_t value) {
+  
+  _impl_.request_id_ = value;
+}
+inline void ResponseHeader::set_request_id(uint64_t value) {
+  _internal_set_request_id(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.ResponseHeader.request_id)
+}
+
+// uint32 payload_size = 2;
+inline void ResponseHeader::clear_payload_size() {
+  _impl_.payload_size_ = 0u;
+}
+inline uint32_t ResponseHeader::_internal_payload_size() const {
+  return _impl_.payload_size_;
+}
+inline uint32_t ResponseHeader::payload_size() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.payload_size)
+  return _internal_payload_size();
+}
+inline void ResponseHeader::_internal_set_payload_size(uint32_t value) {
+  
+  _impl_.payload_size_ = value;
+}
+inline void ResponseHeader::set_payload_size(uint32_t value) {
+  _internal_set_payload_size(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.ResponseHeader.payload_size)
 }
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 
 // @@protoc_insertion_point(namespace_scope)
 

@@ -22,56 +22,84 @@ namespace _pbi = _pb::internal;
 
 namespace foskv {
 namespace rpc {
-PROTOBUF_CONSTEXPR RpcHeader::RpcHeader(
+PROTOBUF_CONSTEXPR RequestHeader::RequestHeader(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.service_name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.method_name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.payload_length_)*/0u
+  , /*decltype(_impl_.request_id_)*/uint64_t{0u}
+  , /*decltype(_impl_.payload_size_)*/0u
   , /*decltype(_impl_._cached_size_)*/{}} {}
-struct RpcHeaderDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR RpcHeaderDefaultTypeInternal()
+struct RequestHeaderDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR RequestHeaderDefaultTypeInternal()
       : _instance(::_pbi::ConstantInitialized{}) {}
-  ~RpcHeaderDefaultTypeInternal() {}
+  ~RequestHeaderDefaultTypeInternal() {}
   union {
-    RpcHeader _instance;
+    RequestHeader _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RpcHeaderDefaultTypeInternal _RpcHeader_default_instance_;
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RequestHeaderDefaultTypeInternal _RequestHeader_default_instance_;
+PROTOBUF_CONSTEXPR ResponseHeader::ResponseHeader(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.request_id_)*/uint64_t{0u}
+  , /*decltype(_impl_.payload_size_)*/0u
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ResponseHeaderDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ResponseHeaderDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ResponseHeaderDefaultTypeInternal() {}
+  union {
+    ResponseHeader _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ResponseHeaderDefaultTypeInternal _ResponseHeader_default_instance_;
 }  // namespace rpc
 }  // namespace foskv
-static ::_pb::Metadata file_level_metadata_rpc_2eproto[1];
+static ::_pb::Metadata file_level_metadata_rpc_2eproto[2];
 static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_rpc_2eproto = nullptr;
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_rpc_2eproto = nullptr;
 
 const uint32_t TableStruct_rpc_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RpcHeader, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RequestHeader, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RpcHeader, _impl_.service_name_),
-  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RpcHeader, _impl_.method_name_),
-  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RpcHeader, _impl_.payload_length_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RequestHeader, _impl_.request_id_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RequestHeader, _impl_.service_name_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RequestHeader, _impl_.method_name_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::RequestHeader, _impl_.payload_size_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.request_id_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.payload_size_),
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, -1, sizeof(::foskv::rpc::RpcHeader)},
+  { 0, -1, -1, sizeof(::foskv::rpc::RequestHeader)},
+  { 10, -1, -1, sizeof(::foskv::rpc::ResponseHeader)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
-  &::foskv::rpc::_RpcHeader_default_instance_._instance,
+  &::foskv::rpc::_RequestHeader_default_instance_._instance,
+  &::foskv::rpc::_ResponseHeader_default_instance_._instance,
 };
 
 const char descriptor_table_protodef_rpc_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\trpc.proto\022\tfoskv.rpc\"N\n\tRpcHeader\022\024\n\014s"
-  "ervice_name\030\001 \001(\014\022\023\n\013method_name\030\002 \001(\014\022\026"
-  "\n\016payload_length\030\003 \001(\rb\006proto3"
+  "\n\trpc.proto\022\tfoskv.rpc\"d\n\rRequestHeader\022"
+  "\022\n\nrequest_id\030\001 \001(\004\022\024\n\014service_name\030\002 \001("
+  "\014\022\023\n\013method_name\030\003 \001(\014\022\024\n\014payload_size\030\004"
+  " \001(\r\":\n\016ResponseHeader\022\022\n\nrequest_id\030\001 \001"
+  "(\004\022\024\n\014payload_size\030\002 \001(\rb\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_rpc_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_rpc_2eproto = {
-    false, false, 110, descriptor_table_protodef_rpc_2eproto,
+    false, false, 192, descriptor_table_protodef_rpc_2eproto,
     "rpc.proto",
-    &descriptor_table_rpc_2eproto_once, nullptr, 0, 1,
+    &descriptor_table_rpc_2eproto_once, nullptr, 0, 2,
     schemas, file_default_instances, TableStruct_rpc_2eproto::offsets,
     file_level_metadata_rpc_2eproto, file_level_enum_descriptors_rpc_2eproto,
     file_level_service_descriptors_rpc_2eproto,
@@ -87,23 +115,24 @@ namespace rpc {
 
 // ===================================================================
 
-class RpcHeader::_Internal {
+class RequestHeader::_Internal {
  public:
 };
 
-RpcHeader::RpcHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+RequestHeader::RequestHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
   SharedCtor(arena, is_message_owned);
-  // @@protoc_insertion_point(arena_constructor:foskv.rpc.RpcHeader)
+  // @@protoc_insertion_point(arena_constructor:foskv.rpc.RequestHeader)
 }
-RpcHeader::RpcHeader(const RpcHeader& from)
+RequestHeader::RequestHeader(const RequestHeader& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
-  RpcHeader* const _this = this; (void)_this;
+  RequestHeader* const _this = this; (void)_this;
   new (&_impl_) Impl_{
       decltype(_impl_.service_name_){}
     , decltype(_impl_.method_name_){}
-    , decltype(_impl_.payload_length_){}
+    , decltype(_impl_.request_id_){}
+    , decltype(_impl_.payload_size_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -123,18 +152,21 @@ RpcHeader::RpcHeader(const RpcHeader& from)
     _this->_impl_.method_name_.Set(from._internal_method_name(), 
       _this->GetArenaForAllocation());
   }
-  _this->_impl_.payload_length_ = from._impl_.payload_length_;
-  // @@protoc_insertion_point(copy_constructor:foskv.rpc.RpcHeader)
+  ::memcpy(&_impl_.request_id_, &from._impl_.request_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.payload_size_) -
+    reinterpret_cast<char*>(&_impl_.request_id_)) + sizeof(_impl_.payload_size_));
+  // @@protoc_insertion_point(copy_constructor:foskv.rpc.RequestHeader)
 }
 
-inline void RpcHeader::SharedCtor(
+inline void RequestHeader::SharedCtor(
     ::_pb::Arena* arena, bool is_message_owned) {
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
       decltype(_impl_.service_name_){}
     , decltype(_impl_.method_name_){}
-    , decltype(_impl_.payload_length_){0u}
+    , decltype(_impl_.request_id_){uint64_t{0u}}
+    , decltype(_impl_.payload_size_){0u}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.service_name_.InitDefault();
@@ -147,8 +179,8 @@ inline void RpcHeader::SharedCtor(
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
-RpcHeader::~RpcHeader() {
-  // @@protoc_insertion_point(destructor:foskv.rpc.RpcHeader)
+RequestHeader::~RequestHeader() {
+  // @@protoc_insertion_point(destructor:foskv.rpc.RequestHeader)
   if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
   (void)arena;
     return;
@@ -156,56 +188,66 @@ RpcHeader::~RpcHeader() {
   SharedDtor();
 }
 
-inline void RpcHeader::SharedDtor() {
+inline void RequestHeader::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.service_name_.Destroy();
   _impl_.method_name_.Destroy();
 }
 
-void RpcHeader::SetCachedSize(int size) const {
+void RequestHeader::SetCachedSize(int size) const {
   _impl_._cached_size_.Set(size);
 }
 
-void RpcHeader::Clear() {
-// @@protoc_insertion_point(message_clear_start:foskv.rpc.RpcHeader)
+void RequestHeader::Clear() {
+// @@protoc_insertion_point(message_clear_start:foskv.rpc.RequestHeader)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   _impl_.service_name_.ClearToEmpty();
   _impl_.method_name_.ClearToEmpty();
-  _impl_.payload_length_ = 0u;
+  ::memset(&_impl_.request_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.payload_size_) -
+      reinterpret_cast<char*>(&_impl_.request_id_)) + sizeof(_impl_.payload_size_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* RpcHeader::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+const char* RequestHeader::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // bytes service_name = 1;
+      // uint64 request_id = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.request_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // bytes service_name = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           auto str = _internal_mutable_service_name();
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // bytes method_name = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+      // bytes method_name = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           auto str = _internal_mutable_method_name();
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // uint32 payload_length = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.payload_length_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+      // uint32 payload_size = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.payload_size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -233,79 +275,90 @@ failure:
 #undef CHK_
 }
 
-uint8_t* RpcHeader::_InternalSerialize(
+uint8_t* RequestHeader::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:foskv.rpc.RpcHeader)
+  // @@protoc_insertion_point(serialize_to_array_start:foskv.rpc.RequestHeader)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // bytes service_name = 1;
+  // uint64 request_id = 1;
+  if (this->_internal_request_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_request_id(), target);
+  }
+
+  // bytes service_name = 2;
   if (!this->_internal_service_name().empty()) {
     target = stream->WriteBytesMaybeAliased(
-        1, this->_internal_service_name(), target);
+        2, this->_internal_service_name(), target);
   }
 
-  // bytes method_name = 2;
+  // bytes method_name = 3;
   if (!this->_internal_method_name().empty()) {
     target = stream->WriteBytesMaybeAliased(
-        2, this->_internal_method_name(), target);
+        3, this->_internal_method_name(), target);
   }
 
-  // uint32 payload_length = 3;
-  if (this->_internal_payload_length() != 0) {
+  // uint32 payload_size = 4;
+  if (this->_internal_payload_size() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(3, this->_internal_payload_length(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(4, this->_internal_payload_size(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:foskv.rpc.RpcHeader)
+  // @@protoc_insertion_point(serialize_to_array_end:foskv.rpc.RequestHeader)
   return target;
 }
 
-size_t RpcHeader::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:foskv.rpc.RpcHeader)
+size_t RequestHeader::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:foskv.rpc.RequestHeader)
   size_t total_size = 0;
 
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // bytes service_name = 1;
+  // bytes service_name = 2;
   if (!this->_internal_service_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
         this->_internal_service_name());
   }
 
-  // bytes method_name = 2;
+  // bytes method_name = 3;
   if (!this->_internal_method_name().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
         this->_internal_method_name());
   }
 
-  // uint32 payload_length = 3;
-  if (this->_internal_payload_length() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_payload_length());
+  // uint64 request_id = 1;
+  if (this->_internal_request_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_request_id());
+  }
+
+  // uint32 payload_size = 4;
+  if (this->_internal_payload_size() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_payload_size());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData RpcHeader::_class_data_ = {
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData RequestHeader::_class_data_ = {
     ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
-    RpcHeader::MergeImpl
+    RequestHeader::MergeImpl
 };
-const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*RpcHeader::GetClassData() const { return &_class_data_; }
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*RequestHeader::GetClassData() const { return &_class_data_; }
 
 
-void RpcHeader::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
-  auto* const _this = static_cast<RpcHeader*>(&to_msg);
-  auto& from = static_cast<const RpcHeader&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:foskv.rpc.RpcHeader)
+void RequestHeader::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<RequestHeader*>(&to_msg);
+  auto& from = static_cast<const RequestHeader&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:foskv.rpc.RequestHeader)
   GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
@@ -316,24 +369,27 @@ void RpcHeader::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROT
   if (!from._internal_method_name().empty()) {
     _this->_internal_set_method_name(from._internal_method_name());
   }
-  if (from._internal_payload_length() != 0) {
-    _this->_internal_set_payload_length(from._internal_payload_length());
+  if (from._internal_request_id() != 0) {
+    _this->_internal_set_request_id(from._internal_request_id());
+  }
+  if (from._internal_payload_size() != 0) {
+    _this->_internal_set_payload_size(from._internal_payload_size());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
-void RpcHeader::CopyFrom(const RpcHeader& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:foskv.rpc.RpcHeader)
+void RequestHeader::CopyFrom(const RequestHeader& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:foskv.rpc.RequestHeader)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool RpcHeader::IsInitialized() const {
+bool RequestHeader::IsInitialized() const {
   return true;
 }
 
-void RpcHeader::InternalSwap(RpcHeader* other) {
+void RequestHeader::InternalSwap(RequestHeader* other) {
   using std::swap;
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
@@ -346,22 +402,242 @@ void RpcHeader::InternalSwap(RpcHeader* other) {
       &_impl_.method_name_, lhs_arena,
       &other->_impl_.method_name_, rhs_arena
   );
-  swap(_impl_.payload_length_, other->_impl_.payload_length_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(RequestHeader, _impl_.payload_size_)
+      + sizeof(RequestHeader::_impl_.payload_size_)
+      - PROTOBUF_FIELD_OFFSET(RequestHeader, _impl_.request_id_)>(
+          reinterpret_cast<char*>(&_impl_.request_id_),
+          reinterpret_cast<char*>(&other->_impl_.request_id_));
 }
 
-::PROTOBUF_NAMESPACE_ID::Metadata RpcHeader::GetMetadata() const {
+::PROTOBUF_NAMESPACE_ID::Metadata RequestHeader::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_rpc_2eproto_getter, &descriptor_table_rpc_2eproto_once,
       file_level_metadata_rpc_2eproto[0]);
+}
+
+// ===================================================================
+
+class ResponseHeader::_Internal {
+ public:
+};
+
+ResponseHeader::ResponseHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:foskv.rpc.ResponseHeader)
+}
+ResponseHeader::ResponseHeader(const ResponseHeader& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  ResponseHeader* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.request_id_){}
+    , decltype(_impl_.payload_size_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::memcpy(&_impl_.request_id_, &from._impl_.request_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.payload_size_) -
+    reinterpret_cast<char*>(&_impl_.request_id_)) + sizeof(_impl_.payload_size_));
+  // @@protoc_insertion_point(copy_constructor:foskv.rpc.ResponseHeader)
+}
+
+inline void ResponseHeader::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.request_id_){uint64_t{0u}}
+    , decltype(_impl_.payload_size_){0u}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+ResponseHeader::~ResponseHeader() {
+  // @@protoc_insertion_point(destructor:foskv.rpc.ResponseHeader)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void ResponseHeader::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void ResponseHeader::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void ResponseHeader::Clear() {
+// @@protoc_insertion_point(message_clear_start:foskv.rpc.ResponseHeader)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.request_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.payload_size_) -
+      reinterpret_cast<char*>(&_impl_.request_id_)) + sizeof(_impl_.payload_size_));
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* ResponseHeader::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // uint64 request_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.request_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint32 payload_size = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.payload_size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* ResponseHeader::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:foskv.rpc.ResponseHeader)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint64 request_id = 1;
+  if (this->_internal_request_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_request_id(), target);
+  }
+
+  // uint32 payload_size = 2;
+  if (this->_internal_payload_size() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(2, this->_internal_payload_size(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:foskv.rpc.ResponseHeader)
+  return target;
+}
+
+size_t ResponseHeader::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:foskv.rpc.ResponseHeader)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // uint64 request_id = 1;
+  if (this->_internal_request_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_request_id());
+  }
+
+  // uint32 payload_size = 2;
+  if (this->_internal_payload_size() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_payload_size());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData ResponseHeader::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    ResponseHeader::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*ResponseHeader::GetClassData() const { return &_class_data_; }
+
+
+void ResponseHeader::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<ResponseHeader*>(&to_msg);
+  auto& from = static_cast<const ResponseHeader&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:foskv.rpc.ResponseHeader)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_request_id() != 0) {
+    _this->_internal_set_request_id(from._internal_request_id());
+  }
+  if (from._internal_payload_size() != 0) {
+    _this->_internal_set_payload_size(from._internal_payload_size());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void ResponseHeader::CopyFrom(const ResponseHeader& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:foskv.rpc.ResponseHeader)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ResponseHeader::IsInitialized() const {
+  return true;
+}
+
+void ResponseHeader::InternalSwap(ResponseHeader* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ResponseHeader, _impl_.payload_size_)
+      + sizeof(ResponseHeader::_impl_.payload_size_)
+      - PROTOBUF_FIELD_OFFSET(ResponseHeader, _impl_.request_id_)>(
+          reinterpret_cast<char*>(&_impl_.request_id_),
+          reinterpret_cast<char*>(&other->_impl_.request_id_));
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata ResponseHeader::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_rpc_2eproto_getter, &descriptor_table_rpc_2eproto_once,
+      file_level_metadata_rpc_2eproto[1]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace rpc
 }  // namespace foskv
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::foskv::rpc::RpcHeader*
-Arena::CreateMaybeMessage< ::foskv::rpc::RpcHeader >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::foskv::rpc::RpcHeader >(arena);
+template<> PROTOBUF_NOINLINE ::foskv::rpc::RequestHeader*
+Arena::CreateMaybeMessage< ::foskv::rpc::RequestHeader >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::foskv::rpc::RequestHeader >(arena);
+}
+template<> PROTOBUF_NOINLINE ::foskv::rpc::ResponseHeader*
+Arena::CreateMaybeMessage< ::foskv::rpc::ResponseHeader >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::foskv::rpc::ResponseHeader >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

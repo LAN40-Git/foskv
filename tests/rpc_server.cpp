@@ -20,6 +20,6 @@ auto main() -> int {
         st.RpcDelete(payload, response);
     });
 
-    provider.run();
+    kosio::runtime::MultiThreadBuilder::default_create().block_on(provider.event_loop());
     return 0;
 }

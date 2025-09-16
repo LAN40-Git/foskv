@@ -1,2 +1,2 @@
-file(GLOB SRC_FILES "*.cpp" "*.cc")
-set(STORAGE_FILES ${SRC_FILES} PARENT_SCOPE)
+file(GLOB FILES "*.cpp" "*.cc")
+set(STORAGE_FILES ${FILES} PARENT_SCOPE)

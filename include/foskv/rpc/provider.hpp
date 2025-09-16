@@ -1,10 +1,6 @@
 #pragma once
-#include "foskv/common/error.hpp"
-#include "foskv/rpc/rpc.pb.h"
-#include <functional>
-#include <unordered_map>
-#include <kosio/core.hpp>
-#include <kosio/net.hpp>
+#include "foskv/rpc/util.hpp"
+#include <kosio/signal/signal.hpp>
 
 namespace foskv::rpc {
 class RpcProvider {
@@ -15,11 +11,15 @@ public:
         : host_(host), port_(port) {}
 
 public:
+    // Use kosio runtime to block on.
+    auto event_loop() -> kosio::async::Task<>;
+
+public:
     void register_invoke(const std::string& service_name,
         const std::string& method_name, const Invoke &invoke);
-    void run();
 
 private:
+    auto run() -> kosio::async::Task<>;
     auto handle_rpc(kosio::net::TcpStream stream) -> kosio::async::Task<>;
     auto invoke(const std::string& service_name, const std::string& method_name,
         std::string_view payload) -> RpcResult<std::string>;

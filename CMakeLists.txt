@@ -26,6 +26,11 @@ if (RocksDB_FOUND)
     message(STATUS "RocksDB version: ${RocksDB_VERSION}")
 endif ()
 
+find_package(TBB REQUIRED)
+if (TBB_FOUND)
+    message(STATUS "TBB version: ${TBB_VERSION}")
+endif ()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # ====== LIBRARY ======
@@ -43,10 +48,17 @@ set(DEPEND_LIBS
         ${PROTOBUF_LIBRARIES}
         ${LIBURING_LIBRARIES}
         ${ROCKSDB_LIBRARIES}
+        tbb
 )
 
 add_subdirectory(src/rpc)
 add_subdirectory(src/storage)
+
+set(SRC_FILES
+        ${RAFT_FILES}
+        ${RPC_FILES}
+        ${STORAGE_FILES}
+)
 
 # ====== TEST ======
 add_subdirectory(tests)

@@ -70,6 +70,7 @@ public:
         kConnectFailed,
         kSendFailed,
         kReceiveFailed,
+        kMessageTooLarge,
     };
 
 public:
@@ -94,6 +95,8 @@ public:
                 return "Failed to send message.";
             case kReceiveFailed:
                 return "Failed to receive message.";
+            case kMessageTooLarge:
+                return "Message too large.";
             default:
                 return strerror(error_code_);
         }
