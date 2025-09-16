@@ -1,52 +1,69 @@
 #pragma once
 #include "foskv/rpc/util.hpp"
+#include "foskv/rpc/config.hpp"
 #include <kosio/sync.hpp>
 #include <tbb/concurrent_unordered_map.h>
 
 namespace foskv::rpc {
+using RpcCallback = std::function<kosio::async::Task<>(RpcResult<std::string_view> has_response)>;
 // One RpcConsumer will approximately cost 8MB
-// Remember to co_await close(), otherwise,
+// Remember to co_await shutdown(), otherwise,
 // there is a risk of the program crashing
 class RpcConsumer {
+    using RpcCallbackMap = tbb::concurrent_unordered_map<uint64_t, RpcCallback>;
 public:
-    explicit RpcConsumer(kosio::net::TcpStream&& stream)
-        : buffer_(4 * 1024 * 1024) // 4MB
-        , stream_(std::move(stream)) {
-        server_addr_ = stream_.peer_addr().value();
-        LOG_INFO("Connected to {}", server_addr_);
-        kosio::spawn(run());
-    }
-
-    // Remeber to co_await close.
-    ~RpcConsumer() = default;
+    explicit RpcConsumer(kosio::net::TcpStream&& stream);
+    ~RpcConsumer();
 
 public:
+    /// @brief Asynchronously connect to the rpc server
+    /// @param host Host of the rpc server
+    /// @param port Port of the rpc server
+    /// @return An unique wrapped RpcConsumer
     static auto connect(std::string_view host, uint16_t port)
     -> kosio::async::Task<RpcResult<std::unique_ptr<RpcConsumer>>>;
 
 public:
-    /// Call a rpc method, thread safe.
+    /// @brief Asynchronously send a rpc request and return
+    /// @param service_name Rpc service name
+    /// @param method_name Rpc method name
+    /// @param payload Serialized (protobuf) rpc request
+    /// @param callback Triggered when the corresponding reply is received
+    /// @return RpcError or void
+    /// @note Thread-safe
     [[REMEMBER_CO_AWAIT]]
     auto call(std::string&& service_name,
               std::string&& method_name,
               std::string&& payload,
-              detail::RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>>;
+              RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>>;
+
+    /// @brief Asynchronously shutdown and never use again
+    /// @return RpcError or void
+    /// @note Not thread-safe, never forget to call this method
     [[REMEMBER_CO_AWAIT]]
-    auto reconnect() -> kosio::async::Task<bool>;
-    /// This function must be called at the end!!!
-    [[REMEMBER_CO_AWAIT]]
-    auto close() -> kosio::async::Task<>;
+    auto shutdown() -> kosio::async::Task<>;
 
 private:
+    /// @brief Asynchronously recv rpc response and trigger the callback in `callbacks_`
+    /// @return A coroutine task
+    /// @note Use kosio::spawn(run())
     auto run() -> kosio::async::Task<>;
 
+    /// @brief Asynchronously reconnect to the rpc server
+    /// @return RpcError or void
+    /// @note Remember `co_await`, not thread-safe
+    [[REMEMBER_CO_AWAIT]]
+    auto reconnect() -> kosio::async::Task<RpcResult<void>>;
+
 private:
-    kosio::sync::Mutex                                           mutex_;
-    kosio::sync::Latch                                           latch_{1};
-    uint64_t                                                     request_id_{0};
-    std::vector<char>                                            buffer_;
-    kosio::net::TcpStream                                        stream_;
-    kosio::net::SocketAddr                                       server_addr_;
-    tbb::concurrent_unordered_map<uint64_t, detail::RpcCallback> callbacks_;
+    kosio::sync::Mutex     mutex_;
+    kosio::sync::Latch     latch_{1};
+    std::atomic<bool>      is_shutdown_{false};
+    std::atomic<bool>      is_running_{true};
+    uint64_t               request_id_{0};
+    std::vector<char>      buffer_;
+    kosio::net::TcpStream  stream_;
+    kosio::net::SocketAddr server_addr_{};
+    RpcCallbackMap         callbacks_;
 };
 } // namespace foskv::rpc

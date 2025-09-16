@@ -1,8 +1,25 @@
 #include "foskv/rpc/provider.hpp"
 
-auto foskv::rpc::RpcProvider::event_loop() -> kosio::async::Task<> {
-    kosio::spawn(run());
-    co_await kosio::signal::ctrl_c();
+auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<kosio::Result<kosio::Error>> {
+    auto has_addr = kosio::net::SocketAddr::parse(host_, port_);
+    if (!has_addr) [[unlikely]] {
+        co_return std::unexpected{has_addr.error()};
+    }
+    auto has_listener = kosio::net::TcpListener::bind(has_addr.value());
+    if (!has_listener) [[unlikely]] {
+        co_return std::unexpected{has_listener.error()};
+    }
+    auto listener = std::move(has_listener.value());
+    LOG_INFO("Listening on {}...", listener.local_addr().value());
+    while (true) {
+        auto has_stream = co_await listener.accept();
+        if (!has_stream) [[unlikely]] {
+            co_return std::unexpected{has_stream.error()};
+        }
+        auto& [stream, peer_addr] = has_stream.value();
+        LOG_INFO("Accept connection from {}", peer_addr);
+        kosio::spawn(handle_rpc(std::move(stream)));
+    }
 }
 
 void foskv::rpc::RpcProvider::register_invoke(
@@ -12,46 +29,17 @@ void foskv::rpc::RpcProvider::register_invoke(
     invokes_[service_name][method_name] = invoke;
 }
 
-auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<> {
-    auto has_addr = kosio::net::SocketAddr::parse(host_, port_);
-    if (!has_addr) {
-        LOG_ERROR("{}", has_addr.error());
-        co_return;
-    }
-    auto has_listener = kosio::net::TcpListener::bind(has_addr.value());
-    if (!has_listener) {
-        LOG_ERROR("{}", has_listener.error());
-        co_return;
-    }
-    auto listener = std::move(has_listener.value());
-    LOG_INFO("Listening on {}...", listener.local_addr().value());
-    while (true) {
-        auto has_stream = co_await listener.accept();
-        if (!has_stream) [[unlikely]] {
-            LOG_ERROR("{}", has_stream.error());
-            break;
-        }
-        auto& [stream, peer_addr] = has_stream.value();
-        LOG_INFO("Accept connection from {}", peer_addr);
-        kosio::spawn(handle_rpc(std::move(stream)));
-    }
-}
-
 auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
 -> kosio::async::Task<> {
-    std::vector<char> buffer(4 * 1024 * 1024);
-    auto peer_addr = stream.peer_addr().value_or(kosio::net::SocketAddr{});
+    std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
+    std::vector<char> resp_buffer(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         // Recv request header size
         uint32_t req_header_size_net;
-        auto recv_ret = co_await stream.read(
+        auto recv_ret = co_await stream.read_exact(
             {reinterpret_cast<char*>(&req_header_size_net), sizeof(uint32_t)});
-        if (!recv_ret || recv_ret.value() == 0) [[unlikely]] {
-            if (!recv_ret) {
-                LOG_ERROR("{}", recv_ret.error());
-            } else {
-                LOG_INFO("Connection closed {}", peer_addr);
-            }
+        if (!recv_ret) [[unlikely]] {
+            LOG_ERROR("{}", recv_ret.error());
             break;
         }
 
@@ -62,14 +50,10 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         }
 
         // Recv request header
-        recv_ret = co_await stream.read(
+        recv_ret = co_await stream.read_exact(
             {buffer.data(), req_header_size});
-        if (!recv_ret || recv_ret.value() == 0) [[unlikely]] {
-            if (!recv_ret) {
-                LOG_ERROR("{}", recv_ret.error());
-            } else {
-                LOG_INFO("Connection closed {}", peer_addr);
-            }
+        if (!recv_ret) [[unlikely]] {
+            LOG_ERROR("{}", recv_ret.error());
             break;
         }
 
@@ -86,38 +70,33 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         auto req_payload_size = req_header.payload_size();
 
         // Recv request payload
-        recv_ret = co_await stream.read(
+        recv_ret = co_await stream.read_exact(
             {buffer.data(), req_payload_size});
-        if (!recv_ret || recv_ret.value()) [[unlikely]] {
-            if (!recv_ret) {
-                LOG_ERROR("{}", recv_ret.error());
-            } else {
-                LOG_INFO("Connection closed {}", peer_addr);
-            }
+        if (!recv_ret) [[unlikely]] {
+            LOG_ERROR("{}", recv_ret.error());
             break;
         }
 
         // Invoke
-        auto has_resp_payload = invoke(service_name, method_name, {buffer.data(), req_payload_size});
+        auto has_resp_payload = invoke(service_name, method_name, {buffer.data(), req_payload_size}, {resp_buffer.data(), resp_buffer.capacity()});
         if (!has_resp_payload) [[unlikely]] {
             LOG_ERROR("{}", has_resp_payload.error());
-            break;
+            continue;
         }
-        auto& resp_payload = has_resp_payload.value();
-        auto resp_payload_size = resp_payload.size();
+        auto resp_payload_size = has_resp_payload.value();
+        if (resp_payload_size > buffer.capacity()) [[unlikely]] {
+            LOG_ERROR("Message too large : {}", resp_payload_size);
+            continue;
+        }
 
         // Make response header
         ResponseHeader resp_header;
         resp_header.set_request_id(request_id);
         resp_header.set_payload_size(resp_payload_size);
         auto resp_header_size = resp_header.ByteSizeLong();
-        if (resp_header_size > buffer.capacity()) [[unlikely]] {
-            LOG_ERROR("Message too large.");
-            break;
-        }
-        if (!resp_header.SerializeToArray(buffer.data(), resp_header_size)) {
+        if (!resp_header.SerializeToArray(buffer.data(), resp_header_size)) [[unlikely]] {
             LOG_ERROR("Failed to serialize response.");
-            break;
+            continue;
         }
 
         // Send [resp_header_len_net -> resp_header -> resp_payload]
@@ -126,7 +105,7 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         auto send_ret = co_await stream.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&resp_header_size_net), sizeof(uint32_t)),
             std::span<const char>(buffer.data(), resp_header_size),
-            std::span<const char>(resp_payload.data(), resp_payload_size)
+            std::span<const char>(resp_buffer.data(), resp_payload_size)
         );
 
         if (!send_ret) [[unlikely]] {
@@ -134,12 +113,14 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             break;
         }
     }
+    co_await stream.close();
 }
 
 auto foskv::rpc::RpcProvider::invoke(
     const std::string& service_name,
     const std::string& method_name,
-    std::string_view payload) -> RpcResult<std::string> {
+    std::string_view payload,
+    std::span<char> response) -> RpcResult<std::size_t> {
     auto service = invokes_.find(service_name);
     if (service == invokes_.end()) {
         return std::unexpected{make_rpc_error(RpcError::kServiceNotFound)};
@@ -150,8 +131,5 @@ auto foskv::rpc::RpcProvider::invoke(
         return std::unexpected{make_rpc_error(RpcError::kMethodNotFound)};
     }
 
-    // TODO: Use thread_loacl std::vector<char>& as parma
-    std::string response_str;
-    invoke->second(payload, response_str);
-    return response_str;
+    return invoke->second(payload, response);
 }

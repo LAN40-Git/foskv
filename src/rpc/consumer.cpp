@@ -1,5 +1,18 @@
 #include "foskv/rpc/consumer.hpp"
 
+foskv::rpc::RpcConsumer::RpcConsumer(kosio::net::TcpStream &&stream)
+    : buffer_(detail::MAX_RPC_MESSAGE_SIZE)
+    , stream_(std::move(stream)) {
+    server_addr_ = stream_.peer_addr().value();
+    LOG_INFO("Connected to {}", server_addr_);
+    kosio::spawn(run());
+}
+
+foskv::rpc::RpcConsumer::~RpcConsumer() {
+    assert(!is_running_.load(std::memory_order_acquire));
+    assert(is_shutdown_.load(std::memory_order_acquire));
+}
+
 auto foskv::rpc::RpcConsumer::connect(std::string_view host, uint16_t port)
 -> kosio::async::Task<RpcResult<std::unique_ptr<RpcConsumer>>> {
     auto has_addr = kosio::net::SocketAddr::parse(host, port);
@@ -13,8 +26,11 @@ auto foskv::rpc::RpcConsumer::connect(std::string_view host, uint16_t port)
     co_return std::make_unique<RpcConsumer>(std::move(has_stream.value()));
 }
 
-auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&method_name, std::string &&payload,
-    detail::RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>> {
+auto foskv::rpc::RpcConsumer::call(
+    std::string &&service_name,
+    std::string &&method_name,
+    std::string &&payload,
+    RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>> {
     co_await mutex_.lock();
     std::lock_guard lock(mutex_, std::adopt_lock);
     // Make request header
@@ -43,6 +59,7 @@ auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&met
     );
 
     if (!ret) [[unlikely]] {
+        co_await reconnect();
         co_return std::unexpected{make_rpc_error(RpcError::kSendFailed)};
     }
 
@@ -51,18 +68,19 @@ auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&met
     co_return RpcResult<void>{};
 }
 
-auto foskv::rpc::RpcConsumer::reconnect() -> kosio::async::Task<bool> {
-    auto ret = co_await kosio::net::TcpStream::connect(server_addr_);
-    if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to reconnect to the server {}.", server_addr_);
-        co_return false;
+auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
+    co_await stream_.close();
+    is_shutdown_.store(true, std::memory_order_release);
+    if (is_running_.load(std::memory_order_acquire)) {
+        co_await latch_.wait();
     }
-    // The old stream will close automatically
-    stream_ = std::move(ret.value());
-    co_return true;
 }
 
 auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
+    if (is_shutdown_.load(std::memory_order_acquire)) {
+        co_return;
+    }
+    is_running_.store(true, std::memory_order_release);
     std::vector<char> buffer(4 * 1024 * 1024); // 4MB
     // Break if failed to reconnect to the rpc server or receive invalid message
     while (true) {
@@ -70,7 +88,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         uint32_t resp_header_size_net;
         auto ret = co_await stream_.read_exact(
             {reinterpret_cast<char*>(&resp_header_size_net), sizeof(uint32_t)});
-        if (!ret && !co_await reconnect()) [[unlikely]] {
+        if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             break;
         }
@@ -84,7 +102,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         // Recv response header
         ret = co_await stream_.read_exact(
             {buffer.data(), resp_header_size});
-        if (!ret && !co_await reconnect()) [[unlikely]] {
+        if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             break;
         }
@@ -104,7 +122,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         // Recv response payload
         ret = co_await stream_.read_exact(
             {buffer.data(), payload_size});
-        if (!ret && !co_await reconnect()) [[unlikely]] {
+        if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             break;
         }
@@ -115,10 +133,24 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
             callbacks_.unsafe_erase(request_id);
         }
     }
-    latch_.count_down();
+    is_running_.store(false, std::memory_order_release);
+    if (is_shutdown_.load(std::memory_order_acquire)) {
+        latch_.count_down();
+    }
 }
 
-auto foskv::rpc::RpcConsumer::close() -> kosio::async::Task<> {
-    co_await stream_.close();
-    co_await latch_.wait();
+auto foskv::rpc::RpcConsumer::reconnect() -> kosio::async::Task<RpcResult<void>> {
+    if (is_shutdown_.load(std::memory_order_acquire) ||
+        is_running_.load(std::memory_order_acquire)) [[unlikely]] {
+            co_return std::unexpected{make_rpc_error(RpcError::kReconnectFailed)};
+        }
+    auto ret = co_await kosio::net::TcpStream::connect(server_addr_);
+    if (!ret) [[unlikely]] {
+        co_return std::unexpected{make_rpc_error(RpcError::kConnectFailed)};
+    }
+    // The old stream has been closed or error,
+    // so this will be ok
+    stream_ = std::move(ret.value());
+    kosio::spawn(run());
+    co_return RpcResult<void>{};
 }

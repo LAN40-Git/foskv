@@ -68,6 +68,7 @@ public:
         kMethodNotFound,
         kSerializeFailed,
         kConnectFailed,
+        kReconnectFailed,
         kSendFailed,
         kReceiveFailed,
         kMessageTooLarge,
@@ -91,6 +92,8 @@ public:
                 return "Failed to serialize message.";
             case kConnectFailed:
                 return "Failed to connect to the rpc server.";
+            case kReconnectFailed:
+                return "Failed to reconnect to the rpc server.";
             case kSendFailed:
                 return "Failed to send message.";
             case kReceiveFailed:

@@ -21,13 +21,21 @@ public:
     static auto Open(const std::string& db_path) -> StorageResult<KVStorage>;
 
 public:
+    [[nodiscard]]
     auto Put(std::string_view key, std::string_view value) const -> rocksdb::Status;
+    [[nodiscard]]
     auto Get(std::string_view key, std::string* value) const -> rocksdb::Status;
+    [[nodiscard]]
     auto Delete(std::string_view key) const -> rocksdb::Status;
-    void RpcPut(std::string_view payload, std::string& response);
-    void RpcGet(std::string_view payload, std::string& response);
-    void RpcDelete(std::string_view payload, std::string& response);
+    [[nodiscard]]
+    auto RpcPut(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t>;
+    [[nodiscard]]
+    auto RpcGet(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t>;
+    [[nodiscard]]
+    auto RpcDelete(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t>;
+    [[nodiscard]]
     auto BatchWrite(const std::vector<std::pair<std::string, std::string>>& kvs) const -> rocksdb::Status;
+    [[nodiscard]]
     auto MultiGet(const std::vector<std::string_view>& keys, std::vector<std::string>* values) const -> std::vector<rocksdb::Status>;
 
 private:
