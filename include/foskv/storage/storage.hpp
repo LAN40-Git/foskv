@@ -2,6 +2,7 @@
 #include "foskv/common/util/noncopyable.hpp"
 #include "foskv/common/error.hpp"
 #include "foskv/storage/kvstorage.pb.h"
+#include "foskv/storage/rpc.hpp"
 #include <rocksdb/db.h>
 
 namespace foskv::storage {

@@ -1,12 +1,8 @@
 #pragma once
-#include "foskv/rpc/consumer.hpp"
-#include "foskv/raft/raft.pb.h"
+#include "foskv/raft/util.hpp"
 
 namespace foskv::raft {
 class Peer {
-private:
-    static constexpr std::string_view SERVICE_NAME = "Raft";
-
 public:
     explicit Peer(const std::string& host, uint16_t port);
     Peer(Peer&& other) noexcept;

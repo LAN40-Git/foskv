@@ -11,6 +11,7 @@ private:
     static constexpr std::string_view OP_PUT = "Put ";
     static constexpr std::string_view OP_GET = "Get ";
     static constexpr std::string_view OP_DELETE = "Delete ";
+    static constexpr std::string_view OP_EXIT = "Exit";
 
 public:
     enum class Op {
@@ -18,6 +19,7 @@ public:
         kPut,
         kGet,
         kDelete,
+        kExit,
     };
 
     struct Args {
@@ -39,9 +41,11 @@ public:
             return parse_get(cmd);
         } else if (cmd.starts_with(OP_DELETE)) {
             return parse_delete(cmd);
+        } else if (cmd.starts_with(OP_EXIT)) {
+            return Args{Op::kExit};
         }
 
-        return Args{Op::kUnknown, "", ""};
+        return Args{Op::kUnknown};
     }
 
     static auto async_parse() -> kosio::async::Task<Args> {

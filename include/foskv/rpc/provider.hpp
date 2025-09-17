@@ -6,6 +6,8 @@
 namespace foskv::rpc {
 class RpcProvider {
     using Invoke = std::function<RpcResult<std::size_t>(std::string_view payload, std::span<char> response)>;
+    using Method = std::unordered_map<std::string_view, Invoke>;
+    using Service = std::unordered_map<std::string_view, Method>;
 
 public:
     RpcProvider(std::string_view host, uint16_t port)
@@ -16,18 +18,24 @@ public:
     auto run() -> kosio::async::Task<kosio::Result<kosio::Error>>;
 
 public:
-    void register_invoke(const std::string& service_name,
-        const std::string& method_name, const Invoke &invoke);
+    void register_invoke(
+        int fd,
+        std::string_view service_name,
+        std::string_view method_name,
+        Invoke&& invoke);
 
 private:
     auto handle_rpc(kosio::net::TcpStream stream) -> kosio::async::Task<>;
-    auto invoke(const std::string& service_name, const std::string& method_name,
-        std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
+    auto invoke(
+        int fd,
+        std::string_view service_name,
+        std::string_view method_name,
+        std::string_view payload,
+        std::span<char> response) -> RpcResult<std::size_t>;
 
 private:
     std::string host_;
     uint16_t    port_;
-    // <service_name, <method_name, Method>>
-    std::unordered_map<std::string, std::unordered_map<std::string, Invoke>> invokes_;
+    std::unordered_map<int, Service> invokes_;
 };
 } // namespace foskv::rpc

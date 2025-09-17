@@ -18,35 +18,35 @@ auto foskv::raft::Peer::operator=(Peer &&other) noexcept -> Peer& {
 
 auto foskv::raft::Peer::request_vote(std::string_view payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
-    constexpr std::string_view METHOD_NAME = "RequestVote";
-
     if (consumer_ == nullptr) [[unlikely]] {
         auto ret = co_await connect();
         if (!ret) [[unlikely]] {
             LOG_ERROR("Failed to connect to {}:{} : {}", host_, port_, ret.error());
+            co_return;
         }
     }
 
-    auto ret = co_await consumer_->call(SERVICE_NAME, METHOD_NAME, payload, std::move(callback));
+    auto ret = co_await consumer_->call(
+        RaftRpc::ServiceName, RaftRpc::RequestVote, payload, std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", SERVICE_NAME, METHOD_NAME, ret.error());
+        LOG_ERROR("Failed to call rpc {}-{} : {}", RaftRpc::ServiceName, RaftRpc::RequestVote, ret.error());
     }
 }
 
 auto foskv::raft::Peer::append_entries(std::string_view payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
-    constexpr std::string_view METHOD_NAME = "AppendEntries";
-
     if (consumer_ == nullptr) [[unlikely]] {
         auto ret = co_await connect();
         if (!ret) [[unlikely]] {
             LOG_ERROR("Failed to connect to {}:{} : {}", host_, port_, ret.error());
+            co_return;
         }
     }
 
-    auto ret = co_await consumer_->call(SERVICE_NAME, METHOD_NAME, payload, std::move(callback));
+    auto ret = co_await consumer_->call(
+        RaftRpc::ServiceName, RaftRpc::AppendEntries, payload, std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", SERVICE_NAME, METHOD_NAME, ret.error());
+        LOG_ERROR("Failed to call rpc {}-{} : {}", RaftRpc::ServiceName, RaftRpc::AppendEntries, ret.error());
     }
 }
 
@@ -57,12 +57,14 @@ auto foskv::raft::Peer::install_snapshot(std::string_view payload, rpc::RpcCallb
         auto ret = co_await connect();
         if (!ret) [[unlikely]] {
             LOG_ERROR("Failed to connect to {}:{} : {}", host_, port_, ret.error());
+            co_return;
         }
     }
 
-    auto ret = co_await consumer_->call(SERVICE_NAME, METHOD_NAME, payload, std::move(callback));
+    auto ret = co_await consumer_->call(
+        RaftRpc::ServiceName, RaftRpc::InstallSnapshot, payload, std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", SERVICE_NAME, METHOD_NAME, ret.error());
+        LOG_ERROR("Failed to call rpc {}-{} : {}", RaftRpc::ServiceName, RaftRpc::InstallSnapshot, ret.error());
     }
 }
 

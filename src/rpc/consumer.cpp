@@ -69,9 +69,14 @@ auto foskv::rpc::RpcConsumer::call(
 }
 
 auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
-    co_await stream_.close();
+    auto ret = co_await stream_.shutdown(SHUT_RDWR);
+    if (!ret) [[unlikely]] {
+        LOG_ERROR("Failed to shutdown consumer : {}", ret.error());
+        co_return;
+    }
     is_shutdown_.store(true, std::memory_order_release);
     if (is_running_.load(std::memory_order_acquire)) {
+        LOG_VERBOSE("Consumer shutting down...");
         co_await latch_.wait();
     }
 }
@@ -131,7 +136,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         if (callbacks_.contains(request_id)) {
             co_await callbacks_[request_id](std::string_view{buffer.data(), payload_size});
             // Since request_id is monotonically incrementing, it is thread safe here.
-            callbacks_.unsafe_erase(request_id);
+            callbacks_.erase(request_id);
         }
     }
     is_running_.store(false, std::memory_order_release);

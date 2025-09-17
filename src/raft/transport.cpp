@@ -11,6 +11,10 @@ foskv::raft::Transport::Transport(std::string_view host, uint16_t port, PeerMap 
     : rpc_provider_(host, port)
     , peers_(std::move(peers)) {}
 
+void foskv::raft::Transport::init() {
+
+}
+
 auto foskv::raft::Transport::run() -> kosio::async::Task<> {
     std::size_t count{0};
     while (true) {
@@ -26,13 +30,29 @@ auto foskv::raft::Transport::run() -> kosio::async::Task<> {
     }
 }
 
-auto foskv::raft::Transport::broadcase_request_vote(std::string_view payload, rpc::RpcCallback&& callback) -> kosio::async::Task<> {
-    std::list<std::coroutine_handle<>> tasks;
-    std::size_t n{0};
+auto foskv::raft::Transport::broadcase_request_vote(RequestVoteRequest&& request,
+    rpc::RpcCallback&& callback) -> kosio::async::Task<> {
+    // TODO: Optimize with buffer pools
+    auto payload = request.SerializeAsString();
     for (auto& peer : peers_ | std::views::values) {
-        tasks.push_back(peer.request_vote(payload, std::move(callback)).take());
-        n++;
+        co_await peer.request_vote(payload, std::move(callback));
     }
+}
 
-    kosio::spawn_batch(tasks, n);
+auto foskv::raft::Transport::broadcase_append_entries(RequestVoteRequest&& request,
+    rpc::RpcCallback &&callback) -> kosio::async::Task<> {
+    // TODO: Optimize with buffer pools
+    auto payload = request.SerializeAsString();
+    for (auto& peer : peers_ | std::views::values) {
+        co_await peer.append_entries(payload, std::move(callback));
+    }
+}
+
+auto foskv::raft::Transport::broadcase_install_snapshot(RequestVoteRequest&& request,
+    rpc::RpcCallback &&callback) -> kosio::async::Task<> {
+    // TODO: Optimize with buffer pools
+    auto payload = request.SerializeAsString();
+    for (auto& peer : peers_ | std::views::values) {
+        co_await peer.install_snapshot(payload, std::move(callback));
+    }
 }

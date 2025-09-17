@@ -23,10 +23,11 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<kosio::Result<kosio::E
 }
 
 void foskv::rpc::RpcProvider::register_invoke(
-    const std::string& service_name,
-    const std::string& method_name,
-    const Invoke &invoke) {
-    invokes_[service_name][method_name] = invoke;
+    int fd,
+    std::string_view service_name,
+    std::string_view method_name,
+    Invoke&& invoke) {
+    invokes_[fd][service_name][method_name] = std::move(invoke);
 }
 
 auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
@@ -78,7 +79,11 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         }
 
         // Invoke
-        auto has_resp_payload = invoke(service_name, method_name, {buffer.data(), req_payload_size}, {resp_buffer.data(), resp_buffer.capacity()});
+        auto has_resp_payload = invoke(
+            stream.fd(),
+            service_name, method_name,
+            {buffer.data(), req_payload_size},
+            {resp_buffer.data(), resp_buffer.capacity()});
         if (!has_resp_payload) [[unlikely]] {
             LOG_ERROR("{} : ({}-{})", has_resp_payload.error(), service_name, method_name);
             continue;
@@ -113,21 +118,30 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             break;
         }
     }
+    // Remove the registered file descriptor, here
+    // is thread safe since the connection is not closed yet
+    invokes_.erase(stream.fd());
     co_await stream.close();
 }
 
 auto foskv::rpc::RpcProvider::invoke(
-    const std::string& service_name,
-    const std::string& method_name,
+    int fd,
+    std::string_view service_name,
+    std::string_view method_name,
     std::string_view payload,
     std::span<char> response) -> RpcResult<std::size_t> {
-    auto service = invokes_.find(service_name);
-    if (service == invokes_.end()) {
+    auto connection = invokes_.find(fd);
+    if (connection == invokes_.end()) [[unlikely]] {
+        return std::unexpected{make_rpc_error(RpcError::kFdNotRegister)};
+    }
+
+    auto service = connection->second.find(service_name);
+    if (service == connection->second.end()) [[unlikely]] {
         return std::unexpected{make_rpc_error(RpcError::kServiceNotFound)};
     }
 
     auto invoke = service->second.find(method_name);
-    if (invoke == service->second.end()) {
+    if (invoke == service->second.end()) [[unlikely]] {
         return std::unexpected{make_rpc_error(RpcError::kMethodNotFound)};
     }
 

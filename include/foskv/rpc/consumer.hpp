@@ -2,7 +2,6 @@
 #include "foskv/rpc/util.hpp"
 #include "foskv/rpc/config.hpp"
 #include <kosio/sync.hpp>
-#include <tbb/concurrent_unordered_map.h>
 
 namespace foskv::rpc {
 using RpcCallback = std::function<kosio::async::Task<>(RpcResult<std::string_view> has_response)>;
@@ -10,7 +9,7 @@ using RpcCallback = std::function<kosio::async::Task<>(RpcResult<std::string_vie
 // Remember to co_await shutdown(), otherwise,
 // there is a risk of the program crashing
 class RpcConsumer {
-    using RpcCallbackMap = tbb::concurrent_unordered_map<uint64_t, RpcCallback>;
+    using RpcCallbackMap = std::unordered_map<uint64_t, RpcCallback>;
 public:
     explicit RpcConsumer(kosio::net::TcpStream&& stream);
     ~RpcConsumer();
@@ -30,7 +29,7 @@ public:
     /// @param payload Serialized (protobuf) rpc request
     /// @param callback Triggered when the corresponding reply is received
     /// @return RpcError or void
-    /// @note Thread-safe, better wrap it with another coroutine task and spawn
+    /// @note Thread-safe
     [[REMEMBER_CO_AWAIT]]
     auto call(std::string_view service_name,
               std::string_view method_name,

@@ -64,6 +64,7 @@ class RpcError : public detail::BaseError<RpcError> {
 public:
     enum Code {
         kUnknown = detail::RpcErrorCodeBase,
+        kFdNotRegister,
         kServiceNotFound,
         kMethodNotFound,
         kSerializeFailed,
@@ -82,7 +83,9 @@ public:
     auto error_message() const noexcept -> std::string_view {
         switch (static_cast<Code>(error_code_)) {
             case kUnknown:
-                return "Unknown timer error.";
+                return "Unknown error.";
+            case kFdNotRegister:
+                return "Fd not register.";
             case kServiceNotFound:
                 return "Service not found.";
             case kMethodNotFound:

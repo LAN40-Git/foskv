@@ -48,7 +48,6 @@ set(DEPEND_LIBS
         ${PROTOBUF_LIBRARIES}
         ${LIBURING_LIBRARIES}
         ${ROCKSDB_LIBRARIES}
-        tbb
 )
 
 add_subdirectory(src/rpc)
