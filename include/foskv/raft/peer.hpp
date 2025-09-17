@@ -11,9 +11,9 @@ public:
 
 public:
     // raft rpc
-    auto request_vote_rpc(const std::string& payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto append_entries_rpc(const std::string& payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto install_snapshot_rpc(const std::string& payload) -> kosio::async::Task<>;
+    auto request_vote_rpc(std::string_view payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto append_entries_rpc(std::string_view payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto install_snapshot_rpc(std::string_view payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
 
 private:
     auto connect() -> kosio::async::Task<RpcResult<void>>;

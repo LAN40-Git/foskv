@@ -80,7 +80,7 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         // Invoke
         auto has_resp_payload = invoke(service_name, method_name, {buffer.data(), req_payload_size}, {resp_buffer.data(), resp_buffer.capacity()});
         if (!has_resp_payload) [[unlikely]] {
-            LOG_ERROR("{}", has_resp_payload.error());
+            LOG_ERROR("{} : ({}-{})", has_resp_payload.error(), service_name, method_name);
             continue;
         }
         auto resp_payload_size = has_resp_payload.value();

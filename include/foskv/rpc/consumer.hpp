@@ -32,9 +32,9 @@ public:
     /// @return RpcError or void
     /// @note Thread-safe
     [[REMEMBER_CO_AWAIT]]
-    auto call(std::string&& service_name,
-              std::string&& method_name,
-              std::string&& payload,
+    auto call(std::string_view service_name,
+              std::string_view method_name,
+              std::string_view payload,
               RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>>;
 
     /// @brief Asynchronously shutdown and never use again

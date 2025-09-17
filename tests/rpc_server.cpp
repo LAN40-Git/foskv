@@ -1,7 +1,7 @@
 #include "foskv/rpc/provider.hpp"
 #include "foskv/storage/storage.hpp"
 
-auto main_loop() -> kosio::async::Task<> {
+auto server() -> kosio::async::Task<> {
     auto has_st = foskv::storage::KVStorage::Open("./test_db");
     if (!has_st) {
         kosio::log::console.error("{}", has_st.error());
@@ -19,7 +19,14 @@ auto main_loop() -> kosio::async::Task<> {
     provider.register_invoke("KVStorage", "Delete", [&st](std::string_view payload, std::span<char> response) -> foskv::RpcResult<std::size_t> {
         return st.RpcDelete(payload, response);
     });
-    kosio::spawn(provider.run());
+    auto ret = co_await provider.run();
+    if (!ret) [[unlikely]] {
+        kosio::log::console.error("{}", ret.error());
+    }
+}
+
+auto main_loop() -> kosio::async::Task<> {
+    kosio::spawn(server());
     co_await kosio::signal::ctrl_c();
 }
 

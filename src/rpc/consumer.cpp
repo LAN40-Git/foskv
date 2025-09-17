@@ -27,17 +27,17 @@ auto foskv::rpc::RpcConsumer::connect(std::string_view host, uint16_t port)
 }
 
 auto foskv::rpc::RpcConsumer::call(
-    std::string &&service_name,
-    std::string &&method_name,
-    std::string &&payload,
+    std::string_view service_name,
+    std::string_view method_name,
+    std::string_view payload,
     RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>> {
     co_await mutex_.lock();
     std::lock_guard lock(mutex_, std::adopt_lock);
     // Make request header
     RequestHeader req_header;
     req_header.set_request_id(request_id_);
-    req_header.set_service_name(std::move(service_name));
-    req_header.set_method_name(std::move(method_name));
+    req_header.set_service_name({service_name.data(), service_name.size()});
+    req_header.set_method_name({method_name.data(), method_name.size()});
     req_header.set_payload_size(payload.size());
 
     // Send [request header size -> request header -> request payload]
