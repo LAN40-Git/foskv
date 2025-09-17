@@ -18,14 +18,17 @@ auto server() -> kosio::async::Task<> {
     }
 
     foskv::rpc::RpcProvider provider{has_addr.value()};
-    provider.register_invoke(KVRpc::ServiceName, KVRpc::Put, [&st](std::string_view payload, std::span<char> response) -> foskv::RpcResult<std::size_t> {
-        return st.RpcPut(payload, response);
+    provider.register_invoke(KVRpc::ServiceName, KVRpc::Put,
+        [&st](std::string_view payload, std::span<char> response) -> kosio::async::Task<foskv::RpcResult<std::size_t>>  {
+        co_return st.RpcPut(payload, response);
     });
-    provider.register_invoke(KVRpc::ServiceName, KVRpc::Get, [&st](std::string_view payload, std::span<char> response) -> foskv::RpcResult<std::size_t> {
-        return st.RpcGet(payload, response);
+    provider.register_invoke(KVRpc::ServiceName, KVRpc::Get,
+        [&st](std::string_view payload, std::span<char> response) -> kosio::async::Task<foskv::RpcResult<std::size_t>> {
+        co_return st.RpcGet(payload, response);
     });
-    provider.register_invoke(KVRpc::ServiceName, KVRpc::Delete, [&st](std::string_view payload, std::span<char> response) -> foskv::RpcResult<std::size_t> {
-        return st.RpcDelete(payload, response);
+    provider.register_invoke(KVRpc::ServiceName, KVRpc::Delete,
+        [&st](std::string_view payload, std::span<char> response) -> kosio::async::Task<foskv::RpcResult<std::size_t>> {
+        co_return st.RpcDelete(payload, response);
     });
     auto ret = co_await provider.run();
     if (!ret) [[unlikely]] {

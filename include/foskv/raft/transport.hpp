@@ -14,12 +14,13 @@ public:
 
 public:
     auto run() -> kosio::async::Task<>;
-    auto broadcase_request_vote(RequestVoteRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto broadcase_append_entries(RequestVoteRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto broadcase_install_snapshot(RequestVoteRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto broadcast_request_vote(RequestVoteRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto broadcast_append_entries(AppendEntriesRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto broadcast_install_snapshot(InstallSnapshotRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
 
 private:
-    rpc::RpcProvider   rpc_provider_;
+    uint64_t           member_id_;
     PeerMap            peers_;
+    rpc::RpcProvider   rpc_provider_;
 };
 } // namespace foskv::raft

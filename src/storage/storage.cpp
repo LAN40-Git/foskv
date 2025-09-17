@@ -39,20 +39,20 @@ auto foskv::storage::KVStorage::Delete(std::string_view key) const
     return status;
 }
 
-auto foskv::storage::KVStorage::RpcPut(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t> {
+auto foskv::storage::KVStorage::RpcPut(std::string_view req_payload, std::span<char> resp_payload) const -> RpcResult<std::size_t> {
     PutRequest req;
     PutResponse resp;
-    std::size_t resp_size;
+    std::size_t resp_payload_size;
 
     auto* resp_header = resp.mutable_header();
-    if (!req.ParseFromArray(payload.data(), payload.size())) {
+    if (!req.ParseFromArray(req_payload.data(), req_payload.size())) {
         resp_header->set_success(false);
         resp_header->set_error("Invalid put request");
-        resp_size = resp.ByteSizeLong();
-        if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+        resp_payload_size = resp.ByteSizeLong();
+        if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        return resp_size;
+        return resp_payload_size;
     }
 
     auto key = req.key();
@@ -61,35 +61,35 @@ auto foskv::storage::KVStorage::RpcPut(std::string_view payload, std::span<char>
     if (!status.ok()) {
         resp_header->set_success(false);
         resp_header->set_error(status.ToString());
-        resp_size = resp.ByteSizeLong();
-        if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+        resp_payload_size = resp.ByteSizeLong();
+        if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        return resp_size;
+        return resp_payload_size;
     }
 
     resp_header->set_success(true);
-    resp_size = resp.ByteSizeLong();
-    if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+    resp_payload_size = resp.ByteSizeLong();
+    if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
         return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
     }
-    return resp_size;
+    return resp_payload_size;
 }
 
-auto foskv::storage::KVStorage::RpcGet(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t> {
+auto foskv::storage::KVStorage::RpcGet(std::string_view req_payload, std::span<char> resp_payload) const -> RpcResult<std::size_t> {
     GetRequest req;
     GetResponse resp;
-    std::size_t resp_size;
+    std::size_t resp_payload_size;
 
     auto* resp_header = resp.mutable_header();
-    if (!req.ParseFromArray(payload.data(), payload.size())) {
+    if (!req.ParseFromArray(req_payload.data(), req_payload.size())) {
         resp_header->set_success(false);
         resp_header->set_error("Invalid get request");
-        resp_size = resp.ByteSizeLong();
-        if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+        resp_payload_size = resp.ByteSizeLong();
+        if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        return resp_size;
+        return resp_payload_size;
     }
 
     auto key = req.key();
@@ -97,35 +97,35 @@ auto foskv::storage::KVStorage::RpcGet(std::string_view payload, std::span<char>
     if (!status.ok()) {
         resp_header->set_success(false);
         resp_header->set_error(status.ToString());
-        resp_size = resp.ByteSizeLong();
-        if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+        resp_payload_size = resp.ByteSizeLong();
+        if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        return resp_size;
+        return resp_payload_size;
     }
 
     resp_header->set_success(true);
-    resp_size = resp.ByteSizeLong();
-    if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+    resp_payload_size = resp.ByteSizeLong();
+    if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
         return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
     }
-    return resp_size;
+    return resp_payload_size;
 }
 
-auto foskv::storage::KVStorage::RpcDelete(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t> {
+auto foskv::storage::KVStorage::RpcDelete(std::string_view req_payload, std::span<char> resp_payload) const -> RpcResult<std::size_t> {
     DeleteRequest req;
     DeleteResponse resp;
-    std::size_t resp_size;
+    std::size_t resp_payload_size;
 
     auto* resp_header = resp.mutable_header();
-    if (!req.ParseFromArray(payload.data(), payload.size())) {
+    if (!req.ParseFromArray(req_payload.data(), req_payload.size())) {
         resp_header->set_success(false);
         resp_header->set_error("Invalid delete request");
-        resp_size = resp.ByteSizeLong();
-        if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+        resp_payload_size = resp.ByteSizeLong();
+        if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        return resp_size;
+        return resp_payload_size;
     }
 
     auto key = req.key();
@@ -133,19 +133,19 @@ auto foskv::storage::KVStorage::RpcDelete(std::string_view payload, std::span<ch
     if (!status.ok()) {
         resp_header->set_success(false);
         resp_header->set_error(status.ToString());
-        resp_size = resp.ByteSizeLong();
-        if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+        resp_payload_size = resp.ByteSizeLong();
+        if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        return resp_size;
+        return resp_payload_size;
     }
 
     resp_header->set_success(true);
-    resp_size = resp.ByteSizeLong();
-    if (!resp.SerializeToArray(response.data(), resp_size)) [[unlikely]] {
+    resp_payload_size = resp.ByteSizeLong();
+    if (!resp.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
         return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
     }
-    return resp_size;
+    return resp_payload_size;
 }
 
 auto foskv::storage::KVStorage::BatchWrite(const std::vector<std::pair<std::string, std::string>> &kvs) const

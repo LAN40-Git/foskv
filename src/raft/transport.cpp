@@ -2,14 +2,14 @@
 
 #include <ranges>
 
-foskv::raft::Transport::Transport(const kosio::net::SocketAddr &addr)
-    : rpc_provider_(addr) {
-    // TODO: Load peers from file
-}
+foskv::raft::Transport::Transport(uint64_t member_id, const kosio::net::SocketAddr &addr)
+    : member_id_(member_id)
+    , rpc_provider_(addr) {}
 
-foskv::raft::Transport::Transport(const kosio::net::SocketAddr &addr, PeerMap &&peers)
-    : rpc_provider_(addr)
-    , peers_(std::move(peers)) {}
+foskv::raft::Transport::Transport(uint64_t member_id, const kosio::net::SocketAddr &addr, PeerMap &&peers)
+    : member_id_(member_id)
+    , peers_(std::move(peers))
+    , rpc_provider_(addr) {}
 
 auto foskv::raft::Transport::run() -> kosio::async::Task<> {
     std::size_t count{0};
@@ -26,7 +26,7 @@ auto foskv::raft::Transport::run() -> kosio::async::Task<> {
     }
 }
 
-auto foskv::raft::Transport::broadcase_request_vote(RequestVoteRequest&& request,
+auto foskv::raft::Transport::broadcast_request_vote(RequestVoteRequest&& request,
     rpc::RpcCallback&& callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
@@ -35,7 +35,7 @@ auto foskv::raft::Transport::broadcase_request_vote(RequestVoteRequest&& request
     }
 }
 
-auto foskv::raft::Transport::broadcase_append_entries(RequestVoteRequest&& request,
+auto foskv::raft::Transport::broadcast_append_entries(AppendEntriesRequest&& request,
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
@@ -44,7 +44,7 @@ auto foskv::raft::Transport::broadcase_append_entries(RequestVoteRequest&& reque
     }
 }
 
-auto foskv::raft::Transport::broadcase_install_snapshot(RequestVoteRequest&& request,
+auto foskv::raft::Transport::broadcast_install_snapshot(InstallSnapshotRequest&& request,
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();

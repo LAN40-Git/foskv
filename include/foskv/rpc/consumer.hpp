@@ -11,15 +11,14 @@ using RpcCallback = std::function<kosio::async::Task<>(RpcResult<std::string_vie
 class RpcConsumer {
     using RpcCallbackMap = std::unordered_map<uint64_t, RpcCallback>;
 public:
-    explicit RpcConsumer(kosio::net::TcpStream&& stream);
+    explicit RpcConsumer(kosio::net::TcpStream&& stream, const kosio::net::SocketAddr& server_addr);
     ~RpcConsumer();
 
 public:
     /// @brief Asynchronously connect to the rpc server
-    /// @param host Host of the rpc server
-    /// @param port Port of the rpc server
+    /// @param server_addr The address of rpc server
     /// @return An unique wrapped RpcConsumer
-    static auto connect(std::string_view host, uint16_t port)
+    static auto connect(const kosio::net::SocketAddr& server_addr)
     -> kosio::async::Task<kosio::Result<std::unique_ptr<RpcConsumer>>>;
 
 public:

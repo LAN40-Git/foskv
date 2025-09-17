@@ -5,7 +5,11 @@
 
 namespace foskv::rpc {
 class RpcProvider {
-    using Invoke = std::function<RpcResult<std::size_t>(std::string_view payload, std::span<char> response)>;
+    // Use ParseFromArray(req_payload.data(), req_payload.size()) to get the rpc request.
+    // Use SerializeToArray(resp_payload.data(), resp_payload_size) to write the rpc
+    // response, return error if resp_payload_size > resp_payload.size() or failed
+    // to serialize
+    using Invoke = std::function<kosio::async::Task<RpcResult<std::size_t>>(std::string_view req_payload, std::span<char> resp_payload)>;
     using Service = std::unordered_map<std::string_view, Invoke>;
 
 public:
@@ -23,12 +27,12 @@ public:
         Invoke&& invoke);
 
 private:
+    /// @brief Handle the rpc request from client
+    /// @param stream TcpStream from rpc client
+    /// @return A coro task which handle the rpc request from rpc client,
+    ///         remember to spawn this task
+    /// @note Thread-safe
     auto handle_rpc(kosio::net::TcpStream stream) -> kosio::async::Task<>;
-    auto invoke(
-        std::string_view service_name,
-        std::string_view method_name,
-        std::string_view payload,
-        std::span<char> response) -> RpcResult<std::size_t>;
 
 private:
     kosio::net::SocketAddr addr_;

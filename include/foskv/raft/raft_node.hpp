@@ -1,10 +1,9 @@
 #pragma once
-#include <cstdint>
+#include "foskv/raft/transport.hpp"
 #include <vector>
 #include <optional>
 #include <kosio/sync.hpp>
 #include <kosio/core.hpp>
-#include "foskv/raft/transport.hpp"
 
 namespace foskv::raft {
 class RaftNode {
@@ -31,10 +30,9 @@ public:
     auto handle_install_snapshot_request(std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
 
 private:
-    std::atomic<bool>  is_shutdown_{false};
-    kosio::sync::Mutex mutex_;
-    Transport          transport_;
-    uint64_t           last_rpc_time_{0};
+    std::atomic<bool>     is_shutdown_{false};
+    kosio::sync::Mutex    mutex_;
+    Transport             transport_;
 
     /* RaftState from https://raft.github.io/raft.pdf */
     enum Role { kLeader, kFollower, kCandidate};

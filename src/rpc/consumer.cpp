@@ -1,10 +1,11 @@
 #include "foskv/rpc/consumer.hpp"
 
-foskv::rpc::RpcConsumer::RpcConsumer(kosio::net::TcpStream &&stream)
+foskv::rpc::RpcConsumer::RpcConsumer(kosio::net::TcpStream &&stream,
+                                     const kosio::net::SocketAddr& server_addr)
     : buffer_(detail::MAX_RPC_MESSAGE_SIZE)
-    , stream_(std::move(stream)) {
-    server_addr_ = stream_.peer_addr().value();
-    LOG_INFO("Connected to {}", server_addr_);
+    , stream_(std::move(stream))
+    , server_addr_(server_addr) {
+    LOG_INFO("Connect to {}", server_addr_);
     kosio::spawn(run());
 }
 
@@ -13,17 +14,13 @@ foskv::rpc::RpcConsumer::~RpcConsumer() {
     assert(is_shutdown_.load(std::memory_order_acquire));
 }
 
-auto foskv::rpc::RpcConsumer::connect(std::string_view host, uint16_t port)
+auto foskv::rpc::RpcConsumer::connect(const kosio::net::SocketAddr& server_addr)
 -> kosio::async::Task<kosio::Result<std::unique_ptr<RpcConsumer>>> {
-    auto has_addr = kosio::net::SocketAddr::parse(host, port);
-    if (!has_addr) [[unlikely]] {
-        co_return std::unexpected{has_addr.error()};
-    }
-    auto has_stream = co_await kosio::net::TcpStream::connect(has_addr.value());
+    auto has_stream = co_await kosio::net::TcpStream::connect(server_addr);
     if (!has_stream) [[unlikely]] {
         co_return std::unexpected{has_stream.error()};
     }
-    co_return std::make_unique<RpcConsumer>(std::move(has_stream.value()));
+    co_return std::make_unique<RpcConsumer>(std::move(has_stream.value()), server_addr);
 }
 
 auto foskv::rpc::RpcConsumer::call(

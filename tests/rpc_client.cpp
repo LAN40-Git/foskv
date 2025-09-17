@@ -119,7 +119,12 @@ auto process(std::unique_ptr<foskv::rpc::RpcConsumer> consumer) -> kosio::async:
 }
 
 auto main_loop() -> kosio::async::Task<> {
-    auto has_consumer = co_await foskv::rpc::RpcConsumer::connect("127.0.0.1", 8080);
+    auto has_addr = kosio::net::SocketAddr::parse("127.0.0.1", 8080);
+    if (!has_addr) [[unlikely]] {
+        kosio::log::console.error("Failed to parse address.");
+        co_return;
+    }
+    auto has_consumer = co_await foskv::rpc::RpcConsumer::connect(has_addr.value());
     if (!has_consumer) {
         kosio::log::console.error("{}", has_consumer.error());
         co_return;

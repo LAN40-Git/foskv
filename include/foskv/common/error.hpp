@@ -65,9 +65,8 @@ public:
     enum Code {
         kUnknown = detail::RpcErrorCodeBase,
         kFdNotRegister,
-        kServiceNotFound,
-        kMethodNotFound,
         kSerializeFailed,
+        kParseFailed,
         kReconnectFailed,
         kSendFailed,
         kReceiveFailed,
@@ -86,12 +85,10 @@ public:
                 return "Unknown error.";
             case kFdNotRegister:
                 return "Fd not register.";
-            case kServiceNotFound:
-                return "Service not found.";
-            case kMethodNotFound:
-                return "Method not found.";
             case kSerializeFailed:
                 return "Failed to serialize message.";
+            case kParseFailed:
+                return "Failed to parse message.";
             case kReconnectFailed:
                 return "Failed to reconnect to the rpc server.";
             case kSendFailed:

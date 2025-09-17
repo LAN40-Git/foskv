@@ -28,7 +28,7 @@ void foskv::rpc::RpcProvider::register_invoke(
 auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
 -> kosio::async::Task<> {
     std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
-    std::vector<char> resp_buffer(detail::MAX_RPC_MESSAGE_SIZE);
+    std::vector<char> resp_payload(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         // Recv request header size
         uint32_t req_header_size_net;
@@ -72,21 +72,27 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             LOG_ERROR("{}", recv_ret.error());
             break;
         }
+        std::string_view req_payload{buffer.data(), req_payload_size};
 
         // Invoke
-        auto has_resp_payload = invoke(
-            service_name, method_name,
-            {buffer.data(), req_payload_size},
-            {resp_buffer.data(), resp_buffer.capacity()});
+        auto service = invokes_.find(service_name);
+        if (service == invokes_.end()) [[unlikely]] {
+            LOG_ERROR("Failed to find service for {}", service_name);
+        }
+
+        auto invoke = service->second.find(method_name);
+        if (invoke == service->second.end()) [[unlikely]] {
+            LOG_ERROR("Failed to find invoke for {}", method_name);
+        }
+
+        auto has_resp_payload = co_await invoke->second(
+            req_payload, {resp_payload.data(), resp_payload.capacity()});
         if (!has_resp_payload) [[unlikely]] {
             LOG_ERROR("{} : ({}-{})", has_resp_payload.error(), service_name, method_name);
             continue;
         }
+
         auto resp_payload_size = has_resp_payload.value();
-        if (resp_payload_size > buffer.capacity()) [[unlikely]] {
-            LOG_ERROR("Message too large : {}", resp_payload_size);
-            continue;
-        }
 
         // Make response header
         ResponseHeader resp_header;
@@ -104,7 +110,7 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         auto send_ret = co_await stream.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&resp_header_size_net), sizeof(uint32_t)),
             std::span<const char>(buffer.data(), resp_header_size),
-            std::span<const char>(resp_buffer.data(), resp_payload_size)
+            std::span<const char>(resp_payload.data(), resp_payload_size)
         );
 
         if (!send_ret) [[unlikely]] {
@@ -113,22 +119,4 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         }
     }
     co_await stream.close();
-}
-
-auto foskv::rpc::RpcProvider::invoke(
-    std::string_view service_name,
-    std::string_view method_name,
-    std::string_view payload,
-    std::span<char> response) -> RpcResult<std::size_t> {
-    auto service = invokes_.find(service_name);
-    if (service == invokes_.end()) [[unlikely]] {
-        return std::unexpected{make_rpc_error(RpcError::kServiceNotFound)};
-    }
-
-    auto invoke = service->second.find(method_name);
-    if (invoke == service->second.end()) [[unlikely]] {
-        return std::unexpected{make_rpc_error(RpcError::kMethodNotFound)};
-    }
-
-    return invoke->second(payload, response);
 }

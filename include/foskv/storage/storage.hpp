@@ -29,11 +29,11 @@ public:
     [[nodiscard]]
     auto Delete(std::string_view key) const -> rocksdb::Status;
     [[nodiscard]]
-    auto RpcPut(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t>;
+    auto RpcPut(std::string_view req_payload, std::span<char> resp_payload) const -> RpcResult<std::size_t>;
     [[nodiscard]]
-    auto RpcGet(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t>;
+    auto RpcGet(std::string_view req_payload, std::span<char> resp_payload) const -> RpcResult<std::size_t>;
     [[nodiscard]]
-    auto RpcDelete(std::string_view payload, std::span<char> response) const -> RpcResult<std::size_t>;
+    auto RpcDelete(std::string_view req_payload, std::span<char> resp_payload) const -> RpcResult<std::size_t>;
     [[nodiscard]]
     auto BatchWrite(const std::vector<std::pair<std::string, std::string>>& kvs) const -> rocksdb::Status;
     [[nodiscard]]
