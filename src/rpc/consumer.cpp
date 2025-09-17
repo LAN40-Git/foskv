@@ -119,6 +119,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         auto payload_size = header.payload_size();
         if (payload_size > buffer.capacity()) [[unlikely]] {
             LOG_ERROR("Response payload too large.");
+            callbacks_.erase(request_id);
             break;
         }
 
@@ -127,12 +128,14 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
             {buffer.data(), payload_size});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
+            callbacks_.erase(request_id);
             break;
         }
 
         if (callbacks_.contains(request_id)) {
             co_await callbacks_[request_id](std::string_view{buffer.data(), payload_size});
-            // Since request_id is monotonically incrementing, it is thread safe here.
+            // Since request_id is monotonically
+            // incrementing, it is thread safe here.
             callbacks_.erase(request_id);
         }
     }

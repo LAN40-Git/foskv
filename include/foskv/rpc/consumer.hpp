@@ -4,7 +4,7 @@
 #include <kosio/sync.hpp>
 
 namespace foskv::rpc {
-using RpcCallback = std::function<kosio::async::Task<>(RpcResult<std::string_view> has_response)>;
+using RpcCallback = std::function<kosio::async::Task<>(std::string_view resp_payload)>;
 // One RpcConsumer will approximately cost 8MB
 // Remember to co_await shutdown(), otherwise,
 // there is a risk of the program crashing

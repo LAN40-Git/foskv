@@ -17,10 +17,19 @@ public:
         : addr_(addr) {}
 
 public:
+    /// @brief Asynchronous accept rpc client connection
+    /// @return A coro task, asynchronous accept rpc client connection
+    /// @note Remember `co_await`, you may wrap this task with another coro
+    ///       which has reconnect logic. Not thread-safe
     [[REMEMBER_CO_AWAIT]]
     auto run() -> kosio::async::Task<kosio::Result<kosio::Error>>;
 
 public:
+    /// @brief Register a rpc invoke
+    /// @param service_name Service name
+    /// @param method_name Method name
+    /// @param invoke The invoke function
+    /// @note Not thread-safe
     void register_invoke(
         std::string_view service_name,
         std::string_view method_name,
@@ -31,7 +40,6 @@ private:
     /// @param stream TcpStream from rpc client
     /// @return A coro task which handle the rpc request from rpc client,
     ///         remember to spawn this task
-    /// @note Thread-safe
     auto handle_rpc(kosio::net::TcpStream stream) -> kosio::async::Task<>;
 
 private:

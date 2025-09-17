@@ -25,21 +25,29 @@ public:
 
 public:
     // raft rpc invoke
-    auto handle_request_vote_request(std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
-    auto handle_append_entries_request(std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
-    auto handle_install_snapshot_request(std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_request_vote_request(std::string_view req_payload, std::span<char> resp_payload)
+    -> kosio::async::Task<RpcResult<std::size_t>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_append_entries_request(std::string_view req_payload, std::span<char> resp_payload)
+    -> kosio::async::Task<RpcResult<std::size_t>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
+    -> kosio::async::Task<RpcResult<std::size_t>>;
 
 private:
     std::atomic<bool>     is_shutdown_{false};
     kosio::sync::Mutex    mutex_;
     Transport             transport_;
+    // election timeout last reset time ms
+    std::atomic<uint64_t> last_reset_time_{0};
 
     /* RaftState from https://raft.github.io/raft.pdf */
     enum Role { kLeader, kFollower, kCandidate};
     std::atomic<Role> role_ = kFollower;
     // Persistent state on all servers
     // TODO: Read from disk
-    uint64_t                current_term_{0};
+    std::atomic<uint64_t>   current_term_{0};
     std::optional<uint64_t> voted_for_{std::nullopt};
     // Default one entry
     std::vector<LogEntry>   logs_{LogEntry{}};
@@ -49,7 +57,7 @@ private:
     uint64_t                last_applied_{0};
 
     // Volatile state on leaders
-    std::vector<int> next_index_{};
-    std::vector<int> match_index_{};
+    std::vector<int> next_index_{0};
+    std::vector<int> match_index_{0};
 };
 } // namespace foskv::raft

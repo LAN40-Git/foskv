@@ -13,7 +13,7 @@ auto foskv::raft::Peer::operator=(Peer &&other) noexcept -> Peer& {
     return *this;
 }
 
-auto foskv::raft::Peer::request_vote(std::string_view payload, rpc::RpcCallback &&callback)
+auto foskv::raft::Peer::request_vote(std::string_view req_payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
     if (consumer_ == nullptr) [[unlikely]] {
         auto ret = co_await connect();
@@ -24,13 +24,13 @@ auto foskv::raft::Peer::request_vote(std::string_view payload, rpc::RpcCallback 
     }
 
     auto ret = co_await consumer_->call(
-        RaftRpc::ServiceName, RaftRpc::RequestVote, payload, std::move(callback));
+        RaftRpc::ServiceName, RaftRpc::RequestVote, req_payload, std::move(callback));
     if (!ret) [[unlikely]] {
         LOG_ERROR("Failed to call rpc {}-{} : {}", RaftRpc::ServiceName, RaftRpc::RequestVote, ret.error());
     }
 }
 
-auto foskv::raft::Peer::append_entries(std::string_view payload, rpc::RpcCallback &&callback)
+auto foskv::raft::Peer::append_entries(std::string_view req_payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
     if (consumer_ == nullptr) [[unlikely]] {
         auto ret = co_await connect();
@@ -41,13 +41,13 @@ auto foskv::raft::Peer::append_entries(std::string_view payload, rpc::RpcCallbac
     }
 
     auto ret = co_await consumer_->call(
-        RaftRpc::ServiceName, RaftRpc::AppendEntries, payload, std::move(callback));
+        RaftRpc::ServiceName, RaftRpc::AppendEntries, req_payload, std::move(callback));
     if (!ret) [[unlikely]] {
         LOG_ERROR("Failed to call rpc {}-{} : {}", RaftRpc::ServiceName, RaftRpc::AppendEntries, ret.error());
     }
 }
 
-auto foskv::raft::Peer::install_snapshot(std::string_view payload, rpc::RpcCallback &&callback)
+auto foskv::raft::Peer::install_snapshot(std::string_view req_payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
     constexpr std::string_view METHOD_NAME = "InstallSnapshot";
     if (consumer_ == nullptr) [[unlikely]] {
@@ -59,7 +59,7 @@ auto foskv::raft::Peer::install_snapshot(std::string_view payload, rpc::RpcCallb
     }
 
     auto ret = co_await consumer_->call(
-        RaftRpc::ServiceName, RaftRpc::InstallSnapshot, payload, std::move(callback));
+        RaftRpc::ServiceName, RaftRpc::InstallSnapshot, req_payload, std::move(callback));
     if (!ret) [[unlikely]] {
         LOG_ERROR("Failed to call rpc {}-{} : {}", RaftRpc::ServiceName, RaftRpc::InstallSnapshot, ret.error());
     }

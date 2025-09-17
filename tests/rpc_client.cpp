@@ -5,13 +5,9 @@
 
 using namespace foskv::storage;
 
-auto RpcPutCallback(foskv::RpcResult<std::string_view> has_response) -> kosio::async::Task<> {
-    if (!has_response) {
-        kosio::log::console.error("{}", has_response.error());
-        co_return;
-    }
-    foskv::storage::PutResponse put_response;
-    if (!put_response.ParseFromArray(has_response.value().data(), has_response.value().size())) {
+auto RpcPutCallback(std::string_view resp_payload) -> kosio::async::Task<> {
+    PutResponse put_response;
+    if (!put_response.ParseFromArray(resp_payload.data(), resp_payload.size())) {
         kosio::log::console.error("Failed to parse response");
         co_return;
     }
@@ -22,13 +18,9 @@ auto RpcPutCallback(foskv::RpcResult<std::string_view> has_response) -> kosio::a
     }
 }
 
-auto RpcGetCallback(foskv::RpcResult<std::string_view> has_response) -> kosio::async::Task<> {
-    if (!has_response) {
-        kosio::log::console.error("{}", has_response.error());
-        co_return;
-    }
-    foskv::storage::GetResponse get_response;
-    if (!get_response.ParseFromArray(has_response.value().data(), has_response.value().size())) {
+auto RpcGetCallback(std::string_view resp_payload) -> kosio::async::Task<> {
+    GetResponse get_response;
+    if (!get_response.ParseFromArray(resp_payload.data(), resp_payload.size())) {
         kosio::log::console.error("Failed to parse response");
         co_return;
     }
@@ -39,13 +31,9 @@ auto RpcGetCallback(foskv::RpcResult<std::string_view> has_response) -> kosio::a
     }
 }
 
-auto RpcDeleteCallback(foskv::RpcResult<std::string_view> has_response) -> kosio::async::Task<> {
-    if (!has_response) {
-        kosio::log::console.error("{}", has_response.error());
-        co_return;
-    }
-    foskv::storage::DeleteResponse delete_response;
-    if (!delete_response.ParseFromArray(has_response.value().data(), has_response.value().size())) {
+auto RpcDeleteCallback(std::string_view resp_payload) -> kosio::async::Task<> {
+    DeleteResponse delete_response;
+    if (!delete_response.ParseFromArray(resp_payload.data(), resp_payload.size())) {
         kosio::log::console.error("Failed to parse response");
         co_return;
     }
