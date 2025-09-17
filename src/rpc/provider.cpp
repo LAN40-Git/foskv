@@ -1,16 +1,12 @@
 #include "foskv/rpc/provider.hpp"
 
 auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<kosio::Result<kosio::Error>> {
-    auto has_addr = kosio::net::SocketAddr::parse(host_, port_);
-    if (!has_addr) [[unlikely]] {
-        co_return std::unexpected{has_addr.error()};
-    }
-    auto has_listener = kosio::net::TcpListener::bind(has_addr.value());
+    auto has_listener = kosio::net::TcpListener::bind(addr_);
     if (!has_listener) [[unlikely]] {
         co_return std::unexpected{has_listener.error()};
     }
     auto listener = std::move(has_listener.value());
-    LOG_INFO("Listening on {}...", listener.local_addr().value());
+    LOG_INFO("Listening on {}...", addr_);
     while (true) {
         auto has_stream = co_await listener.accept();
         if (!has_stream) [[unlikely]] {
@@ -23,11 +19,10 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<kosio::Result<kosio::E
 }
 
 void foskv::rpc::RpcProvider::register_invoke(
-    int fd,
     std::string_view service_name,
     std::string_view method_name,
     Invoke&& invoke) {
-    invokes_[fd][service_name][method_name] = std::move(invoke);
+    invokes_[service_name][method_name] = std::move(invoke);
 }
 
 auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
@@ -80,7 +75,6 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
 
         // Invoke
         auto has_resp_payload = invoke(
-            stream.fd(),
             service_name, method_name,
             {buffer.data(), req_payload_size},
             {resp_buffer.data(), resp_buffer.capacity()});
@@ -118,25 +112,16 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             break;
         }
     }
-    // Remove the registered file descriptor, here
-    // is thread safe since the connection is not closed yet
-    invokes_.erase(stream.fd());
     co_await stream.close();
 }
 
 auto foskv::rpc::RpcProvider::invoke(
-    int fd,
     std::string_view service_name,
     std::string_view method_name,
     std::string_view payload,
     std::span<char> response) -> RpcResult<std::size_t> {
-    auto connection = invokes_.find(fd);
-    if (connection == invokes_.end()) [[unlikely]] {
-        return std::unexpected{make_rpc_error(RpcError::kFdNotRegister)};
-    }
-
-    auto service = connection->second.find(service_name);
-    if (service == connection->second.end()) [[unlikely]] {
+    auto service = invokes_.find(service_name);
+    if (service == invokes_.end()) [[unlikely]] {
         return std::unexpected{make_rpc_error(RpcError::kServiceNotFound)};
     }
 

@@ -2,18 +2,14 @@
 
 #include <ranges>
 
-foskv::raft::Transport::Transport(std::string_view host, uint16_t port)
-    : rpc_provider_(host, port) {
+foskv::raft::Transport::Transport(const kosio::net::SocketAddr &addr)
+    : rpc_provider_(addr) {
     // TODO: Load peers from file
 }
 
-foskv::raft::Transport::Transport(std::string_view host, uint16_t port, PeerMap &&peers)
-    : rpc_provider_(host, port)
+foskv::raft::Transport::Transport(const kosio::net::SocketAddr &addr, PeerMap &&peers)
+    : rpc_provider_(addr)
     , peers_(std::move(peers)) {}
-
-void foskv::raft::Transport::init() {
-
-}
 
 auto foskv::raft::Transport::run() -> kosio::async::Task<> {
     std::size_t count{0};

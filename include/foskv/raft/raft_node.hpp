@@ -9,8 +9,12 @@
 namespace foskv::raft {
 class RaftNode {
 public:
-    explicit RaftNode(std::string_view host, uint16_t port);
-    explicit RaftNode(std::string_view host, uint16_t port, Transport::PeerMap&& peers);
+    explicit RaftNode(uint64_t member_id, const kosio::net::SocketAddr &addr);
+    explicit RaftNode(uint64_t member_id, const kosio::net::SocketAddr &addr, Transport::PeerMap&& peers);
+
+public:
+    void init();
+    auto run() -> kosio::async::Task<>;
 
 public:
     auto start_election_timeout() -> kosio::async::Task<>;
@@ -18,12 +22,13 @@ public:
 
 public:
     void increase_term_to(uint64_t term);
+    void become_leader();
 
 public:
     // raft rpc invoke
-    auto handle_request_vote_request() -> RpcResult<std::size_t>;
-    auto handle_append_entries_request() -> RpcResult<std::size_t>;
-    auto handle_install_snapshot_request() -> RpcResult<std::size_t>;
+    auto handle_request_vote_request(std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
+    auto handle_append_entries_request(std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
+    auto handle_install_snapshot_request(std::string_view payload, std::span<char> response) -> RpcResult<std::size_t>;
 
 private:
     std::atomic<bool>  is_shutdown_{false};
@@ -33,19 +38,20 @@ private:
 
     /* RaftState from https://raft.github.io/raft.pdf */
     enum Role { kLeader, kFollower, kCandidate};
-    Role role = kFollower;
+    std::atomic<Role> role_ = kFollower;
     // Persistent state on all servers
     // TODO: Read from disk
-    uint64_t                current_term{0};
-    std::optional<uint64_t> voted_for{std::nullopt};
-    std::vector<LogEntry>   logs{};
+    uint64_t                current_term_{0};
+    std::optional<uint64_t> voted_for_{std::nullopt};
+    // Default one entry
+    std::vector<LogEntry>   logs_{LogEntry{}};
 
     // Volatile state on all servers
-    uint64_t commit_index{0};
-    uint64_t last_applied{0};
+    uint64_t                commit_index_{0};
+    uint64_t                last_applied_{0};
 
     // Volatile state on leaders
-    std::vector<int> next_index{};
-    std::vector<int> match_index{};
+    std::vector<int> next_index_{};
+    std::vector<int> match_index_{};
 };
 } // namespace foskv::raft

@@ -11,7 +11,13 @@ auto server() -> kosio::async::Task<> {
     }
     auto st = std::move(has_st.value());
 
-    foskv::rpc::RpcProvider provider{"127.0.0.1", 8080};
+    auto has_addr = kosio::net::SocketAddr::parse("127.0.0.1", 8080);
+    if (!has_addr) {
+        kosio::log::console.error("{}", has_addr.error());
+        co_return;
+    }
+
+    foskv::rpc::RpcProvider provider{has_addr.value()};
     provider.register_invoke(KVRpc::ServiceName, KVRpc::Put, [&st](std::string_view payload, std::span<char> response) -> foskv::RpcResult<std::size_t> {
         return st.RpcPut(payload, response);
     });
