@@ -21,7 +21,7 @@ public:
     /// @param port Port of the rpc server
     /// @return An unique wrapped RpcConsumer
     static auto connect(std::string_view host, uint16_t port)
-    -> kosio::async::Task<RpcResult<std::unique_ptr<RpcConsumer>>>;
+    -> kosio::async::Task<kosio::Result<std::unique_ptr<RpcConsumer>>>;
 
 public:
     /// @brief Asynchronously send a rpc request and return
@@ -30,7 +30,7 @@ public:
     /// @param payload Serialized (protobuf) rpc request
     /// @param callback Triggered when the corresponding reply is received
     /// @return RpcError or void
-    /// @note Thread-safe
+    /// @note Thread-safe, better wrap it with another coroutine task and spawn
     [[REMEMBER_CO_AWAIT]]
     auto call(std::string_view service_name,
               std::string_view method_name,
@@ -58,8 +58,8 @@ private:
 private:
     kosio::sync::Mutex     mutex_;
     kosio::sync::Latch     latch_{1};
-    std::atomic<bool>      is_shutdown_{false};
-    std::atomic<bool>      is_running_{true};
+    std::atomic<bool>      is_shutdown_{false}; // Do not change the default values
+    std::atomic<bool>      is_running_{false};  // Do not change the default values
     uint64_t               request_id_{0};
     std::vector<char>      buffer_;
     kosio::net::TcpStream  stream_;

@@ -42,9 +42,9 @@ public:
 
 public:
     // raft rpc callback
-    auto request_vote_callback(std::string_view payload, std::span<char> response) -> kosio::async::Task<>;
-    auto append_entries_callback(std::string_view payload, std::span<char> response) -> kosio::async::Task<>;
-    auto install_snapshot_callback(std::string_view payload, std::span<char> response) -> kosio::async::Task<>;
+    auto request_vote_callback(RpcResult<std::string_view> has_response) -> kosio::async::Task<>;
+    auto append_entries_callback(RpcResult<std::string_view> has_response) -> kosio::async::Task<>;
+    auto install_snapshot_callback(RpcResult<std::string_view> has_response) -> kosio::async::Task<>;
 
 private:
     kosio::sync::Mutex mutex_;

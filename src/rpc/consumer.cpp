@@ -14,14 +14,14 @@ foskv::rpc::RpcConsumer::~RpcConsumer() {
 }
 
 auto foskv::rpc::RpcConsumer::connect(std::string_view host, uint16_t port)
--> kosio::async::Task<RpcResult<std::unique_ptr<RpcConsumer>>> {
+-> kosio::async::Task<kosio::Result<std::unique_ptr<RpcConsumer>>> {
     auto has_addr = kosio::net::SocketAddr::parse(host, port);
     if (!has_addr) [[unlikely]] {
-        co_return std::unexpected{make_rpc_error(RpcError::kConnectFailed)};
+        co_return std::unexpected{has_addr.error()};
     }
     auto has_stream = co_await kosio::net::TcpStream::connect(has_addr.value());
     if (!has_stream) [[unlikely]] {
-        co_return std::unexpected{make_rpc_error(RpcError::kConnectFailed)};
+        co_return std::unexpected{has_stream.error()};
     }
     co_return std::make_unique<RpcConsumer>(std::move(has_stream.value()));
 }
@@ -77,7 +77,8 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
 }
 
 auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
-    if (is_shutdown_.load(std::memory_order_acquire)) {
+    if (is_shutdown_.load(std::memory_order_acquire) ||
+        is_running_.load(std::memory_order_acquire)) {
         co_return;
     }
     is_running_.store(true, std::memory_order_release);
@@ -141,12 +142,12 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
 
 auto foskv::rpc::RpcConsumer::reconnect() -> kosio::async::Task<RpcResult<void>> {
     if (is_shutdown_.load(std::memory_order_acquire) ||
-        is_running_.load(std::memory_order_acquire)) [[unlikely]] {
+        is_running_.load(std::memory_order_acquire)) {
             co_return std::unexpected{make_rpc_error(RpcError::kReconnectFailed)};
-        }
+    }
     auto ret = co_await kosio::net::TcpStream::connect(server_addr_);
-    if (!ret) [[unlikely]] {
-        co_return std::unexpected{make_rpc_error(RpcError::kConnectFailed)};
+    if (!ret) {
+        co_return std::unexpected{make_rpc_error(RpcError::kReconnectFailed)};
     }
     // The old stream has been closed or error,
     // so this will be ok

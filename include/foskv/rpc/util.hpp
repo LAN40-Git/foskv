@@ -6,6 +6,6 @@
 #include <string>
 #include <functional>
 
-namespace foskv::rpc::detail {
+namespace foskv::rpc {
 
-} // namespace foskv::rpc::detail
+} // namespace foskv::rpc
