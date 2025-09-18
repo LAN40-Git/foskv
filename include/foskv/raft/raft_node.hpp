@@ -1,5 +1,6 @@
 #pragma once
 #include "foskv/raft/transport.hpp"
+#include "foskv/raft/config.hpp"
 #include <vector>
 #include <optional>
 #include <kosio/sync.hpp>
@@ -7,9 +8,11 @@
 
 namespace foskv::raft {
 class RaftNode {
+private:
+    explicit RaftNode(const Config& config);
+
 public:
-    explicit RaftNode(uint64_t member_id, const kosio::net::SocketAddr &addr);
-    explicit RaftNode(uint64_t member_id, const kosio::net::SocketAddr &addr, Transport::PeerMap&& peers);
+    static auto create(std::string_view config_file_path) -> RaftResult<std::unique_ptr<RaftNode>>;
 
 public:
     void init();
@@ -46,7 +49,6 @@ private:
     enum Role { kLeader, kFollower, kCandidate};
     std::atomic<Role> role_ = kFollower;
     // Persistent state on all servers
-    // TODO: Read from disk
     std::atomic<uint64_t>   current_term_{0};
     std::optional<uint64_t> voted_for_{std::nullopt};
     // Default one entry

@@ -9,8 +9,7 @@ class Transport {
     using PeerMap = std::unordered_map<kosio::net::SocketAddr, Peer>;
 
 public:
-    explicit Transport(uint64_t member_id, const kosio::net::SocketAddr &addr);
-    explicit Transport(uint64_t member_id, const kosio::net::SocketAddr &addr, PeerMap&& peers);
+    explicit Transport(uint64_t cluster_id, uint64_t member_id, const kosio::net::SocketAddr &addr);
 
 public:
     auto run() -> kosio::async::Task<>;

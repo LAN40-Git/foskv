@@ -1,14 +1,18 @@
 #include "foskv/raft/raft_node.hpp"
 #include "kosio/common/util/random.hpp"
 
-foskv::raft::RaftNode::RaftNode(uint64_t member_id, const kosio::net::SocketAddr &addr)
-    : transport_(member_id, addr) {
-    init();
+foskv::raft::RaftNode::RaftNode(const Config& config) {
+
 }
 
-foskv::raft::RaftNode::RaftNode(uint64_t member_id, const kosio::net::SocketAddr &addr, Transport::PeerMap &&peers)
-    : transport_(member_id, addr, std::move(peers)) {
-    init();
+auto foskv::raft::RaftNode::create(std::string_view config_file_path) -> RaftResult<std::unique_ptr<RaftNode>> {
+    // Load config
+    auto has_config = Config::load(config_file_path);
+    if (!has_config) {
+        return std::unexpected{has_config.error()};
+    }
+    // Load persist state
+
 }
 
 void foskv::raft::RaftNode::init() {

@@ -13,7 +13,7 @@ class RpcProvider {
     using Service = std::unordered_map<std::string_view, Invoke>;
 
 public:
-    RpcProvider(const kosio::net::SocketAddr& addr)
+    explicit RpcProvider(const kosio::net::SocketAddr& addr)
         : addr_(addr) {}
 
 public:

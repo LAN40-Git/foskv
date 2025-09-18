@@ -6,11 +6,6 @@ foskv::raft::Transport::Transport(uint64_t member_id, const kosio::net::SocketAd
     : member_id_(member_id)
     , rpc_provider_(addr) {}
 
-foskv::raft::Transport::Transport(uint64_t member_id, const kosio::net::SocketAddr &addr, PeerMap &&peers)
-    : member_id_(member_id)
-    , peers_(std::move(peers))
-    , rpc_provider_(addr) {}
-
 auto foskv::raft::Transport::run() -> kosio::async::Task<> {
     std::size_t count{0};
     while (true) {

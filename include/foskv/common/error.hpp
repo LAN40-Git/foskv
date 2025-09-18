@@ -13,6 +13,8 @@ static inline constexpr int ErrorCodeInterval = 1000;
 static inline constexpr int RpcErrorCodeBase = ErrorCodeBase;
 // Storage Error
 static inline constexpr int StorageErrorCodeBase = RpcErrorCodeBase + ErrorCodeInterval;
+// Raft Error
+static inline constexpr int RaftErrorCodeBase = StorageErrorCodeBase + ErrorCodeInterval;
 
 template <class DeriverError>
 class BaseError {
@@ -128,6 +130,35 @@ public:
     }
 };
 
+// ========== Raft Error ==========
+class RaftError : public detail::BaseError<RaftError> {
+public:
+    enum Code {
+        kUnknown = detail::RaftErrorCodeBase,
+        kConfigSaveFailed,
+        kConfigLoadFailed,
+    };
+
+public:
+    explicit RaftError(Code error_code)
+        : BaseError<RaftError>(static_cast<int>(error_code)) {}
+
+public:
+    [[nodiscard]]
+    auto error_message() const noexcept -> std::string_view {
+        switch (static_cast<Code>(error_code_)) {
+            case kUnknown:
+                return "Unknown error.";
+            case kConfigSaveFailed:
+                return "Failed to save configuration.";
+            case kConfigLoadFailed:
+                return "Failed to load configuration.";
+            default:
+                return strerror(error_code_);
+        }
+    }
+};
+
 namespace detail {
 template <class ErrorType>
     requires std::derived_from<ErrorType, BaseError<ErrorType>>
@@ -152,6 +183,13 @@ using StorageResult = detail::Result<ResultType, StorageError>;
 [[nodiscard]]
 static inline auto make_storage_error(int error_code) ->detail::BaseError<StorageError> {
     return detail::make_error<StorageError>(error_code);
+}
+
+template <class ResultType>
+using RaftResult = detail::Result<ResultType, RaftError>;
+[[nodiscard]]
+static inline auto make_raft_error(int error_code) ->detail::BaseError<RaftError> {
+    return detail::make_error<RaftError>(error_code);
 }
 } // namespace foskv
 
