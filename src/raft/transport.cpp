@@ -2,11 +2,12 @@
 
 #include <ranges>
 
-foskv::raft::Transport::Transport(uint64_t member_id, const kosio::net::SocketAddr &addr)
-    : member_id_(member_id)
-    , rpc_provider_(addr) {}
+foskv::raft::detail::Transport::Transport(const Config& config)
+    : cluster_id_(config.cluster_id_)
+    , member_id_(config.member_id_)
+    , rpc_provider_(config.addr_) {}
 
-auto foskv::raft::Transport::run() -> kosio::async::Task<> {
+auto foskv::raft::detail::Transport::run() -> kosio::async::Task<> {
     std::size_t count{0};
     while (true) {
         auto ret = co_await rpc_provider_.run();
@@ -21,7 +22,7 @@ auto foskv::raft::Transport::run() -> kosio::async::Task<> {
     }
 }
 
-auto foskv::raft::Transport::broadcast_request_vote(RequestVoteRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_request_vote(RequestVoteRequest&& request,
     rpc::RpcCallback&& callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
@@ -30,7 +31,7 @@ auto foskv::raft::Transport::broadcast_request_vote(RequestVoteRequest&& request
     }
 }
 
-auto foskv::raft::Transport::broadcast_append_entries(AppendEntriesRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_append_entries(AppendEntriesRequest&& request,
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
@@ -39,7 +40,7 @@ auto foskv::raft::Transport::broadcast_append_entries(AppendEntriesRequest&& req
     }
 }
 
-auto foskv::raft::Transport::broadcast_install_snapshot(InstallSnapshotRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_install_snapshot(InstallSnapshotRequest&& request,
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();

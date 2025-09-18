@@ -1,19 +1,29 @@
 #include "foskv/raft/peer.hpp"
 
-foskv::raft::Peer::Peer(const kosio::net::SocketAddr& addr)
-    : addr_(addr) {}
+foskv::raft::detail::Peer::Peer(
+    uint64_t member_id,
+    std::string_view name,
+    const kosio::net::SocketAddr& addr)
+    : member_id_(member_id), name_(name), addr_(addr) {}
 
-foskv::raft::Peer::Peer(Peer &&other) noexcept
-    : addr_(other.addr_)
-    , consumer_(std::move(other.consumer_)) {}
+foskv::raft::detail::Peer::Peer(Peer &&other) noexcept
+    : member_id_(other.member_id_)
+    , addr_(other.addr_)
+    , consumer_(std::move(other.consumer_)) {
+    other.member_id_ = 0;
+    other.addr_ = kosio::net::SocketAddr{};
+}
 
-auto foskv::raft::Peer::operator=(Peer &&other) noexcept -> Peer& {
+auto foskv::raft::detail::Peer::operator=(Peer &&other) noexcept -> Peer& {
+    member_id_ = other.member_id_;
     addr_ = other.addr_;
     consumer_ = std::move(other.consumer_);
+    other.member_id_ = 0;
+    other.addr_ = kosio::net::SocketAddr{};
     return *this;
 }
 
-auto foskv::raft::Peer::request_vote(std::string_view req_payload, rpc::RpcCallback &&callback)
+auto foskv::raft::detail::Peer::request_vote(std::string_view req_payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
     if (consumer_ == nullptr) [[unlikely]] {
         auto ret = co_await connect();
@@ -30,7 +40,7 @@ auto foskv::raft::Peer::request_vote(std::string_view req_payload, rpc::RpcCallb
     }
 }
 
-auto foskv::raft::Peer::append_entries(std::string_view req_payload, rpc::RpcCallback &&callback)
+auto foskv::raft::detail::Peer::append_entries(std::string_view req_payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
     if (consumer_ == nullptr) [[unlikely]] {
         auto ret = co_await connect();
@@ -47,7 +57,7 @@ auto foskv::raft::Peer::append_entries(std::string_view req_payload, rpc::RpcCal
     }
 }
 
-auto foskv::raft::Peer::install_snapshot(std::string_view req_payload, rpc::RpcCallback &&callback)
+auto foskv::raft::detail::Peer::install_snapshot(std::string_view req_payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
     constexpr std::string_view METHOD_NAME = "InstallSnapshot";
     if (consumer_ == nullptr) [[unlikely]] {
@@ -65,7 +75,7 @@ auto foskv::raft::Peer::install_snapshot(std::string_view req_payload, rpc::RpcC
     }
 }
 
-auto foskv::raft::Peer::connect() -> kosio::async::Task<kosio::Result<void>> {
+auto foskv::raft::detail::Peer::connect() -> kosio::async::Task<kosio::Result<void>> {
     auto ret = co_await rpc::RpcConsumer::connect(addr_);
     if (!ret) [[unlikely]] {
         co_return std::unexpected{ret.error()};

@@ -1,6 +1,7 @@
 #include "foskv/rpc/consumer.hpp"
 #include "foskv/storage/command.hpp"
 #include "foskv/storage/storage.hpp"
+#include "foskv/raft/raft_node.hpp"
 #include <kosio/signal/signal.hpp>
 
 using namespace foskv::storage;

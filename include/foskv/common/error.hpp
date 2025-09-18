@@ -84,7 +84,7 @@ public:
     auto error_message() const noexcept -> std::string_view {
         switch (static_cast<Code>(error_code_)) {
             case kUnknown:
-                return "Unknown error.";
+                return "Unknown rpc error.";
             case kFdNotRegister:
                 return "Fd not register.";
             case kSerializeFailed:
@@ -121,7 +121,7 @@ public:
     auto error_message() const noexcept -> std::string_view {
         switch (static_cast<Code>(error_code_)) {
             case kUnknown:
-                return "Unknown io error.";
+                return "Unknown storage error.";
             case kDBOpenFailed:
                 return "Failed to open database.";
             default:
@@ -135,8 +135,13 @@ class RaftError : public detail::BaseError<RaftError> {
 public:
     enum Code {
         kUnknown = detail::RaftErrorCodeBase,
-        kConfigSaveFailed,
-        kConfigLoadFailed,
+        kConfigFileOpenFailed,
+        kPersisterCreateFailed,
+        kPersistentSaveFailed,
+        kInvalidPeerAddress,
+        kRepeatedPeer,
+        kJsonParseFailed,
+        kLocalNodeNotFound,
     };
 
 public:
@@ -148,11 +153,21 @@ public:
     auto error_message() const noexcept -> std::string_view {
         switch (static_cast<Code>(error_code_)) {
             case kUnknown:
-                return "Unknown error.";
-            case kConfigSaveFailed:
-                return "Failed to save configuration.";
-            case kConfigLoadFailed:
-                return "Failed to load configuration.";
+                return "Unknown raft error.";
+            case kConfigFileOpenFailed:
+                return "Failed to open configuration file.";
+            case kPersisterCreateFailed:
+                return "Failed to create persister.";
+            case kPersistentSaveFailed:
+                return "Failed to save persistent.";
+            case kInvalidPeerAddress:
+                return "Invalid peer address.";
+            case kRepeatedPeer:
+                return "Repeated peer.";
+            case kJsonParseFailed:
+                return "Failed to parse JSON.";
+            case kLocalNodeNotFound:
+                return "Failed to find local node in configuration.";
             default:
                 return strerror(error_code_);
         }

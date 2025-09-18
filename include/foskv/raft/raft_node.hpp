@@ -1,6 +1,6 @@
 #pragma once
 #include "foskv/raft/transport.hpp"
-#include "foskv/raft/config.hpp"
+#include "foskv/raft/persister.hpp"
 #include <vector>
 #include <optional>
 #include <kosio/sync.hpp>
@@ -8,11 +8,13 @@
 
 namespace foskv::raft {
 class RaftNode {
-private:
-    explicit RaftNode(const Config& config);
+public:
+    explicit RaftNode(const Config& config, detail::Persister persister);
 
 public:
-    static auto create(std::string_view config_file_path) -> RaftResult<std::unique_ptr<RaftNode>>;
+    static auto create(
+        std::string_view config_file_path,
+        std::string_view persistent_path) -> RaftResult<std::unique_ptr<RaftNode>>;
 
 public:
     void init();
@@ -39,9 +41,10 @@ public:
     -> kosio::async::Task<RpcResult<std::size_t>>;
 
 private:
-    std::atomic<bool>     is_shutdown_{false};
-    kosio::sync::Mutex    mutex_;
-    Transport             transport_;
+    std::atomic<bool>  is_shutdown_{false};
+    kosio::sync::Mutex mutex_;
+    detail::Persister  persister_;
+    detail::Transport  transport_;
     // election timeout last reset time ms
     std::atomic<uint64_t> last_reset_time_{0};
 
@@ -49,17 +52,16 @@ private:
     enum Role { kLeader, kFollower, kCandidate};
     std::atomic<Role> role_ = kFollower;
     // Persistent state on all servers
-    std::atomic<uint64_t>   current_term_{0};
-    std::optional<uint64_t> voted_for_{std::nullopt};
-    // Default one entry
-    std::vector<LogEntry>   logs_{LogEntry{}};
+    std::atomic<uint64_t>   current_term_;
+    std::optional<uint64_t> voted_for_;
+    std::vector<LogEntry>   logs_{};
 
     // Volatile state on all servers
     uint64_t                commit_index_{0};
     uint64_t                last_applied_{0};
 
     // Volatile state on leaders
-    std::vector<int> next_index_{0};
-    std::vector<int> match_index_{0};
+    std::vector<int> next_index_{};
+    std::vector<int> match_index_{};
 };
 } // namespace foskv::raft

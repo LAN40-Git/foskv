@@ -1,11 +1,10 @@
 #pragma once
 #include "foskv/raft/util.hpp"
 
-namespace foskv::raft {
+namespace foskv::raft::detail {
 class Peer {
 public:
-    explicit Peer(const kosio::net::SocketAddr& addr);
-
+    explicit Peer(uint64_t member_id, std::string_view name, const kosio::net::SocketAddr& addr);
     Peer(Peer&& other) noexcept;
     Peer& operator=(Peer&& other) noexcept;
 
@@ -20,7 +19,9 @@ private:
     auto connect() -> kosio::async::Task<kosio::Result<void>>;
 
 private:
+    uint64_t                          member_id_;
+    std::string                       name_;
     kosio::net::SocketAddr            addr_;
     std::unique_ptr<rpc::RpcConsumer> consumer_{nullptr};
 };
-} // namespace foskv::raft
+} // namespace foskv::raft::detail

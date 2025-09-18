@@ -1,23 +1,29 @@
 #include "foskv/raft/raft_node.hpp"
 #include "kosio/common/util/random.hpp"
 
-foskv::raft::RaftNode::RaftNode(const Config& config) {
+foskv::raft::RaftNode::RaftNode(const Config& config, detail::Persister persister)
+    : persister_(std::move(persister))
+    , transport_(config.cluster_id_, config.member_id_, config.addr_) {
 
 }
 
-auto foskv::raft::RaftNode::create(std::string_view config_file_path) -> RaftResult<std::unique_ptr<RaftNode>> {
+auto foskv::raft::RaftNode::create(
+    std::string_view config_file_path,
+    std::string_view persistent_path) -> RaftResult<std::unique_ptr<RaftNode>> {
     // Load config
     auto has_config = Config::load(config_file_path);
-    if (!has_config) {
+    if (!has_config) [[unlikely]] {
         return std::unexpected{has_config.error()};
     }
-    // Load persist state
-
+    // Create persister and load persistent
+    auto has_persister = detail::Persister::create(persistent_path);
+    if (!has_persister) [[unlikely]] {
+        return std::unexpected{has_persister.error()};
+    }
+    return std::make_unique<RaftNode>(has_config.value(), std::move(has_persister.value()));
 }
 
 void foskv::raft::RaftNode::init() {
-    // TODO: Load the configuration from file
-
     // Register invokes
     transport_.rpc_provider_.register_invoke(RaftRpc::ServiceName, RaftRpc::RequestVote,
         [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>>  {
@@ -72,7 +78,7 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
         header->set_member_id(transport_.member_id_);
         header->set_term(current_term);
         auto last_log_index = logs_.size() - 1;
-        auto last_log_term = (last_log_index == 0) ? 0 : logs_[last_log_index].log_term();
+        auto last_log_term = (last_log_index == 0) ? 0 : logs_[last_log_index].term();
         request.set_last_log_index(last_log_index);
         request.set_last_log_term(last_log_term);
         kosio::spawn(transport_.broadcast_request_vote(std::move(request),
@@ -145,7 +151,7 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
         header->set_member_id(transport_.member_id_);
         header->set_term(current_term_.load(std::memory_order_relaxed));
         auto prev_log_index = logs_.size() - 1;
-        auto prev_log_term = (prev_log_index == 0) ? 0 : logs_[prev_log_index].log_term();
+        auto prev_log_term = (prev_log_index == 0) ? 0 : logs_[prev_log_index].term();
         request.set_prev_log_index(prev_log_index);
         request.set_prev_log_term(prev_log_term);
         request.set_leader_commit(commit_index_);
@@ -248,7 +254,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     bool up_to_date_log = false;
 
     if (last_log_index > logs_.size() - 1 ||
-        (last_log_index == logs_.size() - 1 && last_log_term == logs_[last_log_index].log_term())) {
+        (last_log_index == logs_.size() - 1 && last_log_term == logs_[last_log_index].term())) {
         up_to_date_log = true;
     }
 
@@ -340,7 +346,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         co_return resp_payload_size;
     }
 
-    if (logs_[prev_log_index].log_term() != prev_log_term) {
+    if (logs_[prev_log_index].term() != prev_log_term) {
         logs_.erase(logs_.begin() + prev_log_index, logs_.end());
     }
 
