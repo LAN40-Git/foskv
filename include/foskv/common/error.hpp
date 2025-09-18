@@ -136,12 +136,14 @@ public:
     enum Code {
         kUnknown = detail::RaftErrorCodeBase,
         kConfigFileOpenFailed,
+        kConfigFileWriteFailed,
         kPersisterCreateFailed,
         kPersistentSaveFailed,
         kInvalidPeerAddress,
         kRepeatedPeer,
         kJsonParseFailed,
         kLocalNodeNotFound,
+        kInvalidNodeAddress,
     };
 
 public:
@@ -156,6 +158,8 @@ public:
                 return "Unknown raft error.";
             case kConfigFileOpenFailed:
                 return "Failed to open configuration file.";
+            case kConfigFileWriteFailed:
+                return "Failed to write configuration file.";
             case kPersisterCreateFailed:
                 return "Failed to create persister.";
             case kPersistentSaveFailed:
@@ -168,6 +172,8 @@ public:
                 return "Failed to parse JSON.";
             case kLocalNodeNotFound:
                 return "Failed to find local node in configuration.";
+            case kInvalidNodeAddress:
+                return "Invalid node address.";
             default:
                 return strerror(error_code_);
         }

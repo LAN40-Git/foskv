@@ -26,10 +26,8 @@ if (RocksDB_FOUND)
     message(STATUS "RocksDB version: ${RocksDB_VERSION}")
 endif ()
 
-find_package(TBB REQUIRED)
-if (TBB_FOUND)
-    message(STATUS "TBB version: ${TBB_VERSION}")
-endif ()
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(XXHASH REQUIRED libxxhash)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -48,6 +46,7 @@ set(DEPEND_LIBS
         ${PROTOBUF_LIBRARIES}
         ${LIBURING_LIBRARIES}
         ${ROCKSDB_LIBRARIES}
+        ${XXHASH_LIBRARIES}
 )
 
 add_subdirectory(src/rpc)

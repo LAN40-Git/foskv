@@ -1,47 +1,58 @@
 #pragma once
-#include <nlohmann/json.hpp>
 #include "foskv/common/error.hpp"
 #include "foskv/raft/peer.hpp"
+#include <kosio/fs.hpp>
+#include <kosio/io/buf/stream.hpp>
+#include <nlohmann/json.hpp>
 
 namespace foskv::raft {
 struct NodeInfo {
     std::string name;
     std::string host;
     uint16_t    port;
+
+    auto operator==(const NodeInfo& other) const noexcept -> bool;
+    auto hash() const noexcept -> uint64_t;
 };
 
 class Config {
 public:
     explicit Config(
         uint64_t cluster_id,
-        uint64_t member_id,
-        const kosio::net::SocketAddr& node_addr,
-        std::unordered_map<uint64_t, detail::Peer> peers)
-        : cluster_id_(cluster_id)
-        , member_id_(member_id)
-        , node_addr_(node_addr)
-        , peers_(std::move(peers)) {}
+        uint64_t local_member_id,
+        std::string&& local_name,
+        const kosio::net::SocketAddr& local_addr,
+        std::unordered_map<uint64_t, detail::Peer>&& peers,
+        kosio::io::BufStream<kosio::fs::File>&& writer);
 
-    /// @brief Save the raft config to a file
-    /// @param path The config file path
-    /// @param cluster_id The raft cluster id
-    /// @param node_name The local raft node name
-    /// @param node_infos The raft node information in this cluster
-    /// @return void or RaftError
-    static auto save(
+public:
+    [[REMEMBER_CO_AWAIT]]
+    static auto create(
         std::string_view path,
         uint64_t cluster_id,
-        std::string_view node_name,
-        const std::unordered_set<NodeInfo>& node_infos) -> RaftResult<void>;
+        std::string_view local_name,
+        const std::unordered_set<NodeInfo>& node_infos) -> kosio::async::Task<RaftResult<void>>;
 
-    /// @brief Load the config from file
-    /// @param path The config file path
-    /// @return Config or RaftError
-    static auto load(std::string_view path) -> RaftResult<Config>;
+    [[REMEMBER_CO_AWAIT]]
+    static auto load(std::string_view path) -> kosio::async::Task<RaftResult<Config>>;
+
+public:
+    auto save() -> RaftResult<void>;
 
     uint64_t                                   cluster_id_;
-    uint64_t                                   member_id_;
-    kosio::net::SocketAddr                     node_addr_;
+    uint64_t                                   local_member_id_;
+    std::string                                local_name_;
+    kosio::net::SocketAddr                     local_addr_;
     std::unordered_map<uint64_t, detail::Peer> peers_;
+    kosio::io::BufStream<kosio::fs::File>      writer_;
 };
 } // namespace foskv::raft
+
+namespace std {
+    template <>
+    struct hash<foskv::raft::NodeInfo> {
+        std::size_t operator()(const foskv::raft::NodeInfo& n) const noexcept {
+            return n.hash();
+        }
+    };
+} // namespace std
