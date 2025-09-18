@@ -1,7 +1,7 @@
 #include "foskv/raft/persister.hpp"
 #include <kosio/common/debug.hpp>
 
-foskv::raft::detail::Persister::Persister(storage::Storage st)
+foskv::raft::detail::Persister::Persister(storage::Storage&& st)
     : st_(std::move(st))
     , keys_(128)
     , values_(128) {}
@@ -18,16 +18,16 @@ auto foskv::raft::detail::Persister::operator=(Persister &&other) noexcept -> Pe
     return *this;
 }
 
-auto foskv::raft::detail::Persister::create(std::string_view persistent_path)
+auto foskv::raft::detail::Persister::create(const std::filesystem::path& path)
 -> RaftResult<Persister> {
     rocksdb::Options options;
     options.create_if_missing = true;
-    auto has_st = storage::Storage::Open(options, persistent_path);
+    auto has_st = storage::Storage::Open(options, path);
     if (!has_st) [[unlikely]] {
         LOG_ERROR("{}", has_st.error());
         return std::unexpected{make_raft_error(RaftError::kPersisterCreateFailed)};
     }
-    return Persister{has_st.value()};
+    return Persister{std::move(has_st.value())};
 }
 
 auto foskv::raft::detail::Persister::persist_entry(const std::pair<rocksdb::Slice, rocksdb::Slice> &entry) const -> RaftResult<void> {

@@ -14,13 +14,37 @@ foskv::rpc::RpcConsumer::~RpcConsumer() {
     assert(is_shutdown_.load(std::memory_order_acquire));
 }
 
-auto foskv::rpc::RpcConsumer::connect(const kosio::net::SocketAddr& server_addr)
--> kosio::async::Task<kosio::Result<std::unique_ptr<RpcConsumer>>> {
-    auto has_stream = co_await kosio::net::TcpStream::connect(server_addr);
+foskv::rpc::RpcConsumer::RpcConsumer(RpcConsumer&& other) noexcept
+    : is_shutdown_(other.is_shutdown_.load(std::memory_order_relaxed))
+    , is_running_(other.is_running_.load(std::memory_order_relaxed))
+    , request_id_(other.request_id_)
+    , buffer_(std::move(other.buffer_))
+    , stream_(std::move(other.stream_))
+    , server_addr_(other.server_addr_)
+    , callbacks_(std::move(other.callbacks_)) {}
+
+auto foskv::rpc::RpcConsumer::operator=(RpcConsumer&& other) noexcept -> RpcConsumer& {
+    is_shutdown_.store(other.is_shutdown_.load(std::memory_order_relaxed));
+    is_running_.store(other.is_running_.load(std::memory_order_relaxed));
+    request_id_ = other.request_id_;
+    buffer_ = std::move(other.buffer_);
+    stream_ = std::move(other.stream_);
+    server_addr_ = other.server_addr_;
+    callbacks_ = std::move(other.callbacks_);
+    return *this;
+}
+
+auto foskv::rpc::RpcConsumer::connect(std::string_view host, uint16_t port)
+-> kosio::async::Task<kosio::Result<RpcConsumer>> {
+    auto has_addr = kosio::net::SocketAddr::parse(host, port);
+    if (!has_addr) {
+        co_return std::unexpected{has_addr.error()};
+    }
+    auto has_stream = co_await kosio::net::TcpStream::connect(has_addr.value());
     if (!has_stream) [[unlikely]] {
         co_return std::unexpected{has_stream.error()};
     }
-    co_return std::make_unique<RpcConsumer>(std::move(has_stream.value()), server_addr);
+    co_return RpcConsumer{std::move(has_stream.value()), has_addr.value()};
 }
 
 auto foskv::rpc::RpcConsumer::call(

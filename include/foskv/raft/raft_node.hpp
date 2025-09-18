@@ -8,16 +8,19 @@
 
 namespace foskv::raft {
 class RaftNode {
-public:
-    explicit RaftNode(const Config& config, detail::Persister persister);
+private:
+    explicit RaftNode(Config&& config, detail::Persister&& persister);
 
 public:
-    static auto create(
-        std::string_view config_file_path,
-        std::string_view persistent_path) -> RaftResult<std::unique_ptr<RaftNode>>;
+    RaftNode(RaftNode&& other) noexcept;
+    auto operator=(RaftNode&& other) noexcept -> RaftNode&;
 
 public:
-    void init();
+    [[REMEMBER_CO_AWAIT]]
+    static auto create(const std::filesystem::path& config_path, const std::filesystem::path& data_dir)
+    -> kosio::async::Task<RaftResult<RaftNode>>;
+
+public:
     auto run() -> kosio::async::Task<>;
 
 public:
@@ -39,10 +42,13 @@ public:
     [[REMEMBER_CO_AWAIT]]
     auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
     -> kosio::async::Task<RpcResult<std::size_t>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_client_request(std::string_view req_payload, std::span<char> resp_payload)
+    -> kosio::async::Task<RpcResult<std::size_t>>;
 
 private:
-    std::atomic<bool>  is_shutdown_{false};
     kosio::sync::Mutex mutex_;
+    std::atomic<bool>  is_shutdown_{false};
     detail::Persister  persister_;
     detail::Transport  transport_;
     // election timeout last reset time ms
@@ -61,6 +67,7 @@ private:
     uint64_t                last_applied_{0};
 
     // Volatile state on leaders
+    std::optional<uint64_t> leader_id_{std::nullopt};
     std::vector<int> next_index_{};
     std::vector<int> match_index_{};
 };

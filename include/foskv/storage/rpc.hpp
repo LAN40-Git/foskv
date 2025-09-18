@@ -4,7 +4,7 @@
 namespace foskv::storage {
 class KVRpc {
 public:
-#ifdef USE_RPC_NAME
+#ifdef ENABLE_HUMAN_READABLE_RPC_NAMES
     static constexpr std::string_view ServiceName = "KVService";
     static constexpr std::string_view Put = "Put";
     static constexpr std::string_view Get = "Get";

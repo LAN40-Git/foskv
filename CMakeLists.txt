@@ -4,7 +4,26 @@ project(FOSKV VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_compile_definitions(NEED_KOSIO_LOG)
+
+set(OPTIONS
+        ENABLE_KOSIO_LOG
+        ENABLE_HUMAN_READABLE_RPC_NAMES
+        ENABLE_HUMAN_READABLE_JSON
+)
+
+set(ENABLE_KOSIO_LOG ON)
+set(ENABLE_HUMAN_READABLE_RPC_NAMES OFF)
+set(ENABLE_HUMAN_READABLE_JSON ON)
+
+foreach(opt IN LISTS OPTIONS)
+    option(${opt} "Enable ${opt}" ${${opt}})
+endforeach()
+
+foreach(opt IN LISTS OPTIONS)
+    if(${opt})
+        add_compile_definitions(${opt})
+    endif()
+endforeach()
 
 message(STATUS "Version: " "${CMAKE_PROJECT_VERSION}")
 message(STATUS "C++ standard: " "${CMAKE_CXX_STANDARD}")

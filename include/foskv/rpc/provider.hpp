@@ -1,10 +1,11 @@
 #pragma once
 #include "foskv/rpc/util.hpp"
 #include "foskv/rpc/config.hpp"
+#include "foskv/common/util/noncopyable.hpp"
 #include <kosio/signal/signal.hpp>
 
 namespace foskv::rpc {
-class RpcProvider {
+class RpcProvider : util::Noncopyable {
     // Use ParseFromArray(req_payload.data(), req_payload.size()) to get the rpc request.
     // Use SerializeToArray(resp_payload.data(), resp_payload_size) to write the rpc
     // response, return error if resp_payload_size > resp_payload.size() or failed
@@ -17,12 +18,17 @@ public:
         : addr_(addr) {}
 
 public:
+    RpcProvider(RpcProvider&& other) noexcept;
+    auto operator=(RpcProvider&& other) noexcept -> RpcProvider&;
+
+public:
     /// @brief Asynchronous accept rpc client connection
     /// @return A coro task, asynchronous accept rpc client connection
-    /// @note Remember `co_await`, you may wrap this task with another coro
-    ///       which has reconnect logic. Not thread-safe
+    /// @note Remember `co_await`. This function throws an exception when
+    ///       it goes wrong, and you need to catch and directly execute
+    ///       the logic of the program exit
     [[REMEMBER_CO_AWAIT]]
-    auto run() -> kosio::async::Task<kosio::Result<kosio::Error>>;
+    auto run() -> kosio::async::Task<>;
 
 public:
     /// @brief Register a rpc invoke

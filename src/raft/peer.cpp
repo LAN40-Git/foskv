@@ -23,6 +23,15 @@ auto foskv::raft::detail::Peer::operator=(Peer &&other) noexcept -> Peer& {
     return *this;
 }
 
+auto foskv::raft::detail::Peer::create(uint64_t member_id, std::string_view name,
+    std::string_view host, uint16_t port) -> RaftResult<Peer> {
+    auto has_addr = kosio::net::SocketAddr::parse(host, port);
+    if (!has_addr) {
+        return std::unexpected{make_raft_error(RaftError::kInvalidPeerAddress)};
+    }
+    return Peer{member_id, name, has_addr.value()};
+}
+
 auto foskv::raft::detail::Peer::request_vote(std::string_view req_payload, rpc::RpcCallback &&callback)
 -> kosio::async::Task<> {
     if (consumer_ == nullptr) [[unlikely]] {

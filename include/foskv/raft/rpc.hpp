@@ -4,7 +4,7 @@
 namespace foskv::raft {
 class RaftRpc {
 public:
-#ifdef USE_RPC_NAME
+#ifdef ENABLE_HUMAN_READABLE_RPC_NAMES
     static constexpr std::string_view ServiceName = "Raft";
     static constexpr std::string_view RequestVote = "RequestVote";
     static constexpr std::string_view AppendEntries = "AppendEntries";

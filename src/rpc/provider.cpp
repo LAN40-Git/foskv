@@ -1,16 +1,29 @@
 #include "foskv/rpc/provider.hpp"
 
-auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<kosio::Result<kosio::Error>> {
+foskv::rpc::RpcProvider::RpcProvider(RpcProvider &&other) noexcept
+    : addr_(other.addr_)
+    , invokes_(std::move(other.invokes_)) {
+    other.addr_ = kosio::net::SocketAddr{};
+}
+
+auto foskv::rpc::RpcProvider::operator=(RpcProvider &&other) noexcept -> RpcProvider & {
+    addr_ = other.addr_;
+    invokes_ = std::move(other.invokes_);
+    other.addr_ = kosio::net::SocketAddr{};
+    return *this;
+}
+
+auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<> {
     auto has_listener = kosio::net::TcpListener::bind(addr_);
     if (!has_listener) [[unlikely]] {
-        co_return std::unexpected{has_listener.error()};
+        throw std::system_error(errno, std::system_category());
     }
     auto listener = std::move(has_listener.value());
     LOG_INFO("Listening on {}...", addr_);
     while (true) {
         auto has_stream = co_await listener.accept();
         if (!has_stream) [[unlikely]] {
-            co_return std::unexpected{has_stream.error()};
+            throw std::runtime_error("Failed to accept connection.");
         }
         auto& [stream, peer_addr] = has_stream.value();
         LOG_INFO("Accept connection from {}", peer_addr);

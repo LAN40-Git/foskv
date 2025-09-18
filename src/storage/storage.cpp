@@ -8,15 +8,6 @@ foskv::storage::Storage::~Storage() {
     db_->Close();
 }
 
-foskv::storage::Storage::Storage(const Storage& other) {
-    db_ = other.db_;
-}
-
-auto foskv::storage::Storage::operator=(const Storage& other) -> Storage & {
-    db_ = other.db_;
-    return *this;
-}
-
 foskv::storage::Storage::Storage(Storage &&other) noexcept {
     db_ = other.db_;
     other.db_ = nullptr;
@@ -28,10 +19,10 @@ auto foskv::storage::Storage::operator=(Storage &&other) noexcept -> Storage & {
     return *this;
 }
 
-auto foskv::storage::Storage::Open(const rocksdb::Options &options, std::string_view db_path)
+auto foskv::storage::Storage::Open(const rocksdb::Options &options, const std::filesystem::path& db_path)
 -> StorageResult<Storage> {
     rocksdb::DB* db = nullptr;
-    rocksdb::Status status = rocksdb::DB::Open(options, {db_path.data(), db_path.size()}, &db);
+    rocksdb::Status status = rocksdb::DB::Open(options, db_path, &db);
 
     if (!status.ok()) {
         return std::unexpected{make_storage_error(StorageError::kDBOpenFailed)};

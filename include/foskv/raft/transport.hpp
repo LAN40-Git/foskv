@@ -1,5 +1,4 @@
 #pragma once
-#include <kosio/sync.hpp>
 #include "foskv/raft/peer.hpp"
 #include "foskv/raft/config.hpp"
 
@@ -10,10 +9,18 @@ class RaftNode;
 namespace foskv::raft::detail {
 class Transport {
     friend class foskv::raft::RaftNode;
-    using PeerMap = std::unordered_map<kosio::net::SocketAddr, Peer>;
+public:
+    explicit Transport(Config&& config);
 
 public:
-    explicit Transport(const Config& config);
+    Transport(Transport&& other) noexcept;
+    auto operator=(Transport&& other) noexcept -> Transport&;
+
+public:
+    auto cluster_id() const noexcept -> uint64_t { return config_.cluster_id_; }
+    auto member_id() const noexcept -> uint64_t { return config_.local_member_id_; }
+    auto name() const noexcept -> std::string_view { return config_.local_name_; }
+    auto peer_count() const noexcept -> std::size_t { return config_.peers_.size(); }
 
 public:
     auto run() -> kosio::async::Task<>;
@@ -22,9 +29,7 @@ public:
     auto broadcast_install_snapshot(InstallSnapshotRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
 
 private:
-    uint64_t         cluster_id_;
-    uint64_t         member_id_;
-    PeerMap          peers_;
-    rpc::RpcProvider rpc_provider_;
+    Config       config_;
+    rpc::RpcProvider provider_;
 };
 } // namespace foskv::raft::detail

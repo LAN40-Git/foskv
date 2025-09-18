@@ -1,4 +1,6 @@
 #pragma once
+#include <filesystem>
+
 #include "foskv/common/util/noncopyable.hpp"
 #include "foskv/common/error.hpp"
 #include "foskv/storage/kvstorage.pb.h"
@@ -6,19 +8,18 @@
 #include <rocksdb/db.h>
 
 namespace foskv::storage {
-class Storage {
-public:
+class Storage : util::Noncopyable {
+private:
     explicit Storage(rocksdb::DB* db);
-    ~Storage();
 
-    Storage(const Storage& other);
-    auto operator=(const Storage& other) -> Storage&;
+public:
+    ~Storage();
     Storage(Storage&& other) noexcept;
     auto operator=(Storage&& other) noexcept -> Storage&;
 
 public:
     [[nodiscard]]
-    static auto Open(const rocksdb::Options &options, std::string_view db_path)
+    static auto Open(const rocksdb::Options &options, const std::filesystem::path& db_path)
     -> StorageResult<Storage>;
 
 public:
@@ -44,7 +45,7 @@ private:
     rocksdb::ReadOptions  read_options_;
 };
 
-class KVStorage : public util::Noncopyable {
+class KVStorage : util::Noncopyable {
 public:
     explicit KVStorage(rocksdb::DB* db)
         : db_(db) {}

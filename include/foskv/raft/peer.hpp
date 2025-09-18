@@ -9,6 +9,15 @@ public:
     Peer& operator=(Peer&& other) noexcept;
 
 public:
+    auto member_id() const noexcept -> uint64_t { return member_id_; }
+    auto name() const noexcept -> std::string_view { return name_; }
+    auto addr() const noexcept -> const kosio::net::SocketAddr& { return addr_; }
+
+public:
+    static auto create(uint64_t member_id, std::string_view name,
+        std::string_view host, uint16_t port) -> RaftResult<Peer>;
+
+public:
     // raft rpc
     auto request_vote(std::string_view req_payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
     auto append_entries(std::string_view req_payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;

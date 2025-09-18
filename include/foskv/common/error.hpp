@@ -15,6 +15,8 @@ static inline constexpr int RpcErrorCodeBase = ErrorCodeBase;
 static inline constexpr int StorageErrorCodeBase = RpcErrorCodeBase + ErrorCodeInterval;
 // Raft Error
 static inline constexpr int RaftErrorCodeBase = StorageErrorCodeBase + ErrorCodeInterval;
+// Client Error
+static inline constexpr int ClientErrorCodeBase = RaftErrorCodeBase + ErrorCodeInterval;
 
 template <class DeriverError>
 class BaseError {
@@ -69,10 +71,13 @@ public:
         kFdNotRegister,
         kSerializeFailed,
         kParseFailed,
+        kConnectFailed,
         kReconnectFailed,
         kSendFailed,
         kReceiveFailed,
         kMessageTooLarge,
+        kOtherRaftCluster,
+        kInvalidRpcServerAddress,
     };
 
 public:
@@ -91,6 +96,8 @@ public:
                 return "Failed to serialize message.";
             case kParseFailed:
                 return "Failed to parse message.";
+            case kConnectFailed:
+                return "Failed to connect to rpc server.";
             case kReconnectFailed:
                 return "Failed to reconnect to the rpc server.";
             case kSendFailed:
@@ -99,6 +106,10 @@ public:
                 return "Failed to receive message.";
             case kMessageTooLarge:
                 return "Message too large.";
+            case kOtherRaftCluster:
+                return "Message from other raft cluster.";
+            case kInvalidRpcServerAddress:
+                return "Invalid provider address.";
             default:
                 return strerror(error_code_);
         }
@@ -137,13 +148,16 @@ public:
         kUnknown = detail::RaftErrorCodeBase,
         kConfigFileOpenFailed,
         kConfigFileWriteFailed,
+        kConfigFileReadFailed,
+        kConfigFileRenameFailed,
         kPersisterCreateFailed,
         kPersistentSaveFailed,
         kInvalidPeerAddress,
+        kInvalidLocalAddress,
         kRepeatedPeer,
         kJsonParseFailed,
         kLocalNodeNotFound,
-        kInvalidNodeAddress,
+        kStateMachineCreateFailed,
     };
 
 public:
@@ -157,23 +171,51 @@ public:
             case kUnknown:
                 return "Unknown raft error.";
             case kConfigFileOpenFailed:
-                return "Failed to open configuration file.";
+                return "Failed to open raft configuration file.";
             case kConfigFileWriteFailed:
-                return "Failed to write configuration file.";
+                return "Failed to write raft configuration file.";
+            case kConfigFileReadFailed:
+                return "Failed to read raft configuration file.";
+            case kConfigFileRenameFailed:
+                return "Failed to rename raft configuration file.";
             case kPersisterCreateFailed:
                 return "Failed to create persister.";
             case kPersistentSaveFailed:
                 return "Failed to save persistent.";
             case kInvalidPeerAddress:
-                return "Invalid peer address.";
+                return "Invalid peer raft node address.";
+            case kInvalidLocalAddress:
+                return "Invalid local raft node address.";
             case kRepeatedPeer:
-                return "Repeated peer.";
+                return "Find repeated peer in cluster.";
             case kJsonParseFailed:
                 return "Failed to parse JSON.";
             case kLocalNodeNotFound:
-                return "Failed to find local node in configuration.";
-            case kInvalidNodeAddress:
-                return "Invalid node address.";
+                return "Failed to find local raft node in configuration.";
+            case kStateMachineCreateFailed:
+                return "Failed to create state machine.";
+            default:
+                return strerror(error_code_);
+        }
+    }
+};
+
+// ========== Client Error ==========
+class ClientError : public detail::BaseError<ClientError> {
+public:
+    enum Code {
+        kUnknown = detail::StorageErrorCodeBase,
+    };
+public:
+    explicit ClientError(Code error_code)
+        : BaseError<ClientError>(static_cast<int>(error_code)) {}
+
+public:
+    [[nodiscard]]
+    auto error_message() const noexcept -> std::string_view {
+        switch (static_cast<Code>(error_code_)) {
+            case kUnknown:
+                return "Unknown storage error.";
             default:
                 return strerror(error_code_);
         }
@@ -211,6 +253,13 @@ using RaftResult = detail::Result<ResultType, RaftError>;
 [[nodiscard]]
 static inline auto make_raft_error(int error_code) ->detail::BaseError<RaftError> {
     return detail::make_error<RaftError>(error_code);
+}
+
+template <class ResultType>
+using ClientResult = detail::Result<ResultType, ClientError>;
+[[nodiscard]]
+static inline auto make_client_error(int error_code) ->detail::BaseError<ClientError> {
+    return detail::make_error<ClientError>(error_code);
 }
 } // namespace foskv
 

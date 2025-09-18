@@ -2,23 +2,25 @@
 
 #include <ranges>
 
-foskv::raft::detail::Transport::Transport(const Config& config)
-    : cluster_id_(config.cluster_id_)
-    , member_id_(config.member_id_)
-    , rpc_provider_(config.addr_) {}
+foskv::raft::detail::Transport::Transport(Config&& config)
+    : config_(std::move(config))
+    , provider_(config_.local_addr_) {}
+
+foskv::raft::detail::Transport::Transport(Transport &&other) noexcept
+    : config_(std::move(other.config_))
+    , provider_(std::move(other.provider_)) {}
+
+auto foskv::raft::detail::Transport::operator=(Transport &&other) noexcept -> Transport & {
+    config_ = std::move(other.config_);
+    provider_ = std::move(other.provider_);
+    return *this;
+}
 
 auto foskv::raft::detail::Transport::run() -> kosio::async::Task<> {
-    std::size_t count{0};
-    while (true) {
-        auto ret = co_await rpc_provider_.run();
-        if (!ret) [[unlikely]] {
-            LOG_ERROR("{}", ret.error());
-            count++;
-        }
-        if (count == 3) {
-            LOG_ERROR("Failed to run after 3 attempts, exit.");
-            break;
-        }
+    try {
+        co_await provider_.run();
+    } catch (...) {
+        throw;
     }
 }
 
@@ -26,7 +28,7 @@ auto foskv::raft::detail::Transport::broadcast_request_vote(RequestVoteRequest&&
     rpc::RpcCallback&& callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
-    for (auto& peer : peers_ | std::views::values) {
+    for (auto& peer : config_.peers_ | std::views::values) {
         co_await peer.request_vote(payload, std::move(callback));
     }
 }
@@ -35,7 +37,7 @@ auto foskv::raft::detail::Transport::broadcast_append_entries(AppendEntriesReque
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
-    for (auto& peer : peers_ | std::views::values) {
+    for (auto& peer : config_.peers_ | std::views::values) {
         co_await peer.append_entries(payload, std::move(callback));
     }
 }
@@ -44,7 +46,7 @@ auto foskv::raft::detail::Transport::broadcast_install_snapshot(InstallSnapshotR
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
-    for (auto& peer : peers_ | std::views::values) {
+    for (auto& peer : config_.peers_ | std::views::values) {
         co_await peer.install_snapshot(payload, std::move(callback));
     }
 }

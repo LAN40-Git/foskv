@@ -10,16 +10,20 @@ using RpcCallback = std::function<kosio::async::Task<>(std::string_view resp_pay
 // there is a risk of the program crashing
 class RpcConsumer {
     using RpcCallbackMap = std::unordered_map<uint64_t, RpcCallback>;
-public:
+private:
     explicit RpcConsumer(kosio::net::TcpStream&& stream, const kosio::net::SocketAddr& server_addr);
+
+public:
     ~RpcConsumer();
+    RpcConsumer(RpcConsumer&& other) noexcept;
+    auto operator=(RpcConsumer&& other) noexcept -> RpcConsumer&;
 
 public:
     /// @brief Asynchronously connect to the rpc server
-    /// @param server_addr The address of rpc server
-    /// @return An unique wrapped RpcConsumer
-    static auto connect(const kosio::net::SocketAddr& server_addr)
-    -> kosio::async::Task<kosio::Result<std::unique_ptr<RpcConsumer>>>;
+    /// @param host The host of rpc server
+    /// @param port The port of rpc server
+    /// @return A coro task which return RpcConsumer or kosio::Error
+    static auto connect(std::string_view host, uint16_t port) -> kosio::async::Task<kosio::Result<RpcConsumer>>;
 
 public:
     /// @brief Asynchronously send a rpc request and return
@@ -61,7 +65,7 @@ private:
     uint64_t               request_id_{0};
     std::vector<char>      buffer_;
     kosio::net::TcpStream  stream_;
-    kosio::net::SocketAddr server_addr_{};
+    kosio::net::SocketAddr server_addr_;
     RpcCallbackMap         callbacks_;
 };
 } // namespace foskv::rpc
