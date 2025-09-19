@@ -107,7 +107,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         co_return;
     }
     is_running_.store(true, std::memory_order_release);
-    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer;
+    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
     // Break if failed to reconnect to the rpc server or receive invalid message
     while (true) {
         // Recv rpc header size

@@ -13,155 +13,38 @@ foskv::raft::RaftNode::RaftNode(Config&& config, detail::Persister&& persister, 
     using rpc::KVService;
     // Register invokes
     transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::RequestVote,
-        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<void>>  {
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>>  {
         co_return co_await this->handle_request_vote_request(req_payload, resp_payload);
     });
     transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::AppendEntries,
-        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<void>> {
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>> {
         co_return co_await this->handle_append_entries_request(req_payload, resp_payload);
     });
     transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::InstallSnapshot,
-        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<void>> {
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>> {
         co_return co_await this->handle_install_snapshot_request(req_payload, resp_payload);
     });
     transport_.provider_.register_invoke(KVService::ServiceName, KVService::Put,
-        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<void>> {
-        InternalRaftRequest request;
-        if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
-            co_return std::unexpected{make_rpc_error(RpcError::kParseFailed)};
-        }
-
-        co_await mutex_.lock();
-        std::lock_guard lock(mutex_, std::adopt_lock);
-
-        if (role_.load(std::memory_order_relaxed) != kLeader) {
-            // When an invalid redirect message is returned,
-            // the client polls the configuration table
-            rpc::Redirect redirect;
-            if (leader_id_.has_value()) {
-                auto it = transport_.config_.peers_.find(leader_id_.value());
-                if (it != transport_.config_.peers_.end()) {
-                    auto& peer = it->second;
-                    redirect.set_host(peer.host());
-                    redirect.set_port(peer.port());
-                }
-            }
-            auto header = generate_internal_response_header(false, 0, redirect);
-            switch (request.type_case()) {
-                case InternalRaftRequest::kPut: {
-                    kv::PutResponse response;
-                    response.set_allocated_header(&header);
-                    auto resp_payload_size = response.ByteSizeLong();
-                    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
-                        co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
-                    }
-                    resp_payload = resp_payload.subspan(0, resp_payload_size);
-                    co_return RpcResult<void>{};
-                }
-                case InternalRaftRequest::kGet: {
-                    kv::GetResponse response;
-                    response.set_allocated_header(&header);
-                    auto resp_payload_size = response.ByteSizeLong();
-                    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
-                        co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
-                    }
-                    resp_payload = resp_payload.subspan(0, resp_payload_size);
-                    co_return RpcResult<void>{};
-                }
-                case InternalRaftRequest::kDelete: {
-                    kv::DeleteResponse response;
-                    response.set_allocated_header(&header);
-                    auto resp_payload_size = response.ByteSizeLong();
-                    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
-                        co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
-                    }
-                    resp_payload = resp_payload.subspan(0, resp_payload_size);
-                    co_return RpcResult<void>{};
-                }
-                default: {
-                    co_return std::unexpected{make_rpc_error(RpcError::kRpcServiceNotExists)};
-                }
-            }
-        }
-
-        // Packaged as a log entry
-        LogEntry entry;
-        entry.set_index(logs_.size());
-        entry.set_term(logs_.back().term());
-        entry.set_command(std::string{req_payload});
-        auto entry_payload_size = entry.ByteSizeLong();
-        auto index = std::to_string(entry.index());
-        if (!entry.SerializeToArray(buffer_.data(), entry_payload_size)) [[unlikely]] {
-            co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
-        }
-        auto has_been_persistent = persister_.persist_entry(
-            index,
-            {buffer_.data(), entry_payload_size});
-        if (!has_been_persistent) {
-            co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
-        }
-        // Copy the entry for sync
-        LogEntry copy_entry;
-        copy_entry.CopyFrom(entry);
-        // Persister and Append log entry
-        logs_.push_back(std::move(entry));
-
-        // Synchronize log entry
-        auto append_request = produce_append_entries_request();
-        auto new_entry = append_request.add_entries();
-        new_entry->Swap(&copy_entry);
-        kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_request), [this](std::string_view resp_payload) -> kosio::async::Task<void> {
-            AppendEntriesResponse response;
-            if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) [[unlikely]] {
-                LOG_ERROR("Failed to parse request vote response");
-                co_return;
-            }
-
-            auto resp_term = response.header().term();
-            auto success = response.success();
-
-            if (resp_term < current_term_.load(std::memory_order_relaxed)) {
-                co_return;
-            }
-
-            co_await mutex_.lock();
-            std::lock_guard lock(mutex_, std::adopt_lock);
-
-            // Check again
-            auto current_term = current_term_.load(std::memory_order_relaxed);
-            if (resp_term < current_term) {
-                co_return;
-            }
-
-            if (resp_term > current_term) {
-                increase_term_to(resp_term);
-                role_.store(kFollower, std::memory_order_relaxed);
-                last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
-                co_return;
-            }
-
-            if (role_.load(std::memory_order_relaxed) != kLeader) {
-                co_return;
-            }
-        }));
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>> {
+        co_return co_await this->handle_internal_raft_request(req_payload, resp_payload);
     });
 }
 
 foskv::raft::RaftNode::RaftNode(RaftNode &&other) noexcept
     : is_shutdown_(other.is_shutdown_.load(std::memory_order_relaxed))
-      , persister_(std::move(other.persister_))
-      , transport_(std::move(other.transport_))
-      , last_reset_time_(other.last_reset_time_.load(std::memory_order_relaxed))
-      , state_machine_(std::move(other.state_machine_))
-      , role_(other.role_.load(std::memory_order_relaxed))
-      , current_term_(other.current_term_.load(std::memory_order_relaxed))
-      , voted_for_(other.voted_for_)
-      , logs_(std::move(other.logs_))
-      , commit_index_(other.commit_index_)
-      , last_applied_(other.last_applied_)
-      , leader_id_(other.leader_id_)
-      , next_index_(std::move(other.next_index_))
-      , match_index_(std::move(other.match_index_)) {
+    , persister_(std::move(other.persister_))
+    , transport_(std::move(other.transport_))
+    , state_machine_(std::move(other.state_machine_))
+    , last_reset_time_(other.last_reset_time_.load(std::memory_order_relaxed))
+    , role_(other.role_.load(std::memory_order_relaxed))
+    , current_term_(other.current_term_.load(std::memory_order_relaxed))
+    , voted_for_(other.voted_for_)
+    , logs_(std::move(other.logs_))
+    , commit_index_(other.commit_index_)
+    , last_applied_(other.last_applied_)
+    , leader_id_(other.leader_id_)
+    , next_index_(std::move(other.next_index_))
+    , match_index_(std::move(other.match_index_)) {
 }
 
 auto foskv::raft::RaftNode::operator=(RaftNode &&other) noexcept -> RaftNode & {
@@ -208,7 +91,11 @@ auto foskv::raft::RaftNode::create(
 auto foskv::raft::RaftNode::run() -> kosio::async::Task<> {
     kosio::spawn(start_election_timeout());
     kosio::spawn(start_heartbeat_timeout());
-    co_await transport_.run();
+    try {
+        co_await transport_.run();
+    } catch (...) {
+        throw;
+    }
 }
 
 auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
@@ -223,7 +110,7 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
             continue;
         }
 
-        if (role_.load(std::memory_order_relaxed) == kLeader) {
+        if (role_.load(std::memory_order_acquire) == kLeader) {
             continue;
         }
 
@@ -258,7 +145,7 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
                 // Votes for local raftnode at current term
                 static std::size_t votes{0};
 
-                if (resp_term < current_term_.load(std::memory_order_relaxed)) {
+                if (resp_term < current_term_.load(std::memory_order_acquire)) {
                     co_return;
                 }
 
@@ -274,12 +161,12 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
                 if (resp_term > current_term) {
                     votes = 0;
                     increase_term_to(resp_term);
-                    role_.store(kFollower, std::memory_order_relaxed);
+                    role_.store(kFollower, std::memory_order_release);
                     last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
                     co_return;
                 }
 
-                if (role_.load(std::memory_order_relaxed) == kLeader) {
+                if (role_.load(std::memory_order_acquire) == kLeader) {
                     co_return;
                 }
 
@@ -298,7 +185,7 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
         // 50ms heartbeat timeout
         co_await kosio::time::sleep(50);
 
-        if (role_.load(std::memory_order_relaxed) != kLeader) {
+        if (role_.load(std::memory_order_acquire) != kLeader) {
             continue;
         }
 
@@ -329,7 +216,8 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
                 auto resp_term = response.header().term();
                 [[maybe_unused]] auto success = response.success();
 
-                if (resp_term < current_term_.load(std::memory_order_relaxed)) {
+                if (resp_term < current_term_.load(std::memory_order_acquire) ||
+                    role_.load(std::memory_order_acquire) != kLeader) {
                     co_return;
                 }
 
@@ -338,18 +226,15 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
 
                 // Check again
                 auto current_term = current_term_.load(std::memory_order_relaxed);
-                if (resp_term < current_term) {
+                if (resp_term < current_term ||
+                    role_.load(std::memory_order_relaxed) != kLeader) {
                     co_return;
                 }
 
                 if (resp_term > current_term) {
                     increase_term_to(resp_term);
-                    role_.store(kFollower, std::memory_order_relaxed);
+                    role_.store(kFollower, std::memory_order_release);
                     last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
-                    co_return;
-                }
-
-                if (role_.load(std::memory_order_relaxed) != kLeader) {
                     co_return;
                 }
         }));
@@ -358,17 +243,17 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
 
 void foskv::raft::RaftNode::increase_term_to(uint64_t term) {
     // Holding mutex_ here, so use relaxed memory
-    current_term_.store(term, std::memory_order_relaxed);
+    current_term_.store(term, std::memory_order_release);
     voted_for_ = std::nullopt;
 }
 
 void foskv::raft::RaftNode::become_leader() {
     // Holding mutex_ here, so use relaxed memory
-    role_.store(kLeader, std::memory_order_relaxed);
+    role_.store(kLeader, std::memory_order_release);
 }
 
 auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_payload, std::span<char> resp_payload)
--> kosio::async::Task<RpcResult<void>> {
+-> kosio::async::Task<RpcResult<std::size_t>> {
     RequestVoteRequest request;
     if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kParseFailed)};
@@ -380,7 +265,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     auto last_log_index = request.last_log_index();
     auto last_log_term = request.last_log_term();
 
-    if (req_term < current_term_.load(std::memory_order_relaxed)) {
+    if (req_term < current_term_.load(std::memory_order_acquire)) {
         RequestVoteResponse response;
         auto header = generate_response_header();
         response.set_allocated_header(&header);
@@ -389,8 +274,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        resp_payload = resp_payload.subspan(0, resp_payload_size);
-        co_return RpcResult<void>{};
+        co_return resp_payload_size;
     }
 
     co_await mutex_.lock();
@@ -407,8 +291,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        resp_payload = resp_payload.subspan(0, resp_payload_size);
-        co_return RpcResult<void>{};
+        co_return resp_payload_size;
     }
 
     if (req_term > current_term) {
@@ -436,12 +319,11 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
     }
-    resp_payload = resp_payload.subspan(0, resp_payload_size);
-    co_return RpcResult<void>{};
+    co_return resp_payload_size;
 }
 
 auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_payload, std::span<char> resp_payload)
--> kosio::async::Task<RpcResult<void>> {
+-> kosio::async::Task<RpcResult<std::size_t>> {
     AppendEntriesRequest request;
     if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kParseFailed)};
@@ -464,8 +346,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        resp_payload = resp_payload.subspan(0, resp_payload_size);
-        co_return RpcResult<void>{};
+        co_return resp_payload_size;
     }
 
     co_await mutex_.lock();
@@ -482,8 +363,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        resp_payload = resp_payload.subspan(0, resp_payload_size);
-        co_return RpcResult<void>{};
+        co_return resp_payload_size;
     }
 
     if (req_term > current_term) {
@@ -509,8 +389,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        resp_payload = resp_payload.subspan(0, resp_payload_size);
-        co_return RpcResult<void>{};
+        co_return resp_payload_size;
     }
 
     if (prev_log_index > last_log_index) {
@@ -523,8 +402,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
         }
-        resp_payload = resp_payload.subspan(0, resp_payload_size);
-        co_return RpcResult<void>{};
+        co_return resp_payload_size;
     }
 
     if (logs_[prev_log_index].term() != prev_log_term) {
@@ -544,12 +422,11 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
     }
-    resp_payload = resp_payload.subspan(0, resp_payload_size);
-    co_return RpcResult<void>{};
+    co_return resp_payload_size;
 }
 
 auto foskv::raft::RaftNode::handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
--> kosio::async::Task<RpcResult<void>> {
+-> kosio::async::Task<RpcResult<std::size_t>> {
     InstallSnapshotRequest request;
     if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kParseFailed)};
@@ -558,8 +435,127 @@ auto foskv::raft::RaftNode::handle_install_snapshot_request(std::string_view req
 }
 
 auto foskv::raft::RaftNode::handle_internal_raft_request(std::string_view req_payload, std::span<char> resp_payload)
--> kosio::async::Task<RpcResult<void>> {
+-> kosio::async::Task<RpcResult<std::size_t>> {
+InternalRaftRequest request;
+        if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
+            co_return std::unexpected{make_rpc_error(RpcError::kParseFailed)};
+        }
 
+        co_await mutex_.lock();
+        std::lock_guard lock(mutex_, std::adopt_lock);
+
+        if (role_.load(std::memory_order_relaxed) != kLeader) {
+            // When an invalid redirect message is returned,
+            // the client polls the configuration table
+            rpc::Redirect redirect;
+            if (leader_id_.has_value()) {
+                auto it = transport_.config_.peers_.find(leader_id_.value());
+                if (it != transport_.config_.peers_.end()) {
+                    auto& peer = it->second;
+                    redirect.set_host(peer.host());
+                    redirect.set_port(peer.port());
+                }
+            }
+            auto header = generate_internal_response_header(false, 0, redirect);
+            switch (request.type_case()) {
+                case InternalRaftRequest::kPut: {
+                    kv::PutResponse response;
+                    response.set_allocated_header(&header);
+                    auto resp_payload_size = response.ByteSizeLong();
+                    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+                        co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
+                    }
+                    co_return resp_payload_size;
+                }
+                case InternalRaftRequest::kGet: {
+                    kv::GetResponse response;
+                    response.set_allocated_header(&header);
+                    auto resp_payload_size = response.ByteSizeLong();
+                    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+                        co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
+                    }
+                    co_return resp_payload_size;
+                }
+                case InternalRaftRequest::kDelete: {
+                    kv::DeleteResponse response;
+                    response.set_allocated_header(&header);
+                    auto resp_payload_size = response.ByteSizeLong();
+                    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+                        co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
+                    }
+                    co_return resp_payload_size;
+                }
+                default: {
+                    co_return std::unexpected{make_rpc_error(RpcError::kRpcServiceNotExists)};
+                }
+            }
+        }
+
+        // Packaged as a log entry
+        LogEntry entry;
+        entry.set_index(logs_.size());
+        entry.set_term(logs_.back().term());
+        entry.set_command(std::string{req_payload});
+        auto entry_payload_size = entry.ByteSizeLong();
+        auto index = std::to_string(entry.index());
+        if (!entry.SerializeToArray(buffer_.data(), entry_payload_size)) [[unlikely]] {
+            co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
+        }
+        auto has_been_persistent = persister_.persist_entry(
+            index,
+            {buffer_.data(), entry_payload_size});
+        if (!has_been_persistent) {
+            co_return std::unexpected{make_rpc_error(RpcError::kSerializeFailed)};
+        }
+        // Copy the entry for sync
+        LogEntry copy_entry;
+        copy_entry.CopyFrom(entry);
+        // Append log entry
+        logs_.push_back(std::move(entry));
+
+        // Synchronize log entry
+        auto append_request = produce_append_entries_request();
+        auto new_entry = append_request.add_entries();
+        new_entry->Swap(&copy_entry);
+        kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_request), [this](std::string_view resp_payload) -> kosio::async::Task<void> {
+            AppendEntriesResponse response;
+            if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) [[unlikely]] {
+                LOG_ERROR("Failed to parse request vote response");
+                co_return;
+            }
+
+            auto cluster_id = response.header().cluster_id();
+            auto member_id = response.header().member_id();
+            auto resp_term = response.header().term();
+            auto success = response.success();
+
+            if (resp_term < current_term_.load(std::memory_order_acquire) ||
+                role_.load(std::memory_order_acquire) != kLeader) {
+                co_return;
+            }
+
+            co_await mutex_.lock();
+            std::lock_guard lock(mutex_, std::adopt_lock);
+
+            // Check again
+            auto current_term = current_term_.load(std::memory_order_relaxed);
+            if (resp_term < current_term ||
+                role_.load(std::memory_order_relaxed) != kLeader) {
+                co_return;
+            }
+
+            if (resp_term > current_term) {
+                current_term = resp_term;
+                increase_term_to(resp_term);
+                role_.store(kFollower, std::memory_order_acquire);
+                last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
+                co_return;
+            }
+
+            if (success) {
+
+            }
+        }));
 }
 
 auto foskv::raft::RaftNode::generate_response_header()

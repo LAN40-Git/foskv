@@ -1,5 +1,4 @@
 #include "foskv/rpc/provider.hpp"
-#include <kosio/runtime/runtime.hpp>
 
 foskv::rpc::RpcProvider::RpcProvider(RpcProvider &&other) noexcept
     : addr_(other.addr_)
@@ -28,25 +27,28 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<> {
         }
         auto& [stream, peer_addr] = has_stream.value();
         LOG_INFO("Accept connection from {}", peer_addr);
-        kosio::spawn(handle_rpc(std::move(stream)));
+        // thread safe here
+        task_queues_.erase(stream.fd());
+        auto [owned_reader, owned_writer] = stream.into_split();
+        kosio::spawn(produce_invoke_tasks(std::move(owned_reader)));
+        kosio::spawn(consume_invoke_tasks(std::move(owned_writer)));
     }
 }
 
 void foskv::rpc::RpcProvider::register_invoke(
     std::string_view service_name,
     std::string_view method_name,
-    Invoke&& invoke) {
+    detail::Invoke&& invoke) {
     invokes_[service_name][method_name] = std::move(invoke);
 }
 
-auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
--> kosio::async::Task<> {
-    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer;
-    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> resp_payload;
+auto foskv::rpc::RpcProvider::produce_invoke_tasks(kosio::net::OwnedTcpStreamReader reader) -> kosio::async::Task<> {
+    auto fd = reader.fd();
+    auto& tasks = task_queues_[fd];
     while (true) {
         // Recv rpc header size
         uint32_t rpc_header_size_net;
-        auto recv_ret = co_await stream.read_exact(
+        auto recv_ret = co_await reader.read_exact(
             {reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)});
         if (!recv_ret) [[unlikely]] {
             LOG_ERROR("{}", recv_ret.error());
@@ -54,14 +56,16 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         }
 
         uint32_t rpc_header_size = ntohl(rpc_header_size_net);
-        if (rpc_header_size > buffer.max_size()) [[unlikely]] {
+        if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
             LOG_ERROR("Message too large.", rpc_header_size);
             break;
         }
 
+        detail::InvokeTask task;
+        task.req_payload_.resize(rpc_header_size);
+
         // Recv rpc header
-        recv_ret = co_await stream.read_exact(
-            {buffer.data(), rpc_header_size});
+        recv_ret = co_await reader.read_exact(task.req_payload_);
         if (!recv_ret) [[unlikely]] {
             LOG_ERROR("{}", recv_ret.error());
             break;
@@ -69,7 +73,7 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
 
         // Parse rpc header
         RpcHeader rpc_header;
-        if (!rpc_header.ParseFromArray(buffer.data(), rpc_header_size)) {
+        if (!rpc_header.ParseFromString(task.req_payload_)) {
             LOG_ERROR("Failed to parse rpc header");
             break;
         }
@@ -79,16 +83,17 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
         auto method_name = rpc_header.method_name();
         auto req_payload_size = rpc_header.payload_size();
 
+        task.request_id_ = request_id;
+        task.req_payload_.resize(req_payload_size);
+
         // Recv request payload
-        recv_ret = co_await stream.read_exact(
-            {buffer.data(), req_payload_size});
+        recv_ret = co_await reader.read_exact(task.req_payload_);
         if (!recv_ret) [[unlikely]] {
             LOG_ERROR("{}", recv_ret.error());
             break;
         }
-        std::string_view req_payload{buffer.data(), req_payload_size};
 
-        // Invoke
+        // Get invoke
         auto service = invokes_.find(service_name);
         if (service == invokes_.end()) [[unlikely]] {
             LOG_ERROR("Failed to find service for {}", service_name);
@@ -99,31 +104,50 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             LOG_ERROR("Failed to find invoke for {}", method_name);
         }
 
-        std::span<char> resp_payload_span = {resp_payload.data(), resp_payload.max_size()};
-        auto has_resp_payload = co_await invoke->second(
-            req_payload, resp_payload_span);
+        task.invoke_ = invoke->second;
+        co_await tasks.push(std::move(task));
+    }
+}
+
+auto foskv::rpc::RpcProvider::consume_invoke_tasks(kosio::net::OwnedTcpStreamWriter writer) -> kosio::async::Task<> {
+    auto fd = writer.fd();
+    auto& tasks = task_queues_[fd];
+    std::array<char, sizeof(RpcHeader)> buffer{};
+    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> resp_buffer{};
+    while (true) {
+        auto task = co_await tasks.pop();
+
+        auto has_resp_payload = co_await task.invoke_(
+            task.req_payload_, {resp_buffer.data(), resp_buffer.max_size()});
         if (!has_resp_payload) [[unlikely]] {
-            LOG_ERROR("{} : ({}-{})", has_resp_payload.error(), service_name, method_name);
+            LOG_ERROR("Failed to get resp payload from invoke : {}", has_resp_payload.error());
+            continue;
+        }
+
+        auto resp_payload_size = has_resp_payload.value();
+        // It may be an empty reply because the client request needs to
+        // be wrapped in a log and synchronized
+        if (resp_payload_size == 0) {
             continue;
         }
 
         // Make rpc header
-        rpc_header.Clear();
-        rpc_header.set_request_id(request_id);
-        rpc_header.set_payload_size(resp_payload_span.size());
-        rpc_header_size = rpc_header.ByteSizeLong();
+        RpcHeader rpc_header;
+        rpc_header.set_request_id(task.request_id_);
+        rpc_header.set_payload_size(resp_payload_size);
+        auto rpc_header_size = rpc_header.ByteSizeLong();
         if (!rpc_header.SerializeToArray(buffer.data(), rpc_header_size)) [[unlikely]] {
             LOG_ERROR("Failed to serialize response.");
             continue;
         }
 
         // Send [rpc header size -> rpc header -> resp_payload]
-        rpc_header_size_net = htonl(rpc_header_size);
+        auto rpc_header_size_net = htonl(rpc_header_size);
 
-        auto send_ret = co_await stream.write_vectored(
+        auto send_ret = co_await writer.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
             std::span<const char>(buffer.data(), rpc_header_size),
-            std::span<const char>(resp_payload_span)
+            std::span<const char>(resp_buffer.data(), resp_payload_size)
         );
 
         if (!send_ret) [[unlikely]] {
@@ -131,5 +155,4 @@ auto foskv::rpc::RpcProvider::handle_rpc(kosio::net::TcpStream stream)
             break;
         }
     }
-    co_await stream.close();
 }

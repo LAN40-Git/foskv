@@ -33,7 +33,7 @@ public:
     /// @param service_name Rpc service name
     /// @param method_name Rpc method name
     /// @param payload Serialized (protobuf) rpc request
-    /// @param callback Triggered when the corresponding reply is received
+    /// @param callback std::function<kosio::async::Task<>(std::string_view resp_payload)>
     /// @return RpcError or void
     /// @note Thread-safe
     [[REMEMBER_CO_AWAIT]]

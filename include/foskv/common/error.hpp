@@ -132,6 +132,22 @@ public:
     auto error_message() const noexcept -> std::string_view;
 };
 
+// ========== Server Error ==========
+class ServerError : public detail::BaseError<ServerError> {
+public:
+    enum Code {
+        kUnknown = detail::ClientErrorCodeBase,
+        kRaftNodeCreationFailed,
+    };
+public:
+    explicit ServerError(Code error_code)
+        : BaseError<ServerError>(static_cast<int>(error_code)) {}
+
+public:
+    [[nodiscard]]
+    auto error_message() const noexcept -> std::string_view;
+};
+
 // ====== KV Error ======
 class KVError : public detail::BaseError<KVError> {
 public:
@@ -190,6 +206,20 @@ using ClientResult = detail::Result<ResultType, ClientError>;
 [[nodiscard]]
 static inline auto make_client_error(int error_code) ->detail::BaseError<ClientError> {
     return detail::make_error<ClientError>(error_code);
+}
+
+template <class ResultType>
+using ServerResult = detail::Result<ResultType, ServerError>;
+[[nodiscard]]
+static inline auto make_server_error(int error_code) ->detail::BaseError<ServerError> {
+    return detail::make_error<ServerError>(error_code);
+}
+
+template <class ResultType>
+using KVResult = detail::Result<ResultType, KVError>;
+[[nodiscard]]
+static inline auto make_kv_error(int error_code) ->detail::BaseError<KVError> {
+    return detail::make_error<KVError>(error_code);
 }
 } // namespace foskv
 

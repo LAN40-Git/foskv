@@ -21,28 +21,28 @@ public:
 public:
     auto run() -> kosio::async::Task<>;
 
-public:
+private:
     auto start_election_timeout() -> kosio::async::Task<>;
     auto start_heartbeat_timeout() -> kosio::async::Task<>;
 
-public:
+private:
     void increase_term_to(uint64_t term);
     void become_leader();
 
-public:
+private:
     // raft rpc invoke
     [[REMEMBER_CO_AWAIT]]
     auto handle_request_vote_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<void>>;
+    -> kosio::async::Task<RpcResult<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_append_entries_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<void>>;
+    -> kosio::async::Task<RpcResult<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<void>>;
+    -> kosio::async::Task<RpcResult<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_internal_raft_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<void>>;
+    -> kosio::async::Task<RpcResult<std::size_t>>;
 
 private:
     /* Confirm that you have the lock */

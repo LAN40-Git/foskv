@@ -96,6 +96,17 @@ auto foskv::ClientError::error_message() const noexcept -> std::string_view {
     }
 }
 
+auto foskv::ServerError::error_message() const noexcept -> std::string_view {
+    switch (static_cast<Code>(error_code_)) {
+        case kUnknown:
+            return "Unknown storage error.";
+        case kRaftNodeCreationFailed:
+            return "Failed to create raft node.";
+        default:
+            return strerror(error_code_);
+    }
+}
+
 auto foskv::KVError::error_message() const noexcept -> std::string_view {
     switch (static_cast<Code>(error_code_)) {
         case kUnknown:
