@@ -1673,6 +1673,7 @@ class PersistState final :
   enum : int {
     kCurrentTermFieldNumber = 1,
     kVotedForFieldNumber = 2,
+    kCommitIndexFieldNumber = 3,
   };
   // uint64 current_term = 1;
   void clear_current_term();
@@ -1696,6 +1697,15 @@ class PersistState final :
   void _internal_set_voted_for(uint64_t value);
   public:
 
+  // uint64 commit_index = 3;
+  void clear_commit_index();
+  uint64_t commit_index() const;
+  void set_commit_index(uint64_t value);
+  private:
+  uint64_t _internal_commit_index() const;
+  void _internal_set_commit_index(uint64_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:foskv.raft.PersistState)
  private:
   class _Internal;
@@ -1708,6 +1718,7 @@ class PersistState final :
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     uint64_t current_term_;
     uint64_t voted_for_;
+    uint64_t commit_index_;
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_raft_2eproto;
@@ -3028,6 +3039,26 @@ inline void PersistState::_internal_set_voted_for(uint64_t value) {
 inline void PersistState::set_voted_for(uint64_t value) {
   _internal_set_voted_for(value);
   // @@protoc_insertion_point(field_set:foskv.raft.PersistState.voted_for)
+}
+
+// uint64 commit_index = 3;
+inline void PersistState::clear_commit_index() {
+  _impl_.commit_index_ = uint64_t{0u};
+}
+inline uint64_t PersistState::_internal_commit_index() const {
+  return _impl_.commit_index_;
+}
+inline uint64_t PersistState::commit_index() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.PersistState.commit_index)
+  return _internal_commit_index();
+}
+inline void PersistState::_internal_set_commit_index(uint64_t value) {
+  
+  _impl_.commit_index_ = value;
+}
+inline void PersistState::set_commit_index(uint64_t value) {
+  _internal_set_commit_index(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.PersistState.commit_index)
 }
 
 // -------------------------------------------------------------------

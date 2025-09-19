@@ -57,6 +57,7 @@ message InstallSnapshotResponse {
 message PersistState {
     uint64 current_term = 1;
     optional uint64 voted_for = 2;
+    uint64 commit_index = 3;
 }
 
 message SnapshotMetadata {

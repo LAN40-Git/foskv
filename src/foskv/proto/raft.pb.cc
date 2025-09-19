@@ -151,7 +151,8 @@ PROTOBUF_CONSTEXPR PersistState::PersistState(
     /*decltype(_impl_._has_bits_)*/{}
   , /*decltype(_impl_._cached_size_)*/{}
   , /*decltype(_impl_.current_term_)*/uint64_t{0u}
-  , /*decltype(_impl_.voted_for_)*/uint64_t{0u}} {}
+  , /*decltype(_impl_.voted_for_)*/uint64_t{0u}
+  , /*decltype(_impl_.commit_index_)*/uint64_t{0u}} {}
 struct PersistStateDefaultTypeInternal {
   PROTOBUF_CONSTEXPR PersistStateDefaultTypeInternal()
       : _instance(::_pbi::ConstantInitialized{}) {}
@@ -280,8 +281,10 @@ const uint32_t TableStruct_raft_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::foskv::raft::PersistState, _impl_.current_term_),
   PROTOBUF_FIELD_OFFSET(::foskv::raft::PersistState, _impl_.voted_for_),
+  PROTOBUF_FIELD_OFFSET(::foskv::raft::PersistState, _impl_.commit_index_),
   ~0u,
   0,
+  ~0u,
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::foskv::raft::SnapshotMetadata, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -310,9 +313,9 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 48, -1, -1, sizeof(::foskv::raft::AppendEntriesResponse)},
   { 56, -1, -1, sizeof(::foskv::raft::InstallSnapshotRequest)},
   { 69, -1, -1, sizeof(::foskv::raft::InstallSnapshotResponse)},
-  { 76, 84, -1, sizeof(::foskv::raft::PersistState)},
-  { 86, -1, -1, sizeof(::foskv::raft::SnapshotMetadata)},
-  { 94, -1, -1, sizeof(::foskv::raft::InternalRaftRequest)},
+  { 76, 85, -1, sizeof(::foskv::raft::PersistState)},
+  { 88, -1, -1, sizeof(::foskv::raft::SnapshotMetadata)},
+  { 96, -1, -1, sizeof(::foskv::raft::InternalRaftRequest)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -351,21 +354,22 @@ const char descriptor_table_protodef_raft_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "\004 \001(\004\022\016\n\006offset\030\005 \001(\004\022\014\n\004data\030\006 \001(\014\022\014\n\004d"
   "one\030\007 \001(\010\"E\n\027InstallSnapshotResponse\022*\n\006"
   "header\030\001 \001(\0132\032.foskv.raft.ResponseHeader"
-  "\"J\n\014PersistState\022\024\n\014current_term\030\001 \001(\004\022\026"
-  "\n\tvoted_for\030\002 \001(\004H\000\210\001\001B\014\n\n_voted_for\"I\n\020"
-  "SnapshotMetadata\022\032\n\022last_include_index\030\001"
-  " \001(\004\022\031\n\021last_include_term\030\002 \001(\004\"\222\001\n\023Inte"
-  "rnalRaftRequest\022#\n\003put\030\001 \001(\0132\024.foskv.kv."
-  "PutRequestH\000\022#\n\003get\030\002 \001(\0132\024.foskv.kv.Get"
-  "RequestH\000\022)\n\006delete\030\003 \001(\0132\027.foskv.kv.Del"
-  "eteRequestH\000B\006\n\004typeb\006proto3"
+  "\"`\n\014PersistState\022\024\n\014current_term\030\001 \001(\004\022\026"
+  "\n\tvoted_for\030\002 \001(\004H\000\210\001\001\022\024\n\014commit_index\030\003"
+  " \001(\004B\014\n\n_voted_for\"I\n\020SnapshotMetadata\022\032"
+  "\n\022last_include_index\030\001 \001(\004\022\031\n\021last_inclu"
+  "de_term\030\002 \001(\004\"\222\001\n\023InternalRaftRequest\022#\n"
+  "\003put\030\001 \001(\0132\024.foskv.kv.PutRequestH\000\022#\n\003ge"
+  "t\030\002 \001(\0132\024.foskv.kv.GetRequestH\000\022)\n\006delet"
+  "e\030\003 \001(\0132\027.foskv.kv.DeleteRequestH\000B\006\n\004ty"
+  "peb\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_raft_2eproto_deps[1] = {
   &::descriptor_table_kv_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_raft_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_raft_2eproto = {
-    false, false, 1148, descriptor_table_protodef_raft_2eproto,
+    false, false, 1170, descriptor_table_protodef_raft_2eproto,
     "raft.proto",
     &descriptor_table_raft_2eproto_once, descriptor_table_raft_2eproto_deps, 1, 11,
     schemas, file_default_instances, TableStruct_raft_2eproto::offsets,
@@ -2468,12 +2472,13 @@ PersistState::PersistState(const PersistState& from)
       decltype(_impl_._has_bits_){from._impl_._has_bits_}
     , /*decltype(_impl_._cached_size_)*/{}
     , decltype(_impl_.current_term_){}
-    , decltype(_impl_.voted_for_){}};
+    , decltype(_impl_.voted_for_){}
+    , decltype(_impl_.commit_index_){}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&_impl_.current_term_, &from._impl_.current_term_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.voted_for_) -
-    reinterpret_cast<char*>(&_impl_.current_term_)) + sizeof(_impl_.voted_for_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.commit_index_) -
+    reinterpret_cast<char*>(&_impl_.current_term_)) + sizeof(_impl_.commit_index_));
   // @@protoc_insertion_point(copy_constructor:foskv.raft.PersistState)
 }
 
@@ -2486,6 +2491,7 @@ inline void PersistState::SharedCtor(
     , /*decltype(_impl_._cached_size_)*/{}
     , decltype(_impl_.current_term_){uint64_t{0u}}
     , decltype(_impl_.voted_for_){uint64_t{0u}}
+    , decltype(_impl_.commit_index_){uint64_t{0u}}
   };
 }
 
@@ -2514,6 +2520,7 @@ void PersistState::Clear() {
 
   _impl_.current_term_ = uint64_t{0u};
   _impl_.voted_for_ = uint64_t{0u};
+  _impl_.commit_index_ = uint64_t{0u};
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
@@ -2538,6 +2545,14 @@ const char* PersistState::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _Internal::set_has_voted_for(&has_bits);
           _impl_.voted_for_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 commit_index = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.commit_index_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -2584,6 +2599,12 @@ uint8_t* PersistState::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt64ToArray(2, this->_internal_voted_for(), target);
   }
 
+  // uint64 commit_index = 3;
+  if (this->_internal_commit_index() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_commit_index(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2611,6 +2632,11 @@ size_t PersistState::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_voted_for());
   }
 
+  // uint64 commit_index = 3;
+  if (this->_internal_commit_index() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_commit_index());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -2635,6 +2661,9 @@ void PersistState::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::P
   if (from._internal_has_voted_for()) {
     _this->_internal_set_voted_for(from._internal_voted_for());
   }
+  if (from._internal_commit_index() != 0) {
+    _this->_internal_set_commit_index(from._internal_commit_index());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -2654,8 +2683,8 @@ void PersistState::InternalSwap(PersistState* other) {
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(PersistState, _impl_.voted_for_)
-      + sizeof(PersistState::_impl_.voted_for_)
+      PROTOBUF_FIELD_OFFSET(PersistState, _impl_.commit_index_)
+      + sizeof(PersistState::_impl_.commit_index_)
       - PROTOBUF_FIELD_OFFSET(PersistState, _impl_.current_term_)>(
           reinterpret_cast<char*>(&_impl_.current_term_),
           reinterpret_cast<char*>(&other->_impl_.current_term_));

@@ -26,7 +26,7 @@ auto foskv::raft::detail::StateMachine::create(const std::filesystem::path& path
 }
 
 auto foskv::raft::detail::StateMachine::apply(RaftNode& node, const LogEntry &entry)
-const -> RaftResult<std::pair<uint64_t, std::string>> {
+const -> RaftResult<void> {
     InternalRaftRequest request;
     if (!request.ParseFromString(entry.command())) {
         return std::unexpected{make_raft_error(RaftError::kCommandParseFailed)};
@@ -40,9 +40,9 @@ const -> RaftResult<std::pair<uint64_t, std::string>> {
             rpc::ResponseHeader header;
             if (auto status = st_.Put(key, value); !status.ok()) {
                 LOG_ERROR("Failed to apply entry put {}-{} : {}", key, value, status.ToString());
-                header = node.generate_internal_response_header(false, KVError::kPutFailed);
+                header = node.produce_internal_response_header(false, KVError::kPutFailed);
             } else {
-                header = node.generate_internal_response_header(true);
+                header = node.produce_internal_response_header(true);
             }
             response.set_allocated_header(&header);
             // return std::make_pair(request.client_id(), response.SerializeAsString());
@@ -56,9 +56,9 @@ const -> RaftResult<std::pair<uint64_t, std::string>> {
             if (auto status = st_.Get(key, response.mutable_kvs()->mutable_value()); !status.ok()) {
                 LOG_ERROR("Failed to apply entry get {} : {}", key, status.ToString());
                 if (status.IsNotFound()) {
-                    header = node.generate_internal_response_header(false, KVError::kNotFound);
+                    header = node.produce_internal_response_header(false, KVError::kNotFound);
                 } else {
-                    header = node.generate_internal_response_header(true);
+                    header = node.produce_internal_response_header(true);
                 }
             }
             response.set_allocated_header(&header);
@@ -71,9 +71,9 @@ const -> RaftResult<std::pair<uint64_t, std::string>> {
             rpc::ResponseHeader header;
             if (auto status = st_.Delete(key); !status.ok()) {
                 LOG_ERROR("Failed to apply entry delete {} : {}", key, status.ToString());
-                header = node.generate_internal_response_header(false, KVError::kDeleteFailed);
+                header = node.produce_internal_response_header(false, KVError::kDeleteFailed);
             } else {
-                header = node.generate_internal_response_header(true);
+                header = node.produce_internal_response_header(true);
             }
             response.set_allocated_header(&header);
             // return std::make_pair(request.client_id(), response.SerializeAsString());

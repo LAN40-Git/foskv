@@ -28,6 +28,9 @@ private:
 private:
     void increase_term_to(uint64_t term);
     void become_leader();
+    void try_commit_entries();
+    void persist();
+    void apply_commited_entries();
 
 private:
     // raft rpc invoke
@@ -46,9 +49,10 @@ private:
 
 private:
     /* Confirm that you have the lock */
-    auto generate_response_header() const noexcept -> ResponseHeader;
-    auto generate_internal_response_header(bool success, int error_code = 0,
+    auto produce_response_header() const noexcept -> ResponseHeader;
+    auto produce_internal_response_header(bool success, int error_code = 0,
         std::optional<rpc::Redirect> redirect = std::nullopt) const noexcept -> rpc::ResponseHeader;
+    auto produce_request_vote_request() const noexcept -> RequestVoteRequest;
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
 
 private:
@@ -58,6 +62,8 @@ private:
     detail::Transport  transport_;
     detail::StateMachine state_machine_;
     std::array<char, 2*rpc::detail::MAX_RPC_MESSAGE_SIZE> buffer_{};
+    // log index -> request
+    std::unordered_map<uint64_t, InternalRaftRequest> internal_raft_requests_;
     // election timeout last reset time ms
     std::atomic<uint64_t> last_reset_time_{0};
 

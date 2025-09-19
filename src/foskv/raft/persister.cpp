@@ -40,11 +40,11 @@ auto foskv::raft::detail::Persister::persist_entry(const rocksdb::Slice &index_s
     return RaftResult<void>{};
 }
 
-auto foskv::raft::detail::Persister::persist_entries(const std::vector<std::pair<rocksdb::Slice, rocksdb::Slice>>& entries)
-const -> RaftResult<void> {
+auto foskv::raft::detail::Persister::persist_entries(
+    const std::unordered_map<uint64_t, rocksdb::Slice> &entries) const -> RaftResult<void> {
     rocksdb::WriteBatch write_batch;
     for (auto& entry : entries) {
-        write_batch.Put(entry.first, entry.second);
+        write_batch.Put(std::to_string(entry.first), entry.second);
     }
     auto status = st_.BatchWrite(write_batch);
     if (!status.ok()) [[unlikely]] {
@@ -64,23 +64,34 @@ auto foskv::raft::detail::Persister::persist_state(
     return RaftResult<void>{};
 }
 
-void foskv::raft::detail::Persister::load_state(PersistState &state) const {
+auto foskv::raft::detail::Persister::persist_state(PersistState &&state) const -> RaftResult<void> {
+    auto status = st_.Put(PERSISTENT_KEY, state.SerializeAsString());
+    if (!status.ok()) [[unlikely]] {
+        LOG_ERROR("Failed to persist state : {}", status.ToString());
+        return std::unexpected{make_raft_error(RaftError::kPersistentSaveFailed)};
+    }
+    return RaftResult<void>{};
+}
+
+auto foskv::raft::detail::Persister::load_state() const -> PersistState {
     std::string state_payload;
+    PersistState state;
     if (!st_.Get(PERSISTENT_KEY, &state_payload).ok() ||
         !state.ParseFromString(state_payload)) [[unlikely]] {
         state.set_current_term(0);
         state.clear_voted_for();
     }
+    return state;
 }
 
-void foskv::raft::detail::Persister::load_entries(std::vector<LogEntry> &entries) {
+auto foskv::raft::detail::Persister::load_entries() -> std::vector<LogEntry> {
+    std::vector<LogEntry> entries{};
+    std::string start_log_index_str, end_log_index_str;
     try {
-        std::string start_log_index_str, end_log_index_str;
-        entries.resize(0);
 
         if (!st_.Get(START_LOG_INDEX, &start_log_index_str).ok() ||
             !st_.Get(END_LOG_INDEX, &end_log_index_str).ok()) {
-            return;
+            return entries;
         }
 
         auto start_log_index = std::stoull(start_log_index_str);
@@ -120,4 +131,5 @@ void foskv::raft::detail::Persister::load_entries(std::vector<LogEntry> &entries
     catch (...) {
         LOG_ERROR("Unknown error occurred while loading entries");
     }
+    return entries;
 }
