@@ -1,2 +1,0 @@
-file(GLOB FILES "*.cpp" "*.cc")
-set(STORAGE_FILES ${FILES} PARENT_SCOPE)

@@ -7,3 +7,9 @@ message RpcHeader {
   bytes method_name = 3;
   uint32 payload_size = 4;
 }
+
+message ResponseHeader {
+  uint64 cluster_id = 1;
+  uint64 member_id = 2;
+  uint64 term = 3;
+}

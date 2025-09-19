@@ -1,7 +1,7 @@
 #pragma once
+#include "foskv/proto/rpc.pb.h"
 #include "foskv/rpc/config.hpp"
 #include "foskv/common/error.hpp"
-#include "rpc_header.pb.h"
 #include <kosio/sync.hpp>
 #include <kosio/net.hpp>
 #include <functional>

@@ -256,7 +256,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
 
     if (req_term < current_term_.load(std::memory_order_relaxed)) {
         RequestVoteResponse response;
-        foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+        rpc::ResponseHeader* resp_header = response.mutable_header();
         resp_header->set_cluster_id(transport_.cluster_id());
         resp_header->set_member_id(transport_.member_id());
         resp_header->set_term(current_term_.load(std::memory_order_relaxed));
@@ -275,7 +275,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     auto current_term = current_term_.load(std::memory_order_relaxed);
     if (req_term < current_term) {
         RequestVoteResponse response;
-        foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+        rpc::ResponseHeader* resp_header = response.mutable_header();
         resp_header->set_cluster_id(transport_.cluster_id());
         resp_header->set_member_id(transport_.member_id());
         resp_header->set_term(current_term_.load(std::memory_order_relaxed));
@@ -305,7 +305,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     }
 
     RequestVoteResponse response;
-    foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+    rpc::ResponseHeader* resp_header = response.mutable_header();
     resp_header->set_cluster_id(transport_.cluster_id());
     resp_header->set_member_id(transport_.member_id());
     resp_header->set_term(current_term_.load(std::memory_order_relaxed));
@@ -334,7 +334,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
 
     if (req_term < current_term_.load(std::memory_order_relaxed)) {
         AppendEntriesResponse response;
-        foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+        rpc::ResponseHeader* resp_header = response.mutable_header();
         resp_header->set_cluster_id(transport_.cluster_id());
         resp_header->set_member_id(transport_.member_id());
         resp_header->set_term(current_term_.load(std::memory_order_relaxed));
@@ -353,7 +353,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     auto current_term = current_term_.load(std::memory_order_relaxed);
     if (req_term < current_term) {
         AppendEntriesResponse response;
-        foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+        rpc::ResponseHeader* resp_header = response.mutable_header();
         resp_header->set_cluster_id(transport_.cluster_id());
         resp_header->set_member_id(transport_.member_id());
         resp_header->set_term(current_term);
@@ -381,7 +381,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
         commit_index_ = std::min(last_log_index, leader_commit);
         AppendEntriesResponse response;
-        foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+        rpc::ResponseHeader* resp_header = response.mutable_header();
         resp_header->set_cluster_id(transport_.cluster_id());
         resp_header->set_member_id(transport_.member_id());
         resp_header->set_term(current_term);
@@ -396,7 +396,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     if (prev_log_index > last_log_index) {
         // Our log is too old, return false
         AppendEntriesResponse response;
-        foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+        rpc::ResponseHeader* resp_header = response.mutable_header();
         resp_header->set_cluster_id(transport_.cluster_id());
         resp_header->set_member_id(transport_.member_id());
         resp_header->set_term(current_term);
@@ -418,7 +418,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     commit_index_ = std::min(last_log_index, leader_commit);
 
     AppendEntriesResponse response;
-    foskvserverpb::ResponseHeader* resp_header = response.mutable_header();
+    rpc::ResponseHeader* resp_header = response.mutable_header();
     resp_header->set_cluster_id(transport_.cluster_id());
     resp_header->set_member_id(transport_.member_id());
     resp_header->set_term(current_term);
@@ -441,10 +441,10 @@ auto foskv::raft::RaftNode::handle_install_snapshot_request(std::string_view req
 
 auto foskv::raft::RaftNode::handle_internal_raft_request(std::string_view req_payload, std::span<char> resp_payload)
 -> kosio::async::Task<RpcResult<std::size_t>> {
-    using foskvserverpb::InternalRaftRequest;
     InternalRaftRequest request;
     if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kParseFailed)};
     }
+
 
 }

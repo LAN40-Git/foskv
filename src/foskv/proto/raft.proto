@@ -1,6 +1,7 @@
 syntax = "proto3";
 package foskv.raft;
-import "foskv/api/foskvserverpb/rpc.proto";
+import "rpc.proto";
+import "kv.proto";
 
 message RequestVoteRequest {
     uint64 term = 1;
@@ -10,7 +11,7 @@ message RequestVoteRequest {
 }
 
 message RequestVoteResponse {
-    foskvserverpb.ResponseHeader header = 1;
+    rpc.ResponseHeader header = 1;
     bool vote_granted = 2;
 }
 
@@ -30,7 +31,7 @@ message AppendEntriesRequest {
 }
 
 message AppendEntriesResponse {
-    foskvserverpb.ResponseHeader header = 1;
+    rpc.ResponseHeader header = 1;
     bool success = 2;
 }
 
@@ -45,7 +46,7 @@ message InstallSnapshotRequest {
 }
 
 message InstallSnapshotResponse {
-    foskvserverpb.ResponseHeader header = 1;
+    rpc.ResponseHeader header = 1;
 }
 
 message PersistState {
@@ -56,4 +57,15 @@ message PersistState {
 message SnapshotMetadata {
     uint64 last_include_index = 1;
     uint64 last_include_term = 2;
+}
+
+message InternalRaftRequest {
+    uint64 ID = 100;
+
+    oneof type {
+        // KV
+        kv.PutRequest put = 1;
+        kv.GetRequest get = 2;
+        kv.DeleteRequest delete = 3;
+    }
 }

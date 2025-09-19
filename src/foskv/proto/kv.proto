@@ -1,13 +1,7 @@
 syntax = "proto3";
-package foskvserverpb;
+package foskv.kv;
+import "rpc.proto";
 
-message ResponseHeader {
-  uint64 cluster_id = 1;
-  uint64 member_id = 2;
-  uint64 term = 3;
-}
-
-// ===== KV =====
 message KeyValue {
   bytes key = 1;
   bytes value = 2;
@@ -20,7 +14,7 @@ message PutRequest {
 }
 
 message PutResponse {
-  ResponseHeader header = 1;
+  rpc.ResponseHeader header = 1;
   KeyValue prev_kv = 2;
   bool success = 3;
   bytes error = 4;
@@ -31,7 +25,7 @@ message GetRequest {
 }
 
 message GetResponse {
-  ResponseHeader header = 1;
+  rpc.ResponseHeader header = 1;
   KeyValue kvs = 2;
   bool success = 3;
   bytes error = 4;
@@ -42,7 +36,7 @@ message DeleteRequest {
 }
 
 message DeleteResponse {
-  ResponseHeader header = 1;
+  rpc.ResponseHeader header = 1;
   bool success = 3;
   bytes error = 4;
 }

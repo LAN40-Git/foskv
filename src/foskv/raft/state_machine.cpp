@@ -26,7 +26,6 @@ auto foskv::raft::detail::StateMachine::create(const std::filesystem::path& path
 }
 
 auto foskv::raft::detail::StateMachine::apply(RaftNode& node, const LogEntry &entry) const -> RaftResult<std::pair<uint64_t, std::string>> {
-    using foskvserverpb::InternalRaftRequest;
     InternalRaftRequest request;
     if (!request.ParseFromString(entry.command())) {
         return std::unexpected{make_raft_error(RaftError::kCommandParseFailed)};
@@ -36,7 +35,7 @@ auto foskv::raft::detail::StateMachine::apply(RaftNode& node, const LogEntry &en
             auto& args = request.put();
             auto& key = args.key();
             auto& value = args.value();
-            foskvserverpb::PutResponse response;
+            kv::PutResponse response;
             auto* resp_header = response.mutable_header();
             resp_header->set_cluster_id(node.transport_.cluster_id());
             resp_header->set_member_id(node.transport_.member_id());
@@ -48,12 +47,12 @@ auto foskv::raft::detail::StateMachine::apply(RaftNode& node, const LogEntry &en
                 response.set_allocated_error(&error);
             }
             response.set_success(false);
-            return std::make_pair(request.header().id(), response.SerializeAsString());
+            return std::make_pair(request.id(), response.SerializeAsString());
         }
         case InternalRaftRequest::kGet: {
             auto& args = request.get();
             auto& key = args.key();
-            foskvserverpb::GetResponse response;
+            kv::GetResponse response;
             auto* resp_header = response.mutable_header();
             response.mutable_kvs()->set_key(key);
             resp_header->set_cluster_id(node.transport_.cluster_id());
@@ -66,13 +65,13 @@ auto foskv::raft::detail::StateMachine::apply(RaftNode& node, const LogEntry &en
                 response.set_allocated_error(&error);
             }
             response.set_success(true);
-            return std::make_pair(request.header().id(), response.SerializeAsString());
+            return std::make_pair(request.id(), response.SerializeAsString());
         }
         case InternalRaftRequest::kDelete: {
             auto& args = request.put();
             auto& key = args.key();
             auto& value = args.value();
-            foskvserverpb::PutResponse response;
+            kv::PutResponse response;
             auto* resp_header = response.mutable_header();
             resp_header->set_cluster_id(node.transport_.cluster_id());
             resp_header->set_member_id(node.transport_.member_id());
@@ -84,7 +83,7 @@ auto foskv::raft::detail::StateMachine::apply(RaftNode& node, const LogEntry &en
                 response.set_allocated_error(&error);
             }
             response.set_success(true);
-            return std::make_pair(request.header().id(), response.SerializeAsString());
+            return std::make_pair(request.id(), response.SerializeAsString());
         }
         default: {
             LOG_ERROR("Invalid internal raft request.");

@@ -54,7 +54,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(XXHASH REQUIRED libxxhash)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(include/foskv/api)
+include_directories(include/foskv/proto)
 
 # ====== LIBRARY ======
 set(ROCKSDB_LIBRARIES
@@ -74,21 +74,7 @@ set(DEPEND_LIBS
         ${XXHASH_LIBRARIES}
 )
 
-add_subdirectory(src/api)
-add_subdirectory(src/client)
-add_subdirectory(src/common)
-add_subdirectory(src/raft)
-add_subdirectory(src/rpc)
-add_subdirectory(src/storage)
-
-set(SRC_FILES
-        ${PROTO_FILES}
-        ${CLIENT_FILES}
-        ${COMMON_FILES}
-        ${RAFT_FILES}
-        ${RPC_FILES}
-        ${STORAGE_FILES}
-)
+add_subdirectory(src/foskv)
 
 # ====== TEST ======
 add_subdirectory(tests)
