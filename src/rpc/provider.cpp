@@ -1,4 +1,5 @@
 #include "foskv/rpc/provider.hpp"
+#include <kosio/runtime/runtime.hpp>
 
 foskv::rpc::RpcProvider::RpcProvider(RpcProvider &&other) noexcept
     : addr_(other.addr_)

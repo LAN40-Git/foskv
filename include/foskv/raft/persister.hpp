@@ -1,7 +1,5 @@
 #pragma once
-#include "foskv/raft/util.hpp"
 #include "foskv/raft/config.hpp"
-#include <string_view>
 
 namespace foskv::raft::detail {
 class Persister {

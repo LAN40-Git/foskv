@@ -1,2 +1,2 @@
-file(GLOB FILES "*.cpp" "*.cc")
+file(GLOB FILES "*.cpp" "proto/*.cc")
 set(RPC_FILES ${FILES} PARENT_SCOPE)

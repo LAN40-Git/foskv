@@ -1,6 +1,5 @@
 #pragma once
-#include "foskv/raft/config.hpp"
-#include "foskv/raft/util.hpp"
+#include "foskv/raft/peer.hpp"
 
 namespace foskv::raft::detail {
 class StateMachine {

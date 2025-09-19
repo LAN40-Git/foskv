@@ -177,7 +177,7 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
                 co_return std::unexpected{make_raft_error(RaftError::kRepeatedPeer)};
             }
 
-            auto has_peer = detail::Peer::create(member_id, node_info.name, node_info.host, node_info.port);
+            auto has_peer = co_await detail::Peer::create(member_id, node_info.name, node_info.host, node_info.port);
             if (!has_peer) {
                 co_return std::unexpected{has_peer.error()};
             }
@@ -206,7 +206,7 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
 auto foskv::raft::Config::add_peer(uint64_t member_id, std::string_view name,
         std::string_view host, uint16_t port) -> kosio::async::Task<RaftResult<void>> {
     // Hold raft node's mutex
-    auto has_peer = detail::Peer::create(member_id, name, host, port);
+    auto has_peer = co_await detail::Peer::create(member_id, name, host, port);
     if (!has_peer) [[unlikely]] {
         co_return std::unexpected{has_peer.error()};
     }

@@ -1,0 +1,2 @@
+file(GLOB FILES "*.cpp" "*.cc")
+set(COMMON_FILES ${FILES} PARENT_SCOPE)

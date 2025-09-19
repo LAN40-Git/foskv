@@ -1,0 +1,2 @@
+file(GLOB FILES "*.cpp" "*.cc")
+set(CLIENT_FILES ${FILES} PARENT_SCOPE)

@@ -1,10 +1,7 @@
 #pragma once
 #include "foskv/raft/transport.hpp"
 #include "foskv/raft/persister.hpp"
-#include <vector>
-#include <optional>
-#include <kosio/sync.hpp>
-#include <kosio/core.hpp>
+#include "foskv/raft/state_machine.hpp"
 
 namespace foskv::raft {
 class RaftNode {

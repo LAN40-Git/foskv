@@ -1,5 +1,5 @@
 #pragma once
-#include "foskv/client/kv_service.pb.h"
+#include "foskv/rpc/rpc.hpp"
 #include "foskv/rpc/consumer.hpp"
 
 namespace foskv::client {
@@ -15,6 +15,9 @@ public:
 public:
     [[REMEMBER_CO_AWAIT]]
     static auto connect(std::string_view host, uint16_t port) -> kosio::async::Task<ClientResult<KVClient>>;
+
+public:
+
 
 private:
     rpc::RpcConsumer consumer_;

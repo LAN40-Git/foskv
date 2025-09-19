@@ -13,6 +13,7 @@ auto foskv::client::KVClient::connect(std::string_view host, uint16_t port)
     auto has_consumer = co_await rpc::RpcConsumer::connect(host, port);
     if (!has_consumer) {
         LOG_ERROR("Failed to connect to {}:{} : {}", host, port, has_consumer.error());
-        co_return std::unexpected{make_client_error(ClientError::)}
+        co_return std::unexpected{make_client_error(ClientError::kConnectFailed)};
     }
+    co_return KVClient{std::move(has_consumer.value())};
 }

@@ -1,7 +1,12 @@
 #pragma once
-#include "foskv/rpc/util.hpp"
 #include "foskv/rpc/config.hpp"
+#include "foskv/common/error.hpp"
+#include "foskv/rpc/proto/rpc.pb.h"
+#include "foskv/rpc/proto/kv_service.pb.h"
+#include "foskv/rpc/proto/raft_service.pb.h"
 #include <kosio/sync.hpp>
+#include <kosio/net.hpp>
+#include <functional>
 
 namespace foskv::rpc {
 using RpcCallback = std::function<kosio::async::Task<>(std::string_view resp_payload)>;

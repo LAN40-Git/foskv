@@ -1,5 +1,4 @@
 #pragma once
-#include "foskv/common/error.hpp"
 #include "foskv/raft/peer.hpp"
 #include <kosio/fs.hpp>
 #include <nlohmann/json.hpp>

@@ -68,10 +68,15 @@ set(DEPEND_LIBS
         ${XXHASH_LIBRARIES}
 )
 
+add_subdirectory(src/client)
+add_subdirectory(src/common)
+add_subdirectory(src/raft)
 add_subdirectory(src/rpc)
 add_subdirectory(src/storage)
 
 set(SRC_FILES
+        ${CLIENT_FILES}
+        ${COMMON_FILES}
         ${RAFT_FILES}
         ${RPC_FILES}
         ${STORAGE_FILES}

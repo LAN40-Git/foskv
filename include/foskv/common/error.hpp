@@ -38,31 +38,6 @@ protected:
 };
 } // namespace detail
 
-/* Template of DriverError
-// ========== Fixme ==========
-class Fixme : public detail::BaseError<Fixme> {
-public:
-    enum Code {
-        kUnknown = Fixme,
-    };
-
-public:
-    explicit Fixme(int error_code)
-        : BaseError<Fixme>(error_code) {}
-
-public:
-    [[nodiscard]]
-    auto error_message() const noexcept -> std::string_view {
-        switch (static_cast<Code>(error_code_)) {
-            case kUnknown:
-                return "Unknown Fixme error.";
-            default:
-                return strerror(error_code_);
-        }
-    }
-};
-*/
-
 // ========== Rpc Error ==========
 class RpcError : public detail::BaseError<RpcError> {
 public:
@@ -86,34 +61,7 @@ public:
 
 public:
     [[nodiscard]]
-    auto error_message() const noexcept -> std::string_view {
-        switch (static_cast<Code>(error_code_)) {
-            case kUnknown:
-                return "Unknown rpc error.";
-            case kFdNotRegister:
-                return "Fd not register.";
-            case kSerializeFailed:
-                return "Failed to serialize message.";
-            case kParseFailed:
-                return "Failed to parse message.";
-            case kConnectFailed:
-                return "Failed to connect to rpc server.";
-            case kReconnectFailed:
-                return "Failed to reconnect to the rpc server.";
-            case kSendFailed:
-                return "Failed to send message.";
-            case kReceiveFailed:
-                return "Failed to receive message.";
-            case kMessageTooLarge:
-                return "Message too large.";
-            case kOtherRaftCluster:
-                return "Message from other raft cluster.";
-            case kInvalidRpcServerAddress:
-                return "Invalid provider address.";
-            default:
-                return strerror(error_code_);
-        }
-    }
+    auto error_message() const noexcept -> std::string_view;
 };
 
 // ========== Storage Error ==========
@@ -129,16 +77,7 @@ public:
 
 public:
     [[nodiscard]]
-    auto error_message() const noexcept -> std::string_view {
-        switch (static_cast<Code>(error_code_)) {
-            case kUnknown:
-                return "Unknown storage error.";
-            case kDBOpenFailed:
-                return "Failed to open database.";
-            default:
-                return strerror(error_code_);
-        }
-    }
+    auto error_message() const noexcept -> std::string_view;
 };
 
 // ========== Raft Error ==========
@@ -158,6 +97,7 @@ public:
         kJsonParseFailed,
         kLocalNodeNotFound,
         kStateMachineCreateFailed,
+        kPeerCreateFailed,
     };
 
 public:
@@ -166,45 +106,16 @@ public:
 
 public:
     [[nodiscard]]
-    auto error_message() const noexcept -> std::string_view {
-        switch (static_cast<Code>(error_code_)) {
-            case kUnknown:
-                return "Unknown raft error.";
-            case kConfigFileOpenFailed:
-                return "Failed to open raft configuration file.";
-            case kConfigFileWriteFailed:
-                return "Failed to write raft configuration file.";
-            case kConfigFileReadFailed:
-                return "Failed to read raft configuration file.";
-            case kConfigFileRenameFailed:
-                return "Failed to rename raft configuration file.";
-            case kPersisterCreateFailed:
-                return "Failed to create persister.";
-            case kPersistentSaveFailed:
-                return "Failed to save persistent.";
-            case kInvalidPeerAddress:
-                return "Invalid peer raft node address.";
-            case kInvalidLocalAddress:
-                return "Invalid local raft node address.";
-            case kRepeatedPeer:
-                return "Find repeated peer in cluster.";
-            case kJsonParseFailed:
-                return "Failed to parse JSON.";
-            case kLocalNodeNotFound:
-                return "Failed to find local raft node in configuration.";
-            case kStateMachineCreateFailed:
-                return "Failed to create state machine.";
-            default:
-                return strerror(error_code_);
-        }
-    }
+    auto error_message() const noexcept -> std::string_view;
 };
 
 // ========== Client Error ==========
 class ClientError : public detail::BaseError<ClientError> {
 public:
     enum Code {
-        kUnknown = detail::StorageErrorCodeBase,
+        kUnknown = detail::ClientErrorCodeBase,
+        kConnectFailed,
+        kReconnectFailed,
     };
 public:
     explicit ClientError(Code error_code)
@@ -212,14 +123,7 @@ public:
 
 public:
     [[nodiscard]]
-    auto error_message() const noexcept -> std::string_view {
-        switch (static_cast<Code>(error_code_)) {
-            case kUnknown:
-                return "Unknown storage error.";
-            default:
-                return strerror(error_code_);
-        }
-    }
+    auto error_message() const noexcept -> std::string_view;
 };
 
 namespace detail {

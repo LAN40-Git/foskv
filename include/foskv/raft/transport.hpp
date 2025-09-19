@@ -1,5 +1,4 @@
 #pragma once
-#include "foskv/raft/peer.hpp"
 #include "foskv/raft/config.hpp"
 
 namespace foskv::raft {

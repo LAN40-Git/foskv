@@ -4,16 +4,17 @@
 foskv::raft::RaftNode::RaftNode(Config&& config, detail::Persister&& persister)
     : persister_(std::move(persister))
     , transport_(std::move(config)) {
+    using rpc::RaftService;
     // Register invokes
-    transport_.provider_.register_invoke(RaftRpc::ServiceName, RaftRpc::RequestVote,
+    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::RequestVote,
         [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>>  {
         co_return co_await this->handle_request_vote_request(req_payload, resp_payload);
     });
-    transport_.provider_.register_invoke(RaftRpc::ServiceName, RaftRpc::AppendEntries,
+    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::AppendEntries,
         [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>> {
         co_return co_await this->handle_append_entries_request(req_payload, resp_payload);
     });
-    transport_.provider_.register_invoke(RaftRpc::ServiceName, RaftRpc::InstallSnapshot,
+    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::InstallSnapshot,
         [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<RpcResult<std::size_t>> {
         co_return co_await this->handle_install_snapshot_request(req_payload, resp_payload);
     });
