@@ -46,6 +46,9 @@ struct TableStruct_kv_5fservice_2eproto {
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_kv_5fservice_2eproto;
 namespace foskv {
 namespace client {
+class Command;
+struct CommandDefaultTypeInternal;
+extern CommandDefaultTypeInternal _Command_default_instance_;
 class DeleteRequest;
 struct DeleteRequestDefaultTypeInternal;
 extern DeleteRequestDefaultTypeInternal _DeleteRequest_default_instance_;
@@ -67,6 +70,7 @@ extern PutResponseDefaultTypeInternal _PutResponse_default_instance_;
 }  // namespace client
 }  // namespace foskv
 PROTOBUF_NAMESPACE_OPEN
+template<> ::foskv::client::Command* Arena::CreateMaybeMessage<::foskv::client::Command>(Arena*);
 template<> ::foskv::client::DeleteRequest* Arena::CreateMaybeMessage<::foskv::client::DeleteRequest>(Arena*);
 template<> ::foskv::client::DeleteResponse* Arena::CreateMaybeMessage<::foskv::client::DeleteResponse>(Arena*);
 template<> ::foskv::client::GetRequest* Arena::CreateMaybeMessage<::foskv::client::GetRequest>(Arena*);
@@ -1054,6 +1058,224 @@ class DeleteResponse final :
   union { Impl_ _impl_; };
   friend struct ::TableStruct_kv_5fservice_2eproto;
 };
+// -------------------------------------------------------------------
+
+class Command final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.client.Command) */ {
+ public:
+  inline Command() : Command(nullptr) {}
+  ~Command() override;
+  explicit PROTOBUF_CONSTEXPR Command(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Command(const Command& from);
+  Command(Command&& from) noexcept
+    : Command() {
+    *this = ::std::move(from);
+  }
+
+  inline Command& operator=(const Command& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Command& operator=(Command&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Command& default_instance() {
+    return *internal_default_instance();
+  }
+  enum OpCase {
+    kPut = 1,
+    kGet = 2,
+    kDelete = 3,
+    OP_NOT_SET = 0,
+  };
+
+  static inline const Command* internal_default_instance() {
+    return reinterpret_cast<const Command*>(
+               &_Command_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    6;
+
+  friend void swap(Command& a, Command& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Command* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Command* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Command* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Command>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Command& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Command& from) {
+    Command::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Command* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "foskv.client.Command";
+  }
+  protected:
+  explicit Command(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPutFieldNumber = 1,
+    kGetFieldNumber = 2,
+    kDeleteFieldNumber = 3,
+  };
+  // .foskv.client.PutRequest put = 1;
+  bool has_put() const;
+  private:
+  bool _internal_has_put() const;
+  public:
+  void clear_put();
+  const ::foskv::client::PutRequest& put() const;
+  PROTOBUF_NODISCARD ::foskv::client::PutRequest* release_put();
+  ::foskv::client::PutRequest* mutable_put();
+  void set_allocated_put(::foskv::client::PutRequest* put);
+  private:
+  const ::foskv::client::PutRequest& _internal_put() const;
+  ::foskv::client::PutRequest* _internal_mutable_put();
+  public:
+  void unsafe_arena_set_allocated_put(
+      ::foskv::client::PutRequest* put);
+  ::foskv::client::PutRequest* unsafe_arena_release_put();
+
+  // .foskv.client.GetRequest get = 2;
+  bool has_get() const;
+  private:
+  bool _internal_has_get() const;
+  public:
+  void clear_get();
+  const ::foskv::client::GetRequest& get() const;
+  PROTOBUF_NODISCARD ::foskv::client::GetRequest* release_get();
+  ::foskv::client::GetRequest* mutable_get();
+  void set_allocated_get(::foskv::client::GetRequest* get);
+  private:
+  const ::foskv::client::GetRequest& _internal_get() const;
+  ::foskv::client::GetRequest* _internal_mutable_get();
+  public:
+  void unsafe_arena_set_allocated_get(
+      ::foskv::client::GetRequest* get);
+  ::foskv::client::GetRequest* unsafe_arena_release_get();
+
+  // .foskv.client.DeleteRequest delete = 3;
+  bool has_delete_() const;
+  private:
+  bool _internal_has_delete_() const;
+  public:
+  void clear_delete_();
+  const ::foskv::client::DeleteRequest& delete_() const;
+  PROTOBUF_NODISCARD ::foskv::client::DeleteRequest* release_delete_();
+  ::foskv::client::DeleteRequest* mutable_delete_();
+  void set_allocated_delete_(::foskv::client::DeleteRequest* delete_);
+  private:
+  const ::foskv::client::DeleteRequest& _internal_delete_() const;
+  ::foskv::client::DeleteRequest* _internal_mutable_delete_();
+  public:
+  void unsafe_arena_set_allocated_delete_(
+      ::foskv::client::DeleteRequest* delete_);
+  ::foskv::client::DeleteRequest* unsafe_arena_release_delete_();
+
+  void clear_Op();
+  OpCase Op_case() const;
+  // @@protoc_insertion_point(class_scope:foskv.client.Command)
+ private:
+  class _Internal;
+  void set_has_put();
+  void set_has_get();
+  void set_has_delete_();
+
+  inline bool has_Op() const;
+  inline void clear_has_Op();
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    union OpUnion {
+      constexpr OpUnion() : _constinit_{} {}
+        ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized _constinit_;
+      ::foskv::client::PutRequest* put_;
+      ::foskv::client::GetRequest* get_;
+      ::foskv::client::DeleteRequest* delete__;
+    } Op_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+    uint32_t _oneof_case_[1];
+
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_kv_5fservice_2eproto;
+};
 // ===================================================================
 
 
@@ -1543,9 +1765,246 @@ inline void DeleteResponse::set_allocated_error(std::string* error) {
   // @@protoc_insertion_point(field_set_allocated:foskv.client.DeleteResponse.error)
 }
 
+// -------------------------------------------------------------------
+
+// Command
+
+// .foskv.client.PutRequest put = 1;
+inline bool Command::_internal_has_put() const {
+  return Op_case() == kPut;
+}
+inline bool Command::has_put() const {
+  return _internal_has_put();
+}
+inline void Command::set_has_put() {
+  _impl_._oneof_case_[0] = kPut;
+}
+inline void Command::clear_put() {
+  if (_internal_has_put()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete _impl_.Op_.put_;
+    }
+    clear_has_Op();
+  }
+}
+inline ::foskv::client::PutRequest* Command::release_put() {
+  // @@protoc_insertion_point(field_release:foskv.client.Command.put)
+  if (_internal_has_put()) {
+    clear_has_Op();
+    ::foskv::client::PutRequest* temp = _impl_.Op_.put_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.Op_.put_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::foskv::client::PutRequest& Command::_internal_put() const {
+  return _internal_has_put()
+      ? *_impl_.Op_.put_
+      : reinterpret_cast< ::foskv::client::PutRequest&>(::foskv::client::_PutRequest_default_instance_);
+}
+inline const ::foskv::client::PutRequest& Command::put() const {
+  // @@protoc_insertion_point(field_get:foskv.client.Command.put)
+  return _internal_put();
+}
+inline ::foskv::client::PutRequest* Command::unsafe_arena_release_put() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.client.Command.put)
+  if (_internal_has_put()) {
+    clear_has_Op();
+    ::foskv::client::PutRequest* temp = _impl_.Op_.put_;
+    _impl_.Op_.put_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Command::unsafe_arena_set_allocated_put(::foskv::client::PutRequest* put) {
+  clear_Op();
+  if (put) {
+    set_has_put();
+    _impl_.Op_.put_ = put;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.client.Command.put)
+}
+inline ::foskv::client::PutRequest* Command::_internal_mutable_put() {
+  if (!_internal_has_put()) {
+    clear_Op();
+    set_has_put();
+    _impl_.Op_.put_ = CreateMaybeMessage< ::foskv::client::PutRequest >(GetArenaForAllocation());
+  }
+  return _impl_.Op_.put_;
+}
+inline ::foskv::client::PutRequest* Command::mutable_put() {
+  ::foskv::client::PutRequest* _msg = _internal_mutable_put();
+  // @@protoc_insertion_point(field_mutable:foskv.client.Command.put)
+  return _msg;
+}
+
+// .foskv.client.GetRequest get = 2;
+inline bool Command::_internal_has_get() const {
+  return Op_case() == kGet;
+}
+inline bool Command::has_get() const {
+  return _internal_has_get();
+}
+inline void Command::set_has_get() {
+  _impl_._oneof_case_[0] = kGet;
+}
+inline void Command::clear_get() {
+  if (_internal_has_get()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete _impl_.Op_.get_;
+    }
+    clear_has_Op();
+  }
+}
+inline ::foskv::client::GetRequest* Command::release_get() {
+  // @@protoc_insertion_point(field_release:foskv.client.Command.get)
+  if (_internal_has_get()) {
+    clear_has_Op();
+    ::foskv::client::GetRequest* temp = _impl_.Op_.get_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.Op_.get_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::foskv::client::GetRequest& Command::_internal_get() const {
+  return _internal_has_get()
+      ? *_impl_.Op_.get_
+      : reinterpret_cast< ::foskv::client::GetRequest&>(::foskv::client::_GetRequest_default_instance_);
+}
+inline const ::foskv::client::GetRequest& Command::get() const {
+  // @@protoc_insertion_point(field_get:foskv.client.Command.get)
+  return _internal_get();
+}
+inline ::foskv::client::GetRequest* Command::unsafe_arena_release_get() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.client.Command.get)
+  if (_internal_has_get()) {
+    clear_has_Op();
+    ::foskv::client::GetRequest* temp = _impl_.Op_.get_;
+    _impl_.Op_.get_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Command::unsafe_arena_set_allocated_get(::foskv::client::GetRequest* get) {
+  clear_Op();
+  if (get) {
+    set_has_get();
+    _impl_.Op_.get_ = get;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.client.Command.get)
+}
+inline ::foskv::client::GetRequest* Command::_internal_mutable_get() {
+  if (!_internal_has_get()) {
+    clear_Op();
+    set_has_get();
+    _impl_.Op_.get_ = CreateMaybeMessage< ::foskv::client::GetRequest >(GetArenaForAllocation());
+  }
+  return _impl_.Op_.get_;
+}
+inline ::foskv::client::GetRequest* Command::mutable_get() {
+  ::foskv::client::GetRequest* _msg = _internal_mutable_get();
+  // @@protoc_insertion_point(field_mutable:foskv.client.Command.get)
+  return _msg;
+}
+
+// .foskv.client.DeleteRequest delete = 3;
+inline bool Command::_internal_has_delete_() const {
+  return Op_case() == kDelete;
+}
+inline bool Command::has_delete_() const {
+  return _internal_has_delete_();
+}
+inline void Command::set_has_delete_() {
+  _impl_._oneof_case_[0] = kDelete;
+}
+inline void Command::clear_delete_() {
+  if (_internal_has_delete_()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete _impl_.Op_.delete__;
+    }
+    clear_has_Op();
+  }
+}
+inline ::foskv::client::DeleteRequest* Command::release_delete_() {
+  // @@protoc_insertion_point(field_release:foskv.client.Command.delete)
+  if (_internal_has_delete_()) {
+    clear_has_Op();
+    ::foskv::client::DeleteRequest* temp = _impl_.Op_.delete__;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.Op_.delete__ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::foskv::client::DeleteRequest& Command::_internal_delete_() const {
+  return _internal_has_delete_()
+      ? *_impl_.Op_.delete__
+      : reinterpret_cast< ::foskv::client::DeleteRequest&>(::foskv::client::_DeleteRequest_default_instance_);
+}
+inline const ::foskv::client::DeleteRequest& Command::delete_() const {
+  // @@protoc_insertion_point(field_get:foskv.client.Command.delete)
+  return _internal_delete_();
+}
+inline ::foskv::client::DeleteRequest* Command::unsafe_arena_release_delete_() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.client.Command.delete)
+  if (_internal_has_delete_()) {
+    clear_has_Op();
+    ::foskv::client::DeleteRequest* temp = _impl_.Op_.delete__;
+    _impl_.Op_.delete__ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Command::unsafe_arena_set_allocated_delete_(::foskv::client::DeleteRequest* delete_) {
+  clear_Op();
+  if (delete_) {
+    set_has_delete_();
+    _impl_.Op_.delete__ = delete_;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.client.Command.delete)
+}
+inline ::foskv::client::DeleteRequest* Command::_internal_mutable_delete_() {
+  if (!_internal_has_delete_()) {
+    clear_Op();
+    set_has_delete_();
+    _impl_.Op_.delete__ = CreateMaybeMessage< ::foskv::client::DeleteRequest >(GetArenaForAllocation());
+  }
+  return _impl_.Op_.delete__;
+}
+inline ::foskv::client::DeleteRequest* Command::mutable_delete_() {
+  ::foskv::client::DeleteRequest* _msg = _internal_mutable_delete_();
+  // @@protoc_insertion_point(field_mutable:foskv.client.Command.delete)
+  return _msg;
+}
+
+inline bool Command::has_Op() const {
+  return Op_case() != OP_NOT_SET;
+}
+inline void Command::clear_has_Op() {
+  _impl_._oneof_case_[0] = OP_NOT_SET;
+}
+inline Command::OpCase Command::Op_case() const {
+  return Command::OpCase(_impl_._oneof_case_[0]);
+}
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

@@ -28,3 +28,11 @@ message DeleteResponse {
     bool success = 1;
     bytes error = 2;
 }
+
+message Command {
+    oneof Op {
+        PutRequest put = 1;
+        GetRequest get = 2;
+        DeleteRequest delete= 3;
+    }
+}

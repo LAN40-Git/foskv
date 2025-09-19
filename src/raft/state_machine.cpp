@@ -25,7 +25,29 @@ auto foskv::raft::detail::StateMachine::create(const std::filesystem::path& path
 }
 
 auto foskv::raft::detail::StateMachine::apply_entries(std::span<const LogEntry> entries) -> uint64_t {
+    client::Command cmd;
     for (auto &entry : entries) {
+        if (cmd.ParseFromString(entry.command())) {
+            switch (cmd.Op_case()) {
+                case client::Command::kPut: {
+                    auto& args = cmd.put();
+                    auto& key = args.key();
+                    auto& value = args.value();
+                    auto status = st_.Put(key, value);
+                    if (!status.ok()) [[unlikely]] {
+                        LOG_ERROR("Failed to apply entry {}-{} : {}", entry.index(), entry.term(), status.ToString());
+                    }
+                }
+                case client::Command::kGet: {
 
+                }
+                case client::Command::kDelete: {
+
+                }
+                default: {
+                    LOG_ERROR("Unknown command.");
+                }
+            }
+        }
     }
 }
