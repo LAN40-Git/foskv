@@ -30,10 +30,11 @@ auto foskv::raft::detail::Persister::create(const std::filesystem::path& path)
     return Persister{std::move(has_st.value())};
 }
 
-auto foskv::raft::detail::Persister::persist_entry(const std::pair<rocksdb::Slice, rocksdb::Slice> &entry) const -> RaftResult<void> {
-    auto status = st_.Put(entry.first, entry.second);
+auto foskv::raft::detail::Persister::persist_entry(const rocksdb::Slice &index_slice,
+    const rocksdb::Slice &entry_payload_slice) const -> RaftResult<void> {
+    auto status = st_.Put(index_slice, entry_payload_slice);
     if (!status.ok()) [[unlikely]] {
-        LOG_ERROR("Failed to persist entry {}-{} : {}", entry.first.ToString(), entry.second.ToString(), status.ToString());
+        LOG_ERROR("Failed to persist entry at {} : {}", index_slice.ToString(), status.ToString());
         return std::unexpected{make_raft_error(RaftError::kPersistentSaveFailed)};
     }
     return RaftResult<void>{};
@@ -75,8 +76,7 @@ void foskv::raft::detail::Persister::load_state(PersistState &state) const {
 void foskv::raft::detail::Persister::load_entries(std::vector<LogEntry> &entries) {
     try {
         std::string start_log_index_str, end_log_index_str;
-
-        entries = {LogEntry{}};
+        entries.resize(0);
 
         if (!st_.Get(START_LOG_INDEX, &start_log_index_str).ok() ||
             !st_.Get(END_LOG_INDEX, &end_log_index_str).ok()) {
@@ -116,10 +116,8 @@ void foskv::raft::detail::Persister::load_entries(std::vector<LogEntry> &entries
         // Log recovery completes
     } catch (const std::exception& e) {
         LOG_ERROR("Failed to load entries: {}", e.what());
-        entries = {LogEntry{}};
     }
     catch (...) {
         LOG_ERROR("Unknown error occurred while loading entries");
-        entries = {LogEntry{}};
     }
 }

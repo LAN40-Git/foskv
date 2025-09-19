@@ -2,8 +2,7 @@
 
 foskv::rpc::RpcConsumer::RpcConsumer(kosio::net::TcpStream &&stream,
                                      const kosio::net::SocketAddr& server_addr)
-    : buffer_(detail::MAX_RPC_MESSAGE_SIZE)
-    , stream_(std::move(stream))
+    : stream_(std::move(stream))
     , server_addr_(server_addr) {
     LOG_INFO("Connect to {}", server_addr_);
     kosio::spawn(run());
@@ -63,7 +62,7 @@ auto foskv::rpc::RpcConsumer::call(
 
     // Send [rpc header size -> rpc header -> request payload]
     auto rpc_header_size = rpc_header.ByteSizeLong();
-    if (rpc_header_size > buffer_.capacity()) [[unlikely]] {
+    if (rpc_header_size > buffer_.max_size()) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kMessageTooLarge)};
     }
     rpc_header.SerializeToArray(buffer_.data(), static_cast<int>(rpc_header_size));
@@ -108,7 +107,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         co_return;
     }
     is_running_.store(true, std::memory_order_release);
-    std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
+    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer;
     // Break if failed to reconnect to the rpc server or receive invalid message
     while (true) {
         // Recv rpc header size
@@ -121,7 +120,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         }
 
         uint32_t rpc_header_size = ntohl(rpc_header_size_net);
-        if (rpc_header_size > buffer.capacity()) [[unlikely]] {
+        if (rpc_header_size > buffer.max_size()) [[unlikely]] {
             LOG_ERROR("Response header too large.");
             break;
         }
@@ -141,7 +140,7 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
         }
         auto request_id = rpc_header.request_id();
         auto payload_size = rpc_header.payload_size();
-        if (payload_size > buffer.capacity()) [[unlikely]] {
+        if (payload_size > buffer.max_size()) [[unlikely]] {
             LOG_ERROR("Response payload too large.");
             callbacks_.erase(request_id);
             break;

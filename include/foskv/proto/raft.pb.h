@@ -30,7 +30,6 @@
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/unknown_field_set.h>
-#include "rpc.pb.h"
 #include "kv.pb.h"
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
@@ -75,6 +74,9 @@ extern RequestVoteRequestDefaultTypeInternal _RequestVoteRequest_default_instanc
 class RequestVoteResponse;
 struct RequestVoteResponseDefaultTypeInternal;
 extern RequestVoteResponseDefaultTypeInternal _RequestVoteResponse_default_instance_;
+class ResponseHeader;
+struct ResponseHeaderDefaultTypeInternal;
+extern ResponseHeaderDefaultTypeInternal _ResponseHeader_default_instance_;
 class SnapshotMetadata;
 struct SnapshotMetadataDefaultTypeInternal;
 extern SnapshotMetadataDefaultTypeInternal _SnapshotMetadata_default_instance_;
@@ -90,12 +92,183 @@ template<> ::foskv::raft::LogEntry* Arena::CreateMaybeMessage<::foskv::raft::Log
 template<> ::foskv::raft::PersistState* Arena::CreateMaybeMessage<::foskv::raft::PersistState>(Arena*);
 template<> ::foskv::raft::RequestVoteRequest* Arena::CreateMaybeMessage<::foskv::raft::RequestVoteRequest>(Arena*);
 template<> ::foskv::raft::RequestVoteResponse* Arena::CreateMaybeMessage<::foskv::raft::RequestVoteResponse>(Arena*);
+template<> ::foskv::raft::ResponseHeader* Arena::CreateMaybeMessage<::foskv::raft::ResponseHeader>(Arena*);
 template<> ::foskv::raft::SnapshotMetadata* Arena::CreateMaybeMessage<::foskv::raft::SnapshotMetadata>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace foskv {
 namespace raft {
 
 // ===================================================================
+
+class ResponseHeader final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.raft.ResponseHeader) */ {
+ public:
+  inline ResponseHeader() : ResponseHeader(nullptr) {}
+  ~ResponseHeader() override;
+  explicit PROTOBUF_CONSTEXPR ResponseHeader(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ResponseHeader(const ResponseHeader& from);
+  ResponseHeader(ResponseHeader&& from) noexcept
+    : ResponseHeader() {
+    *this = ::std::move(from);
+  }
+
+  inline ResponseHeader& operator=(const ResponseHeader& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ResponseHeader& operator=(ResponseHeader&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ResponseHeader& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ResponseHeader* internal_default_instance() {
+    return reinterpret_cast<const ResponseHeader*>(
+               &_ResponseHeader_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    0;
+
+  friend void swap(ResponseHeader& a, ResponseHeader& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ResponseHeader* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ResponseHeader* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ResponseHeader* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ResponseHeader>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ResponseHeader& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const ResponseHeader& from) {
+    ResponseHeader::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ResponseHeader* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "foskv.raft.ResponseHeader";
+  }
+  protected:
+  explicit ResponseHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kClusterIdFieldNumber = 1,
+    kMemberIdFieldNumber = 2,
+    kTermFieldNumber = 3,
+  };
+  // uint64 cluster_id = 1;
+  void clear_cluster_id();
+  uint64_t cluster_id() const;
+  void set_cluster_id(uint64_t value);
+  private:
+  uint64_t _internal_cluster_id() const;
+  void _internal_set_cluster_id(uint64_t value);
+  public:
+
+  // uint64 member_id = 2;
+  void clear_member_id();
+  uint64_t member_id() const;
+  void set_member_id(uint64_t value);
+  private:
+  uint64_t _internal_member_id() const;
+  void _internal_set_member_id(uint64_t value);
+  public:
+
+  // uint64 term = 3;
+  void clear_term();
+  uint64_t term() const;
+  void set_term(uint64_t value);
+  private:
+  uint64_t _internal_term() const;
+  void _internal_set_term(uint64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:foskv.raft.ResponseHeader)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint64_t cluster_id_;
+    uint64_t member_id_;
+    uint64_t term_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_raft_2eproto;
+};
+// -------------------------------------------------------------------
 
 class RequestVoteRequest final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.raft.RequestVoteRequest) */ {
@@ -145,7 +318,7 @@ class RequestVoteRequest final :
                &_RequestVoteRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    0;
+    1;
 
   friend void swap(RequestVoteRequest& a, RequestVoteRequest& b) {
     a.Swap(&b);
@@ -326,7 +499,7 @@ class RequestVoteResponse final :
                &_RequestVoteResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    2;
 
   friend void swap(RequestVoteResponse& a, RequestVoteResponse& b) {
     a.Swap(&b);
@@ -402,23 +575,23 @@ class RequestVoteResponse final :
     kHeaderFieldNumber = 1,
     kVoteGrantedFieldNumber = 2,
   };
-  // .foskv.rpc.ResponseHeader header = 1;
+  // .foskv.raft.ResponseHeader header = 1;
   bool has_header() const;
   private:
   bool _internal_has_header() const;
   public:
   void clear_header();
-  const ::foskv::rpc::ResponseHeader& header() const;
-  PROTOBUF_NODISCARD ::foskv::rpc::ResponseHeader* release_header();
-  ::foskv::rpc::ResponseHeader* mutable_header();
-  void set_allocated_header(::foskv::rpc::ResponseHeader* header);
+  const ::foskv::raft::ResponseHeader& header() const;
+  PROTOBUF_NODISCARD ::foskv::raft::ResponseHeader* release_header();
+  ::foskv::raft::ResponseHeader* mutable_header();
+  void set_allocated_header(::foskv::raft::ResponseHeader* header);
   private:
-  const ::foskv::rpc::ResponseHeader& _internal_header() const;
-  ::foskv::rpc::ResponseHeader* _internal_mutable_header();
+  const ::foskv::raft::ResponseHeader& _internal_header() const;
+  ::foskv::raft::ResponseHeader* _internal_mutable_header();
   public:
   void unsafe_arena_set_allocated_header(
-      ::foskv::rpc::ResponseHeader* header);
-  ::foskv::rpc::ResponseHeader* unsafe_arena_release_header();
+      ::foskv::raft::ResponseHeader* header);
+  ::foskv::raft::ResponseHeader* unsafe_arena_release_header();
 
   // bool vote_granted = 2;
   void clear_vote_granted();
@@ -437,7 +610,7 @@ class RequestVoteResponse final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::foskv::rpc::ResponseHeader* header_;
+    ::foskv::raft::ResponseHeader* header_;
     bool vote_granted_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -494,7 +667,7 @@ class LogEntry final :
                &_LogEntry_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    3;
 
   friend void swap(LogEntry& a, LogEntry& b) {
     a.Swap(&b);
@@ -669,7 +842,7 @@ class AppendEntriesRequest final :
                &_AppendEntriesRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    3;
+    4;
 
   friend void swap(AppendEntriesRequest& a, AppendEntriesRequest& b) {
     a.Swap(&b);
@@ -881,7 +1054,7 @@ class AppendEntriesResponse final :
                &_AppendEntriesResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    4;
+    5;
 
   friend void swap(AppendEntriesResponse& a, AppendEntriesResponse& b) {
     a.Swap(&b);
@@ -957,23 +1130,23 @@ class AppendEntriesResponse final :
     kHeaderFieldNumber = 1,
     kSuccessFieldNumber = 2,
   };
-  // .foskv.rpc.ResponseHeader header = 1;
+  // .foskv.raft.ResponseHeader header = 1;
   bool has_header() const;
   private:
   bool _internal_has_header() const;
   public:
   void clear_header();
-  const ::foskv::rpc::ResponseHeader& header() const;
-  PROTOBUF_NODISCARD ::foskv::rpc::ResponseHeader* release_header();
-  ::foskv::rpc::ResponseHeader* mutable_header();
-  void set_allocated_header(::foskv::rpc::ResponseHeader* header);
+  const ::foskv::raft::ResponseHeader& header() const;
+  PROTOBUF_NODISCARD ::foskv::raft::ResponseHeader* release_header();
+  ::foskv::raft::ResponseHeader* mutable_header();
+  void set_allocated_header(::foskv::raft::ResponseHeader* header);
   private:
-  const ::foskv::rpc::ResponseHeader& _internal_header() const;
-  ::foskv::rpc::ResponseHeader* _internal_mutable_header();
+  const ::foskv::raft::ResponseHeader& _internal_header() const;
+  ::foskv::raft::ResponseHeader* _internal_mutable_header();
   public:
   void unsafe_arena_set_allocated_header(
-      ::foskv::rpc::ResponseHeader* header);
-  ::foskv::rpc::ResponseHeader* unsafe_arena_release_header();
+      ::foskv::raft::ResponseHeader* header);
+  ::foskv::raft::ResponseHeader* unsafe_arena_release_header();
 
   // bool success = 2;
   void clear_success();
@@ -992,7 +1165,7 @@ class AppendEntriesResponse final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::foskv::rpc::ResponseHeader* header_;
+    ::foskv::raft::ResponseHeader* header_;
     bool success_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -1049,7 +1222,7 @@ class InstallSnapshotRequest final :
                &_InstallSnapshotRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    6;
 
   friend void swap(InstallSnapshotRequest& a, InstallSnapshotRequest& b) {
     a.Swap(&b);
@@ -1268,7 +1441,7 @@ class InstallSnapshotResponse final :
                &_InstallSnapshotResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    7;
 
   friend void swap(InstallSnapshotResponse& a, InstallSnapshotResponse& b) {
     a.Swap(&b);
@@ -1343,23 +1516,23 @@ class InstallSnapshotResponse final :
   enum : int {
     kHeaderFieldNumber = 1,
   };
-  // .foskv.rpc.ResponseHeader header = 1;
+  // .foskv.raft.ResponseHeader header = 1;
   bool has_header() const;
   private:
   bool _internal_has_header() const;
   public:
   void clear_header();
-  const ::foskv::rpc::ResponseHeader& header() const;
-  PROTOBUF_NODISCARD ::foskv::rpc::ResponseHeader* release_header();
-  ::foskv::rpc::ResponseHeader* mutable_header();
-  void set_allocated_header(::foskv::rpc::ResponseHeader* header);
+  const ::foskv::raft::ResponseHeader& header() const;
+  PROTOBUF_NODISCARD ::foskv::raft::ResponseHeader* release_header();
+  ::foskv::raft::ResponseHeader* mutable_header();
+  void set_allocated_header(::foskv::raft::ResponseHeader* header);
   private:
-  const ::foskv::rpc::ResponseHeader& _internal_header() const;
-  ::foskv::rpc::ResponseHeader* _internal_mutable_header();
+  const ::foskv::raft::ResponseHeader& _internal_header() const;
+  ::foskv::raft::ResponseHeader* _internal_mutable_header();
   public:
   void unsafe_arena_set_allocated_header(
-      ::foskv::rpc::ResponseHeader* header);
-  ::foskv::rpc::ResponseHeader* unsafe_arena_release_header();
+      ::foskv::raft::ResponseHeader* header);
+  ::foskv::raft::ResponseHeader* unsafe_arena_release_header();
 
   // @@protoc_insertion_point(class_scope:foskv.raft.InstallSnapshotResponse)
  private:
@@ -1369,7 +1542,7 @@ class InstallSnapshotResponse final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::foskv::rpc::ResponseHeader* header_;
+    ::foskv::raft::ResponseHeader* header_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1425,7 +1598,7 @@ class PersistState final :
                &_PersistState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    8;
 
   friend void swap(PersistState& a, PersistState& b) {
     a.Swap(&b);
@@ -1589,7 +1762,7 @@ class SnapshotMetadata final :
                &_SnapshotMetadata_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    9;
 
   friend void swap(SnapshotMetadata& a, SnapshotMetadata& b) {
     a.Swap(&b);
@@ -1755,7 +1928,7 @@ class InternalRaftRequest final :
                &_InternalRaftRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    10;
 
   friend void swap(InternalRaftRequest& a, InternalRaftRequest& b) {
     a.Swap(&b);
@@ -1828,20 +2001,10 @@ class InternalRaftRequest final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kIDFieldNumber = 100,
     kPutFieldNumber = 1,
     kGetFieldNumber = 2,
     kDeleteFieldNumber = 3,
   };
-  // uint64 ID = 100;
-  void clear_id();
-  uint64_t id() const;
-  void set_id(uint64_t value);
-  private:
-  uint64_t _internal_id() const;
-  void _internal_set_id(uint64_t value);
-  public:
-
   // .foskv.kv.PutRequest put = 1;
   bool has_put() const;
   private:
@@ -1912,7 +2075,6 @@ class InternalRaftRequest final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    uint64_t id_;
     union TypeUnion {
       constexpr TypeUnion() : _constinit_{} {}
         ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized _constinit_;
@@ -1936,6 +2098,70 @@ class InternalRaftRequest final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
+// ResponseHeader
+
+// uint64 cluster_id = 1;
+inline void ResponseHeader::clear_cluster_id() {
+  _impl_.cluster_id_ = uint64_t{0u};
+}
+inline uint64_t ResponseHeader::_internal_cluster_id() const {
+  return _impl_.cluster_id_;
+}
+inline uint64_t ResponseHeader::cluster_id() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.ResponseHeader.cluster_id)
+  return _internal_cluster_id();
+}
+inline void ResponseHeader::_internal_set_cluster_id(uint64_t value) {
+  
+  _impl_.cluster_id_ = value;
+}
+inline void ResponseHeader::set_cluster_id(uint64_t value) {
+  _internal_set_cluster_id(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.ResponseHeader.cluster_id)
+}
+
+// uint64 member_id = 2;
+inline void ResponseHeader::clear_member_id() {
+  _impl_.member_id_ = uint64_t{0u};
+}
+inline uint64_t ResponseHeader::_internal_member_id() const {
+  return _impl_.member_id_;
+}
+inline uint64_t ResponseHeader::member_id() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.ResponseHeader.member_id)
+  return _internal_member_id();
+}
+inline void ResponseHeader::_internal_set_member_id(uint64_t value) {
+  
+  _impl_.member_id_ = value;
+}
+inline void ResponseHeader::set_member_id(uint64_t value) {
+  _internal_set_member_id(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.ResponseHeader.member_id)
+}
+
+// uint64 term = 3;
+inline void ResponseHeader::clear_term() {
+  _impl_.term_ = uint64_t{0u};
+}
+inline uint64_t ResponseHeader::_internal_term() const {
+  return _impl_.term_;
+}
+inline uint64_t ResponseHeader::term() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.ResponseHeader.term)
+  return _internal_term();
+}
+inline void ResponseHeader::_internal_set_term(uint64_t value) {
+  
+  _impl_.term_ = value;
+}
+inline void ResponseHeader::set_term(uint64_t value) {
+  _internal_set_term(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.ResponseHeader.term)
+}
+
+// -------------------------------------------------------------------
+
 // RequestVoteRequest
 
 // uint64 term = 1;
@@ -2022,24 +2248,30 @@ inline void RequestVoteRequest::set_last_log_term(uint64_t value) {
 
 // RequestVoteResponse
 
-// .foskv.rpc.ResponseHeader header = 1;
+// .foskv.raft.ResponseHeader header = 1;
 inline bool RequestVoteResponse::_internal_has_header() const {
   return this != internal_default_instance() && _impl_.header_ != nullptr;
 }
 inline bool RequestVoteResponse::has_header() const {
   return _internal_has_header();
 }
-inline const ::foskv::rpc::ResponseHeader& RequestVoteResponse::_internal_header() const {
-  const ::foskv::rpc::ResponseHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::foskv::rpc::ResponseHeader&>(
-      ::foskv::rpc::_ResponseHeader_default_instance_);
+inline void RequestVoteResponse::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
 }
-inline const ::foskv::rpc::ResponseHeader& RequestVoteResponse::header() const {
+inline const ::foskv::raft::ResponseHeader& RequestVoteResponse::_internal_header() const {
+  const ::foskv::raft::ResponseHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::foskv::raft::ResponseHeader&>(
+      ::foskv::raft::_ResponseHeader_default_instance_);
+}
+inline const ::foskv::raft::ResponseHeader& RequestVoteResponse::header() const {
   // @@protoc_insertion_point(field_get:foskv.raft.RequestVoteResponse.header)
   return _internal_header();
 }
 inline void RequestVoteResponse::unsafe_arena_set_allocated_header(
-    ::foskv::rpc::ResponseHeader* header) {
+    ::foskv::raft::ResponseHeader* header) {
   if (GetArenaForAllocation() == nullptr) {
     delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
   }
@@ -2051,9 +2283,9 @@ inline void RequestVoteResponse::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.RequestVoteResponse.header)
 }
-inline ::foskv::rpc::ResponseHeader* RequestVoteResponse::release_header() {
+inline ::foskv::raft::ResponseHeader* RequestVoteResponse::release_header() {
   
-  ::foskv::rpc::ResponseHeader* temp = _impl_.header_;
+  ::foskv::raft::ResponseHeader* temp = _impl_.header_;
   _impl_.header_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
@@ -2066,35 +2298,34 @@ inline ::foskv::rpc::ResponseHeader* RequestVoteResponse::release_header() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::foskv::rpc::ResponseHeader* RequestVoteResponse::unsafe_arena_release_header() {
+inline ::foskv::raft::ResponseHeader* RequestVoteResponse::unsafe_arena_release_header() {
   // @@protoc_insertion_point(field_release:foskv.raft.RequestVoteResponse.header)
   
-  ::foskv::rpc::ResponseHeader* temp = _impl_.header_;
+  ::foskv::raft::ResponseHeader* temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::foskv::rpc::ResponseHeader* RequestVoteResponse::_internal_mutable_header() {
+inline ::foskv::raft::ResponseHeader* RequestVoteResponse::_internal_mutable_header() {
   
   if (_impl_.header_ == nullptr) {
-    auto* p = CreateMaybeMessage<::foskv::rpc::ResponseHeader>(GetArenaForAllocation());
+    auto* p = CreateMaybeMessage<::foskv::raft::ResponseHeader>(GetArenaForAllocation());
     _impl_.header_ = p;
   }
   return _impl_.header_;
 }
-inline ::foskv::rpc::ResponseHeader* RequestVoteResponse::mutable_header() {
-  ::foskv::rpc::ResponseHeader* _msg = _internal_mutable_header();
+inline ::foskv::raft::ResponseHeader* RequestVoteResponse::mutable_header() {
+  ::foskv::raft::ResponseHeader* _msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:foskv.raft.RequestVoteResponse.header)
   return _msg;
 }
-inline void RequestVoteResponse::set_allocated_header(::foskv::rpc::ResponseHeader* header) {
+inline void RequestVoteResponse::set_allocated_header(::foskv::raft::ResponseHeader* header) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+    delete _impl_.header_;
   }
   if (header) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(header));
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
     if (message_arena != submessage_arena) {
       header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, header, submessage_arena);
@@ -2369,24 +2600,30 @@ inline void AppendEntriesRequest::set_leader_commit(uint64_t value) {
 
 // AppendEntriesResponse
 
-// .foskv.rpc.ResponseHeader header = 1;
+// .foskv.raft.ResponseHeader header = 1;
 inline bool AppendEntriesResponse::_internal_has_header() const {
   return this != internal_default_instance() && _impl_.header_ != nullptr;
 }
 inline bool AppendEntriesResponse::has_header() const {
   return _internal_has_header();
 }
-inline const ::foskv::rpc::ResponseHeader& AppendEntriesResponse::_internal_header() const {
-  const ::foskv::rpc::ResponseHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::foskv::rpc::ResponseHeader&>(
-      ::foskv::rpc::_ResponseHeader_default_instance_);
+inline void AppendEntriesResponse::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
 }
-inline const ::foskv::rpc::ResponseHeader& AppendEntriesResponse::header() const {
+inline const ::foskv::raft::ResponseHeader& AppendEntriesResponse::_internal_header() const {
+  const ::foskv::raft::ResponseHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::foskv::raft::ResponseHeader&>(
+      ::foskv::raft::_ResponseHeader_default_instance_);
+}
+inline const ::foskv::raft::ResponseHeader& AppendEntriesResponse::header() const {
   // @@protoc_insertion_point(field_get:foskv.raft.AppendEntriesResponse.header)
   return _internal_header();
 }
 inline void AppendEntriesResponse::unsafe_arena_set_allocated_header(
-    ::foskv::rpc::ResponseHeader* header) {
+    ::foskv::raft::ResponseHeader* header) {
   if (GetArenaForAllocation() == nullptr) {
     delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
   }
@@ -2398,9 +2635,9 @@ inline void AppendEntriesResponse::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.AppendEntriesResponse.header)
 }
-inline ::foskv::rpc::ResponseHeader* AppendEntriesResponse::release_header() {
+inline ::foskv::raft::ResponseHeader* AppendEntriesResponse::release_header() {
   
-  ::foskv::rpc::ResponseHeader* temp = _impl_.header_;
+  ::foskv::raft::ResponseHeader* temp = _impl_.header_;
   _impl_.header_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
@@ -2413,35 +2650,34 @@ inline ::foskv::rpc::ResponseHeader* AppendEntriesResponse::release_header() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::foskv::rpc::ResponseHeader* AppendEntriesResponse::unsafe_arena_release_header() {
+inline ::foskv::raft::ResponseHeader* AppendEntriesResponse::unsafe_arena_release_header() {
   // @@protoc_insertion_point(field_release:foskv.raft.AppendEntriesResponse.header)
   
-  ::foskv::rpc::ResponseHeader* temp = _impl_.header_;
+  ::foskv::raft::ResponseHeader* temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::foskv::rpc::ResponseHeader* AppendEntriesResponse::_internal_mutable_header() {
+inline ::foskv::raft::ResponseHeader* AppendEntriesResponse::_internal_mutable_header() {
   
   if (_impl_.header_ == nullptr) {
-    auto* p = CreateMaybeMessage<::foskv::rpc::ResponseHeader>(GetArenaForAllocation());
+    auto* p = CreateMaybeMessage<::foskv::raft::ResponseHeader>(GetArenaForAllocation());
     _impl_.header_ = p;
   }
   return _impl_.header_;
 }
-inline ::foskv::rpc::ResponseHeader* AppendEntriesResponse::mutable_header() {
-  ::foskv::rpc::ResponseHeader* _msg = _internal_mutable_header();
+inline ::foskv::raft::ResponseHeader* AppendEntriesResponse::mutable_header() {
+  ::foskv::raft::ResponseHeader* _msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:foskv.raft.AppendEntriesResponse.header)
   return _msg;
 }
-inline void AppendEntriesResponse::set_allocated_header(::foskv::rpc::ResponseHeader* header) {
+inline void AppendEntriesResponse::set_allocated_header(::foskv::raft::ResponseHeader* header) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+    delete _impl_.header_;
   }
   if (header) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(header));
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
     if (message_arena != submessage_arena) {
       header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, header, submessage_arena);
@@ -2652,24 +2888,30 @@ inline void InstallSnapshotRequest::set_done(bool value) {
 
 // InstallSnapshotResponse
 
-// .foskv.rpc.ResponseHeader header = 1;
+// .foskv.raft.ResponseHeader header = 1;
 inline bool InstallSnapshotResponse::_internal_has_header() const {
   return this != internal_default_instance() && _impl_.header_ != nullptr;
 }
 inline bool InstallSnapshotResponse::has_header() const {
   return _internal_has_header();
 }
-inline const ::foskv::rpc::ResponseHeader& InstallSnapshotResponse::_internal_header() const {
-  const ::foskv::rpc::ResponseHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::foskv::rpc::ResponseHeader&>(
-      ::foskv::rpc::_ResponseHeader_default_instance_);
+inline void InstallSnapshotResponse::clear_header() {
+  if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
+    delete _impl_.header_;
+  }
+  _impl_.header_ = nullptr;
 }
-inline const ::foskv::rpc::ResponseHeader& InstallSnapshotResponse::header() const {
+inline const ::foskv::raft::ResponseHeader& InstallSnapshotResponse::_internal_header() const {
+  const ::foskv::raft::ResponseHeader* p = _impl_.header_;
+  return p != nullptr ? *p : reinterpret_cast<const ::foskv::raft::ResponseHeader&>(
+      ::foskv::raft::_ResponseHeader_default_instance_);
+}
+inline const ::foskv::raft::ResponseHeader& InstallSnapshotResponse::header() const {
   // @@protoc_insertion_point(field_get:foskv.raft.InstallSnapshotResponse.header)
   return _internal_header();
 }
 inline void InstallSnapshotResponse::unsafe_arena_set_allocated_header(
-    ::foskv::rpc::ResponseHeader* header) {
+    ::foskv::raft::ResponseHeader* header) {
   if (GetArenaForAllocation() == nullptr) {
     delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
   }
@@ -2681,9 +2923,9 @@ inline void InstallSnapshotResponse::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.InstallSnapshotResponse.header)
 }
-inline ::foskv::rpc::ResponseHeader* InstallSnapshotResponse::release_header() {
+inline ::foskv::raft::ResponseHeader* InstallSnapshotResponse::release_header() {
   
-  ::foskv::rpc::ResponseHeader* temp = _impl_.header_;
+  ::foskv::raft::ResponseHeader* temp = _impl_.header_;
   _impl_.header_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
@@ -2696,35 +2938,34 @@ inline ::foskv::rpc::ResponseHeader* InstallSnapshotResponse::release_header() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::foskv::rpc::ResponseHeader* InstallSnapshotResponse::unsafe_arena_release_header() {
+inline ::foskv::raft::ResponseHeader* InstallSnapshotResponse::unsafe_arena_release_header() {
   // @@protoc_insertion_point(field_release:foskv.raft.InstallSnapshotResponse.header)
   
-  ::foskv::rpc::ResponseHeader* temp = _impl_.header_;
+  ::foskv::raft::ResponseHeader* temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::foskv::rpc::ResponseHeader* InstallSnapshotResponse::_internal_mutable_header() {
+inline ::foskv::raft::ResponseHeader* InstallSnapshotResponse::_internal_mutable_header() {
   
   if (_impl_.header_ == nullptr) {
-    auto* p = CreateMaybeMessage<::foskv::rpc::ResponseHeader>(GetArenaForAllocation());
+    auto* p = CreateMaybeMessage<::foskv::raft::ResponseHeader>(GetArenaForAllocation());
     _impl_.header_ = p;
   }
   return _impl_.header_;
 }
-inline ::foskv::rpc::ResponseHeader* InstallSnapshotResponse::mutable_header() {
-  ::foskv::rpc::ResponseHeader* _msg = _internal_mutable_header();
+inline ::foskv::raft::ResponseHeader* InstallSnapshotResponse::mutable_header() {
+  ::foskv::raft::ResponseHeader* _msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:foskv.raft.InstallSnapshotResponse.header)
   return _msg;
 }
-inline void InstallSnapshotResponse::set_allocated_header(::foskv::rpc::ResponseHeader* header) {
+inline void InstallSnapshotResponse::set_allocated_header(::foskv::raft::ResponseHeader* header) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.header_);
+    delete _impl_.header_;
   }
   if (header) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(header));
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(header);
     if (message_arena != submessage_arena) {
       header = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, header, submessage_arena);
@@ -2836,26 +3077,6 @@ inline void SnapshotMetadata::set_last_include_term(uint64_t value) {
 // -------------------------------------------------------------------
 
 // InternalRaftRequest
-
-// uint64 ID = 100;
-inline void InternalRaftRequest::clear_id() {
-  _impl_.id_ = uint64_t{0u};
-}
-inline uint64_t InternalRaftRequest::_internal_id() const {
-  return _impl_.id_;
-}
-inline uint64_t InternalRaftRequest::id() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.ID)
-  return _internal_id();
-}
-inline void InternalRaftRequest::_internal_set_id(uint64_t value) {
-  
-  _impl_.id_ = value;
-}
-inline void InternalRaftRequest::set_id(uint64_t value) {
-  _internal_set_id(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.InternalRaftRequest.ID)
-}
 
 // .foskv.kv.PutRequest put = 1;
 inline bool InternalRaftRequest::_internal_has_put() const {
@@ -3067,6 +3288,8 @@ inline InternalRaftRequest::TypeCase InternalRaftRequest::type_case() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

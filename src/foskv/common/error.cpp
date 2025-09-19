@@ -24,6 +24,10 @@ auto foskv::RpcError::error_message() const noexcept -> std::string_view {
             return "Message from other raft cluster.";
         case kInvalidRpcServerAddress:
             return "Invalid provider address.";
+        case kEntryPersistFailed:
+            return "Failed to persist entry.";
+        case kRpcServiceNotExists:
+            return "Rpc service not exists.";
         default:
             return strerror(error_code_);
     }
@@ -87,6 +91,25 @@ auto foskv::ClientError::error_message() const noexcept -> std::string_view {
             return "Failed to connect to server.";
         case kReconnectFailed:
             return "Failed to reconnect to server.";
+        default:
+            return strerror(error_code_);
+    }
+}
+
+auto foskv::KVError::error_message() const noexcept -> std::string_view {
+    switch (static_cast<Code>(error_code_)) {
+        case kUnknown:
+            return "Unknown storage error.";
+        case kPutFailed:
+            return "Failed to put key-value, internal error.";
+        case kGetFailed:
+            return "Failed to get key-value, internal error.";
+        case kDeleteFailed:
+            return "Failed to delete key-value, internal error.";
+        case kNotFound:
+            return "Key value not found.";
+        case kNeedRedirect:
+            return "Need redirect to leader.";
         default:
             return strerror(error_code_);
     }

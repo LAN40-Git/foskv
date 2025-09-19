@@ -66,7 +66,7 @@ private:
     std::atomic<bool>      is_shutdown_{false}; // Do not change the default values
     std::atomic<bool>      is_running_{false};  // Do not change the default values
     uint64_t               request_id_{0};
-    std::vector<char>      buffer_;
+    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer_;
     kosio::net::TcpStream  stream_;
     kosio::net::SocketAddr server_addr_;
     RpcCallbackMap         callbacks_;

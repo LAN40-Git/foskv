@@ -24,7 +24,7 @@ auto foskv::raft::detail::Transport::run() -> kosio::async::Task<> {
     }
 }
 
-auto foskv::raft::detail::Transport::broadcast_request_vote(RequestVoteRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_request_vote_request(RequestVoteRequest&& request,
     rpc::RpcCallback&& callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
@@ -33,7 +33,7 @@ auto foskv::raft::detail::Transport::broadcast_request_vote(RequestVoteRequest&&
     }
 }
 
-auto foskv::raft::detail::Transport::broadcast_append_entries(AppendEntriesRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_append_entries_request(AppendEntriesRequest&& request,
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
@@ -42,7 +42,7 @@ auto foskv::raft::detail::Transport::broadcast_append_entries(AppendEntriesReque
     }
 }
 
-auto foskv::raft::detail::Transport::broadcast_install_snapshot(InstallSnapshotRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_install_snapshot_request(InstallSnapshotRequest&& request,
     rpc::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();

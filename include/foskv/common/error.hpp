@@ -17,6 +17,8 @@ static inline constexpr int StorageErrorCodeBase = RpcErrorCodeBase + ErrorCodeI
 static inline constexpr int RaftErrorCodeBase = StorageErrorCodeBase + ErrorCodeInterval;
 // Client Error
 static inline constexpr int ClientErrorCodeBase = RaftErrorCodeBase + ErrorCodeInterval;
+// KV Error
+static inline constexpr int KVErrorCodeBase = ClientErrorCodeBase + ErrorCodeInterval;
 
 template <class DeriverError>
 class BaseError {
@@ -53,6 +55,8 @@ public:
         kMessageTooLarge,
         kOtherRaftCluster,
         kInvalidRpcServerAddress,
+        kEntryPersistFailed,
+        kRpcServiceNotExists,
     };
 
 public:
@@ -122,6 +126,26 @@ public:
 public:
     explicit ClientError(Code error_code)
         : BaseError<ClientError>(static_cast<int>(error_code)) {}
+
+public:
+    [[nodiscard]]
+    auto error_message() const noexcept -> std::string_view;
+};
+
+// ====== KV Error ======
+class KVError : public detail::BaseError<KVError> {
+public:
+    enum Code {
+        kUnknown = detail::KVErrorCodeBase,
+        kPutFailed,
+        kGetFailed,
+        kDeleteFailed,
+        kNotFound,
+        kNeedRedirect,
+    };
+public:
+    explicit KVError(Code error_code)
+        : BaseError<KVError>(static_cast<int>(error_code)) {}
 
 public:
     [[nodiscard]]

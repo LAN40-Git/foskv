@@ -38,12 +38,30 @@ struct RpcHeaderDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RpcHeaderDefaultTypeInternal _RpcHeader_default_instance_;
+PROTOBUF_CONSTEXPR Redirect::Redirect(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.host_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.port_)*/0u
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct RedirectDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR RedirectDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~RedirectDefaultTypeInternal() {}
+  union {
+    Redirect _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RedirectDefaultTypeInternal _Redirect_default_instance_;
 PROTOBUF_CONSTEXPR ResponseHeader::ResponseHeader(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.cluster_id_)*/uint64_t{0u}
+    /*decltype(_impl_._has_bits_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.redirect_)*/nullptr
+  , /*decltype(_impl_.cluster_id_)*/uint64_t{0u}
   , /*decltype(_impl_.member_id_)*/uint64_t{0u}
   , /*decltype(_impl_.term_)*/uint64_t{0u}
-  , /*decltype(_impl_._cached_size_)*/{}} {}
+  , /*decltype(_impl_.success_)*/false
+  , /*decltype(_impl_.error_code_)*/0} {}
 struct ResponseHeaderDefaultTypeInternal {
   PROTOBUF_CONSTEXPR ResponseHeaderDefaultTypeInternal()
       : _instance(::_pbi::ConstantInitialized{}) {}
@@ -55,7 +73,7 @@ struct ResponseHeaderDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ResponseHeaderDefaultTypeInternal _ResponseHeader_default_instance_;
 }  // namespace rpc
 }  // namespace foskv
-static ::_pb::Metadata file_level_metadata_rpc_2eproto[2];
+static ::_pb::Metadata file_level_metadata_rpc_2eproto[3];
 static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_rpc_2eproto = nullptr;
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_rpc_2eproto = nullptr;
 
@@ -71,6 +89,14 @@ const uint32_t TableStruct_rpc_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(prot
   PROTOBUF_FIELD_OFFSET(::foskv::rpc::RpcHeader, _impl_.method_name_),
   PROTOBUF_FIELD_OFFSET(::foskv::rpc::RpcHeader, _impl_.payload_size_),
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::Redirect, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::Redirect, _impl_.host_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::Redirect, _impl_.port_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_._has_bits_),
   PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
@@ -79,14 +105,25 @@ const uint32_t TableStruct_rpc_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(prot
   PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.cluster_id_),
   PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.member_id_),
   PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.term_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.success_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.error_code_),
+  PROTOBUF_FIELD_OFFSET(::foskv::rpc::ResponseHeader, _impl_.redirect_),
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
+  ~0u,
+  0,
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::foskv::rpc::RpcHeader)},
-  { 10, -1, -1, sizeof(::foskv::rpc::ResponseHeader)},
+  { 10, -1, -1, sizeof(::foskv::rpc::Redirect)},
+  { 18, 30, -1, sizeof(::foskv::rpc::ResponseHeader)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
   &::foskv::rpc::_RpcHeader_default_instance_._instance,
+  &::foskv::rpc::_Redirect_default_instance_._instance,
   &::foskv::rpc::_ResponseHeader_default_instance_._instance,
 };
 
@@ -94,14 +131,18 @@ const char descriptor_table_protodef_rpc_2eproto[] PROTOBUF_SECTION_VARIABLE(pro
   "\n\trpc.proto\022\tfoskv.rpc\"`\n\tRpcHeader\022\022\n\nr"
   "equest_id\030\001 \001(\004\022\024\n\014service_name\030\002 \001(\014\022\023\n"
   "\013method_name\030\003 \001(\014\022\024\n\014payload_size\030\004 \001(\r"
-  "\"E\n\016ResponseHeader\022\022\n\ncluster_id\030\001 \001(\004\022\021"
-  "\n\tmember_id\030\002 \001(\004\022\014\n\004term\030\003 \001(\004b\006proto3"
+  "\"&\n\010Redirect\022\014\n\004host\030\001 \001(\t\022\014\n\004port\030\002 \001(\r"
+  "\"\243\001\n\016ResponseHeader\022\022\n\ncluster_id\030\001 \001(\004\022"
+  "\021\n\tmember_id\030\002 \001(\004\022\014\n\004term\030\003 \001(\004\022\017\n\007succ"
+  "ess\030\004 \001(\010\022\022\n\nerror_code\030\005 \001(\005\022*\n\010redirec"
+  "t\030\006 \001(\0132\023.foskv.rpc.RedirectH\000\210\001\001B\013\n\t_re"
+  "directb\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_rpc_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_rpc_2eproto = {
-    false, false, 199, descriptor_table_protodef_rpc_2eproto,
+    false, false, 334, descriptor_table_protodef_rpc_2eproto,
     "rpc.proto",
-    &descriptor_table_rpc_2eproto_once, nullptr, 0, 2,
+    &descriptor_table_rpc_2eproto_once, nullptr, 0, 3,
     schemas, file_default_instances, TableStruct_rpc_2eproto::offsets,
     file_level_metadata_rpc_2eproto, file_level_enum_descriptors_rpc_2eproto,
     file_level_service_descriptors_rpc_2eproto,
@@ -420,10 +461,249 @@ void RpcHeader::InternalSwap(RpcHeader* other) {
 
 // ===================================================================
 
-class ResponseHeader::_Internal {
+class Redirect::_Internal {
  public:
 };
 
+Redirect::Redirect(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:foskv.rpc.Redirect)
+}
+Redirect::Redirect(const Redirect& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  Redirect* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.host_){}
+    , decltype(_impl_.port_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.host_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.host_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_host().empty()) {
+    _this->_impl_.host_.Set(from._internal_host(), 
+      _this->GetArenaForAllocation());
+  }
+  _this->_impl_.port_ = from._impl_.port_;
+  // @@protoc_insertion_point(copy_constructor:foskv.rpc.Redirect)
+}
+
+inline void Redirect::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.host_){}
+    , decltype(_impl_.port_){0u}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.host_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.host_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+Redirect::~Redirect() {
+  // @@protoc_insertion_point(destructor:foskv.rpc.Redirect)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void Redirect::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.host_.Destroy();
+}
+
+void Redirect::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void Redirect::Clear() {
+// @@protoc_insertion_point(message_clear_start:foskv.rpc.Redirect)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.host_.ClearToEmpty();
+  _impl_.port_ = 0u;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* Redirect::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // string host = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          auto str = _internal_mutable_host();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "foskv.rpc.Redirect.host"));
+        } else
+          goto handle_unusual;
+        continue;
+      // uint32 port = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Redirect::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:foskv.rpc.Redirect)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string host = 1;
+  if (!this->_internal_host().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_host().data(), static_cast<int>(this->_internal_host().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "foskv.rpc.Redirect.host");
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_host(), target);
+  }
+
+  // uint32 port = 2;
+  if (this->_internal_port() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(2, this->_internal_port(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:foskv.rpc.Redirect)
+  return target;
+}
+
+size_t Redirect::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:foskv.rpc.Redirect)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string host = 1;
+  if (!this->_internal_host().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_host());
+  }
+
+  // uint32 port = 2;
+  if (this->_internal_port() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_port());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Redirect::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    Redirect::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Redirect::GetClassData() const { return &_class_data_; }
+
+
+void Redirect::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<Redirect*>(&to_msg);
+  auto& from = static_cast<const Redirect&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:foskv.rpc.Redirect)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_host().empty()) {
+    _this->_internal_set_host(from._internal_host());
+  }
+  if (from._internal_port() != 0) {
+    _this->_internal_set_port(from._internal_port());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Redirect::CopyFrom(const Redirect& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:foskv.rpc.Redirect)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Redirect::IsInitialized() const {
+  return true;
+}
+
+void Redirect::InternalSwap(Redirect* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.host_, lhs_arena,
+      &other->_impl_.host_, rhs_arena
+  );
+  swap(_impl_.port_, other->_impl_.port_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata Redirect::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_rpc_2eproto_getter, &descriptor_table_rpc_2eproto_once,
+      file_level_metadata_rpc_2eproto[1]);
+}
+
+// ===================================================================
+
+class ResponseHeader::_Internal {
+ public:
+  using HasBits = decltype(std::declval<ResponseHeader>()._impl_._has_bits_);
+  static const ::foskv::rpc::Redirect& redirect(const ResponseHeader* msg);
+  static void set_has_redirect(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+};
+
+const ::foskv::rpc::Redirect&
+ResponseHeader::_Internal::redirect(const ResponseHeader* msg) {
+  return *msg->_impl_.redirect_;
+}
 ResponseHeader::ResponseHeader(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
@@ -434,15 +714,22 @@ ResponseHeader::ResponseHeader(const ResponseHeader& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   ResponseHeader* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.cluster_id_){}
+      decltype(_impl_._has_bits_){from._impl_._has_bits_}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.redirect_){nullptr}
+    , decltype(_impl_.cluster_id_){}
     , decltype(_impl_.member_id_){}
     , decltype(_impl_.term_){}
-    , /*decltype(_impl_._cached_size_)*/{}};
+    , decltype(_impl_.success_){}
+    , decltype(_impl_.error_code_){}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  if (from._internal_has_redirect()) {
+    _this->_impl_.redirect_ = new ::foskv::rpc::Redirect(*from._impl_.redirect_);
+  }
   ::memcpy(&_impl_.cluster_id_, &from._impl_.cluster_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.term_) -
-    reinterpret_cast<char*>(&_impl_.cluster_id_)) + sizeof(_impl_.term_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.error_code_) -
+    reinterpret_cast<char*>(&_impl_.cluster_id_)) + sizeof(_impl_.error_code_));
   // @@protoc_insertion_point(copy_constructor:foskv.rpc.ResponseHeader)
 }
 
@@ -451,10 +738,14 @@ inline void ResponseHeader::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.cluster_id_){uint64_t{0u}}
+      decltype(_impl_._has_bits_){}
+    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.redirect_){nullptr}
+    , decltype(_impl_.cluster_id_){uint64_t{0u}}
     , decltype(_impl_.member_id_){uint64_t{0u}}
     , decltype(_impl_.term_){uint64_t{0u}}
-    , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.success_){false}
+    , decltype(_impl_.error_code_){0}
   };
 }
 
@@ -469,6 +760,7 @@ ResponseHeader::~ResponseHeader() {
 
 inline void ResponseHeader::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.redirect_;
 }
 
 void ResponseHeader::SetCachedSize(int size) const {
@@ -481,14 +773,21 @@ void ResponseHeader::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    GOOGLE_DCHECK(_impl_.redirect_ != nullptr);
+    _impl_.redirect_->Clear();
+  }
   ::memset(&_impl_.cluster_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.term_) -
-      reinterpret_cast<char*>(&_impl_.cluster_id_)) + sizeof(_impl_.term_));
+      reinterpret_cast<char*>(&_impl_.error_code_) -
+      reinterpret_cast<char*>(&_impl_.cluster_id_)) + sizeof(_impl_.error_code_));
+  _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
 const char* ResponseHeader::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
@@ -517,6 +816,30 @@ const char* ResponseHeader::_InternalParse(const char* ptr, ::_pbi::ParseContext
         } else
           goto handle_unusual;
         continue;
+      // bool success = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 error_code = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.error_code_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // optional .foskv.rpc.Redirect redirect = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          ptr = ctx->ParseMessage(_internal_mutable_redirect(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
       default:
         goto handle_unusual;
     }  // switch
@@ -533,6 +856,7 @@ const char* ResponseHeader::_InternalParse(const char* ptr, ::_pbi::ParseContext
     CHK_(ptr != nullptr);
   }  // while
 message_done:
+  _impl_._has_bits_.Or(has_bits);
   return ptr;
 failure:
   ptr = nullptr;
@@ -564,6 +888,25 @@ uint8_t* ResponseHeader::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_term(), target);
   }
 
+  // bool success = 4;
+  if (this->_internal_success() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(4, this->_internal_success(), target);
+  }
+
+  // int32 error_code = 5;
+  if (this->_internal_error_code() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_error_code(), target);
+  }
+
+  // optional .foskv.rpc.Redirect redirect = 6;
+  if (_internal_has_redirect()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(6, _Internal::redirect(this),
+        _Internal::redirect(this).GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -580,6 +923,14 @@ size_t ResponseHeader::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  // optional .foskv.rpc.Redirect redirect = 6;
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.redirect_);
+  }
+
   // uint64 cluster_id = 1;
   if (this->_internal_cluster_id() != 0) {
     total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_cluster_id());
@@ -593,6 +944,16 @@ size_t ResponseHeader::ByteSizeLong() const {
   // uint64 term = 3;
   if (this->_internal_term() != 0) {
     total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_term());
+  }
+
+  // bool success = 4;
+  if (this->_internal_success() != 0) {
+    total_size += 1 + 1;
+  }
+
+  // int32 error_code = 5;
+  if (this->_internal_error_code() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_error_code());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -613,6 +974,10 @@ void ResponseHeader::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const :
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  if (from._internal_has_redirect()) {
+    _this->_internal_mutable_redirect()->::foskv::rpc::Redirect::MergeFrom(
+        from._internal_redirect());
+  }
   if (from._internal_cluster_id() != 0) {
     _this->_internal_set_cluster_id(from._internal_cluster_id());
   }
@@ -621,6 +986,12 @@ void ResponseHeader::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const :
   }
   if (from._internal_term() != 0) {
     _this->_internal_set_term(from._internal_term());
+  }
+  if (from._internal_success() != 0) {
+    _this->_internal_set_success(from._internal_success());
+  }
+  if (from._internal_error_code() != 0) {
+    _this->_internal_set_error_code(from._internal_error_code());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -639,18 +1010,19 @@ bool ResponseHeader::IsInitialized() const {
 void ResponseHeader::InternalSwap(ResponseHeader* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(ResponseHeader, _impl_.term_)
-      + sizeof(ResponseHeader::_impl_.term_)
-      - PROTOBUF_FIELD_OFFSET(ResponseHeader, _impl_.cluster_id_)>(
-          reinterpret_cast<char*>(&_impl_.cluster_id_),
-          reinterpret_cast<char*>(&other->_impl_.cluster_id_));
+      PROTOBUF_FIELD_OFFSET(ResponseHeader, _impl_.error_code_)
+      + sizeof(ResponseHeader::_impl_.error_code_)
+      - PROTOBUF_FIELD_OFFSET(ResponseHeader, _impl_.redirect_)>(
+          reinterpret_cast<char*>(&_impl_.redirect_),
+          reinterpret_cast<char*>(&other->_impl_.redirect_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata ResponseHeader::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_rpc_2eproto_getter, &descriptor_table_rpc_2eproto_once,
-      file_level_metadata_rpc_2eproto[1]);
+      file_level_metadata_rpc_2eproto[2]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
@@ -660,6 +1032,10 @@ PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::foskv::rpc::RpcHeader*
 Arena::CreateMaybeMessage< ::foskv::rpc::RpcHeader >(Arena* arena) {
   return Arena::CreateMessageInternal< ::foskv::rpc::RpcHeader >(arena);
+}
+template<> PROTOBUF_NOINLINE ::foskv::rpc::Redirect*
+Arena::CreateMaybeMessage< ::foskv::rpc::Redirect >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::foskv::rpc::Redirect >(arena);
 }
 template<> PROTOBUF_NOINLINE ::foskv::rpc::ResponseHeader*
 Arena::CreateMaybeMessage< ::foskv::rpc::ResponseHeader >(Arena* arena) {

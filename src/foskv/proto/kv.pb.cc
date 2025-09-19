@@ -53,10 +53,8 @@ struct PutRequestDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PutRequestDefaultTypeInternal _PutRequest_default_instance_;
 PROTOBUF_CONSTEXPR PutResponse::PutResponse(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.error_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.header_)*/nullptr
+    /*decltype(_impl_.header_)*/nullptr
   , /*decltype(_impl_.prev_kv_)*/nullptr
-  , /*decltype(_impl_.success_)*/false
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct PutResponseDefaultTypeInternal {
   PROTOBUF_CONSTEXPR PutResponseDefaultTypeInternal()
@@ -82,10 +80,8 @@ struct GetRequestDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GetRequestDefaultTypeInternal _GetRequest_default_instance_;
 PROTOBUF_CONSTEXPR GetResponse::GetResponse(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.error_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.header_)*/nullptr
+    /*decltype(_impl_.header_)*/nullptr
   , /*decltype(_impl_.kvs_)*/nullptr
-  , /*decltype(_impl_.success_)*/false
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct GetResponseDefaultTypeInternal {
   PROTOBUF_CONSTEXPR GetResponseDefaultTypeInternal()
@@ -111,9 +107,7 @@ struct DeleteRequestDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DeleteRequestDefaultTypeInternal _DeleteRequest_default_instance_;
 PROTOBUF_CONSTEXPR DeleteResponse::DeleteResponse(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.error_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.header_)*/nullptr
-  , /*decltype(_impl_.success_)*/false
+    /*decltype(_impl_.header_)*/nullptr
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct DeleteResponseDefaultTypeInternal {
   PROTOBUF_CONSTEXPR DeleteResponseDefaultTypeInternal()
@@ -156,8 +150,6 @@ const uint32_t TableStruct_kv_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(proto
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::foskv::kv::PutResponse, _impl_.header_),
   PROTOBUF_FIELD_OFFSET(::foskv::kv::PutResponse, _impl_.prev_kv_),
-  PROTOBUF_FIELD_OFFSET(::foskv::kv::PutResponse, _impl_.success_),
-  PROTOBUF_FIELD_OFFSET(::foskv::kv::PutResponse, _impl_.error_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::foskv::kv::GetRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -173,8 +165,6 @@ const uint32_t TableStruct_kv_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(proto
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::foskv::kv::GetResponse, _impl_.header_),
   PROTOBUF_FIELD_OFFSET(::foskv::kv::GetResponse, _impl_.kvs_),
-  PROTOBUF_FIELD_OFFSET(::foskv::kv::GetResponse, _impl_.success_),
-  PROTOBUF_FIELD_OFFSET(::foskv::kv::GetResponse, _impl_.error_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::foskv::kv::DeleteRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -189,17 +179,15 @@ const uint32_t TableStruct_kv_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(proto
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::foskv::kv::DeleteResponse, _impl_.header_),
-  PROTOBUF_FIELD_OFFSET(::foskv::kv::DeleteResponse, _impl_.success_),
-  PROTOBUF_FIELD_OFFSET(::foskv::kv::DeleteResponse, _impl_.error_),
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::foskv::kv::KeyValue)},
   { 8, -1, -1, sizeof(::foskv::kv::PutRequest)},
   { 17, -1, -1, sizeof(::foskv::kv::PutResponse)},
-  { 27, -1, -1, sizeof(::foskv::kv::GetRequest)},
-  { 34, -1, -1, sizeof(::foskv::kv::GetResponse)},
-  { 44, -1, -1, sizeof(::foskv::kv::DeleteRequest)},
-  { 51, -1, -1, sizeof(::foskv::kv::DeleteResponse)},
+  { 25, -1, -1, sizeof(::foskv::kv::GetRequest)},
+  { 32, -1, -1, sizeof(::foskv::kv::GetResponse)},
+  { 40, -1, -1, sizeof(::foskv::kv::DeleteRequest)},
+  { 47, -1, -1, sizeof(::foskv::kv::DeleteResponse)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -216,24 +204,22 @@ const char descriptor_table_protodef_kv_2eproto[] PROTOBUF_SECTION_VARIABLE(prot
   "\n\010kv.proto\022\010foskv.kv\032\trpc.proto\"&\n\010KeyVa"
   "lue\022\013\n\003key\030\001 \001(\014\022\r\n\005value\030\002 \001(\014\"9\n\nPutRe"
   "quest\022\013\n\003key\030\001 \001(\014\022\r\n\005value\030\002 \001(\014\022\017\n\007pre"
-  "v_kv\030\003 \001(\010\"}\n\013PutResponse\022)\n\006header\030\001 \001("
+  "v_kv\030\003 \001(\010\"]\n\013PutResponse\022)\n\006header\030\001 \001("
   "\0132\031.foskv.rpc.ResponseHeader\022#\n\007prev_kv\030"
-  "\002 \001(\0132\022.foskv.kv.KeyValue\022\017\n\007success\030\003 \001"
-  "(\010\022\r\n\005error\030\004 \001(\014\"\031\n\nGetRequest\022\013\n\003key\030\001"
-  " \001(\014\"y\n\013GetResponse\022)\n\006header\030\001 \001(\0132\031.fo"
-  "skv.rpc.ResponseHeader\022\037\n\003kvs\030\002 \001(\0132\022.fo"
-  "skv.kv.KeyValue\022\017\n\007success\030\003 \001(\010\022\r\n\005erro"
-  "r\030\004 \001(\014\"\034\n\rDeleteRequest\022\013\n\003key\030\001 \001(\014\"[\n"
-  "\016DeleteResponse\022)\n\006header\030\001 \001(\0132\031.foskv."
-  "rpc.ResponseHeader\022\017\n\007success\030\003 \001(\010\022\r\n\005e"
-  "rror\030\004 \001(\014b\006proto3"
+  "\002 \001(\0132\022.foskv.kv.KeyValue\"\031\n\nGetRequest\022"
+  "\013\n\003key\030\001 \001(\014\"Y\n\013GetResponse\022)\n\006header\030\001 "
+  "\001(\0132\031.foskv.rpc.ResponseHeader\022\037\n\003kvs\030\002 "
+  "\001(\0132\022.foskv.kv.KeyValue\"\034\n\rDeleteRequest"
+  "\022\013\n\003key\030\001 \001(\014\";\n\016DeleteResponse\022)\n\006heade"
+  "r\030\001 \001(\0132\031.foskv.rpc.ResponseHeaderb\006prot"
+  "o3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_kv_2eproto_deps[1] = {
   &::descriptor_table_rpc_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_kv_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_kv_2eproto = {
-    false, false, 538, descriptor_table_protodef_kv_2eproto,
+    false, false, 442, descriptor_table_protodef_kv_2eproto,
     "kv.proto",
     &descriptor_table_kv_2eproto_once, descriptor_table_kv_2eproto_deps, 1, 7,
     schemas, file_default_instances, TableStruct_kv_2eproto::offsets,
@@ -794,28 +780,17 @@ PutResponse::PutResponse(const PutResponse& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   PutResponse* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.error_){}
-    , decltype(_impl_.header_){nullptr}
+      decltype(_impl_.header_){nullptr}
     , decltype(_impl_.prev_kv_){nullptr}
-    , decltype(_impl_.success_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  _impl_.error_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.error_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_error().empty()) {
-    _this->_impl_.error_.Set(from._internal_error(), 
-      _this->GetArenaForAllocation());
-  }
   if (from._internal_has_header()) {
     _this->_impl_.header_ = new ::foskv::rpc::ResponseHeader(*from._impl_.header_);
   }
   if (from._internal_has_prev_kv()) {
     _this->_impl_.prev_kv_ = new ::foskv::kv::KeyValue(*from._impl_.prev_kv_);
   }
-  _this->_impl_.success_ = from._impl_.success_;
   // @@protoc_insertion_point(copy_constructor:foskv.kv.PutResponse)
 }
 
@@ -824,16 +799,10 @@ inline void PutResponse::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.error_){}
-    , decltype(_impl_.header_){nullptr}
+      decltype(_impl_.header_){nullptr}
     , decltype(_impl_.prev_kv_){nullptr}
-    , decltype(_impl_.success_){false}
     , /*decltype(_impl_._cached_size_)*/{}
   };
-  _impl_.error_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.error_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 PutResponse::~PutResponse() {
@@ -847,7 +816,6 @@ PutResponse::~PutResponse() {
 
 inline void PutResponse::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  _impl_.error_.Destroy();
   if (this != internal_default_instance()) delete _impl_.header_;
   if (this != internal_default_instance()) delete _impl_.prev_kv_;
 }
@@ -862,7 +830,6 @@ void PutResponse::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.error_.ClearToEmpty();
   if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
     delete _impl_.header_;
   }
@@ -871,7 +838,6 @@ void PutResponse::Clear() {
     delete _impl_.prev_kv_;
   }
   _impl_.prev_kv_ = nullptr;
-  _impl_.success_ = false;
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -893,23 +859,6 @@ const char* PutResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* c
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_prev_kv(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bool success = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bytes error = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
-          auto str = _internal_mutable_error();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -957,18 +906,6 @@ uint8_t* PutResponse::_InternalSerialize(
         _Internal::prev_kv(this).GetCachedSize(), target, stream);
   }
 
-  // bool success = 3;
-  if (this->_internal_success() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteBoolToArray(3, this->_internal_success(), target);
-  }
-
-  // bytes error = 4;
-  if (!this->_internal_error().empty()) {
-    target = stream->WriteBytesMaybeAliased(
-        4, this->_internal_error(), target);
-  }
-
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -985,13 +922,6 @@ size_t PutResponse::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // bytes error = 4;
-  if (!this->_internal_error().empty()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-        this->_internal_error());
-  }
-
   // .foskv.rpc.ResponseHeader header = 1;
   if (this->_internal_has_header()) {
     total_size += 1 +
@@ -1004,11 +934,6 @@ size_t PutResponse::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *_impl_.prev_kv_);
-  }
-
-  // bool success = 3;
-  if (this->_internal_success() != 0) {
-    total_size += 1 + 1;
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -1029,9 +954,6 @@ void PutResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PR
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_error().empty()) {
-    _this->_internal_set_error(from._internal_error());
-  }
   if (from._internal_has_header()) {
     _this->_internal_mutable_header()->::foskv::rpc::ResponseHeader::MergeFrom(
         from._internal_header());
@@ -1039,9 +961,6 @@ void PutResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PR
   if (from._internal_has_prev_kv()) {
     _this->_internal_mutable_prev_kv()->::foskv::kv::KeyValue::MergeFrom(
         from._internal_prev_kv());
-  }
-  if (from._internal_success() != 0) {
-    _this->_internal_set_success(from._internal_success());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -1059,16 +978,10 @@ bool PutResponse::IsInitialized() const {
 
 void PutResponse::InternalSwap(PutResponse* other) {
   using std::swap;
-  auto* lhs_arena = GetArenaForAllocation();
-  auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.error_, lhs_arena,
-      &other->_impl_.error_, rhs_arena
-  );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(PutResponse, _impl_.success_)
-      + sizeof(PutResponse::_impl_.success_)
+      PROTOBUF_FIELD_OFFSET(PutResponse, _impl_.prev_kv_)
+      + sizeof(PutResponse::_impl_.prev_kv_)
       - PROTOBUF_FIELD_OFFSET(PutResponse, _impl_.header_)>(
           reinterpret_cast<char*>(&_impl_.header_),
           reinterpret_cast<char*>(&other->_impl_.header_));
@@ -1310,28 +1223,17 @@ GetResponse::GetResponse(const GetResponse& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   GetResponse* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.error_){}
-    , decltype(_impl_.header_){nullptr}
+      decltype(_impl_.header_){nullptr}
     , decltype(_impl_.kvs_){nullptr}
-    , decltype(_impl_.success_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  _impl_.error_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.error_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_error().empty()) {
-    _this->_impl_.error_.Set(from._internal_error(), 
-      _this->GetArenaForAllocation());
-  }
   if (from._internal_has_header()) {
     _this->_impl_.header_ = new ::foskv::rpc::ResponseHeader(*from._impl_.header_);
   }
   if (from._internal_has_kvs()) {
     _this->_impl_.kvs_ = new ::foskv::kv::KeyValue(*from._impl_.kvs_);
   }
-  _this->_impl_.success_ = from._impl_.success_;
   // @@protoc_insertion_point(copy_constructor:foskv.kv.GetResponse)
 }
 
@@ -1340,16 +1242,10 @@ inline void GetResponse::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.error_){}
-    , decltype(_impl_.header_){nullptr}
+      decltype(_impl_.header_){nullptr}
     , decltype(_impl_.kvs_){nullptr}
-    , decltype(_impl_.success_){false}
     , /*decltype(_impl_._cached_size_)*/{}
   };
-  _impl_.error_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.error_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 GetResponse::~GetResponse() {
@@ -1363,7 +1259,6 @@ GetResponse::~GetResponse() {
 
 inline void GetResponse::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  _impl_.error_.Destroy();
   if (this != internal_default_instance()) delete _impl_.header_;
   if (this != internal_default_instance()) delete _impl_.kvs_;
 }
@@ -1378,7 +1273,6 @@ void GetResponse::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.error_.ClearToEmpty();
   if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
     delete _impl_.header_;
   }
@@ -1387,7 +1281,6 @@ void GetResponse::Clear() {
     delete _impl_.kvs_;
   }
   _impl_.kvs_ = nullptr;
-  _impl_.success_ = false;
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1409,23 +1302,6 @@ const char* GetResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* c
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
           ptr = ctx->ParseMessage(_internal_mutable_kvs(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bool success = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bytes error = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
-          auto str = _internal_mutable_error();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1473,18 +1349,6 @@ uint8_t* GetResponse::_InternalSerialize(
         _Internal::kvs(this).GetCachedSize(), target, stream);
   }
 
-  // bool success = 3;
-  if (this->_internal_success() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteBoolToArray(3, this->_internal_success(), target);
-  }
-
-  // bytes error = 4;
-  if (!this->_internal_error().empty()) {
-    target = stream->WriteBytesMaybeAliased(
-        4, this->_internal_error(), target);
-  }
-
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1501,13 +1365,6 @@ size_t GetResponse::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // bytes error = 4;
-  if (!this->_internal_error().empty()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-        this->_internal_error());
-  }
-
   // .foskv.rpc.ResponseHeader header = 1;
   if (this->_internal_has_header()) {
     total_size += 1 +
@@ -1520,11 +1377,6 @@ size_t GetResponse::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *_impl_.kvs_);
-  }
-
-  // bool success = 3;
-  if (this->_internal_success() != 0) {
-    total_size += 1 + 1;
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -1545,9 +1397,6 @@ void GetResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PR
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_error().empty()) {
-    _this->_internal_set_error(from._internal_error());
-  }
   if (from._internal_has_header()) {
     _this->_internal_mutable_header()->::foskv::rpc::ResponseHeader::MergeFrom(
         from._internal_header());
@@ -1555,9 +1404,6 @@ void GetResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PR
   if (from._internal_has_kvs()) {
     _this->_internal_mutable_kvs()->::foskv::kv::KeyValue::MergeFrom(
         from._internal_kvs());
-  }
-  if (from._internal_success() != 0) {
-    _this->_internal_set_success(from._internal_success());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -1575,16 +1421,10 @@ bool GetResponse::IsInitialized() const {
 
 void GetResponse::InternalSwap(GetResponse* other) {
   using std::swap;
-  auto* lhs_arena = GetArenaForAllocation();
-  auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.error_, lhs_arena,
-      &other->_impl_.error_, rhs_arena
-  );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(GetResponse, _impl_.success_)
-      + sizeof(GetResponse::_impl_.success_)
+      PROTOBUF_FIELD_OFFSET(GetResponse, _impl_.kvs_)
+      + sizeof(GetResponse::_impl_.kvs_)
       - PROTOBUF_FIELD_OFFSET(GetResponse, _impl_.header_)>(
           reinterpret_cast<char*>(&_impl_.header_),
           reinterpret_cast<char*>(&other->_impl_.header_));
@@ -1821,24 +1661,13 @@ DeleteResponse::DeleteResponse(const DeleteResponse& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   DeleteResponse* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.error_){}
-    , decltype(_impl_.header_){nullptr}
-    , decltype(_impl_.success_){}
+      decltype(_impl_.header_){nullptr}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  _impl_.error_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.error_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_error().empty()) {
-    _this->_impl_.error_.Set(from._internal_error(), 
-      _this->GetArenaForAllocation());
-  }
   if (from._internal_has_header()) {
     _this->_impl_.header_ = new ::foskv::rpc::ResponseHeader(*from._impl_.header_);
   }
-  _this->_impl_.success_ = from._impl_.success_;
   // @@protoc_insertion_point(copy_constructor:foskv.kv.DeleteResponse)
 }
 
@@ -1847,15 +1676,9 @@ inline void DeleteResponse::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.error_){}
-    , decltype(_impl_.header_){nullptr}
-    , decltype(_impl_.success_){false}
+      decltype(_impl_.header_){nullptr}
     , /*decltype(_impl_._cached_size_)*/{}
   };
-  _impl_.error_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.error_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 DeleteResponse::~DeleteResponse() {
@@ -1869,7 +1692,6 @@ DeleteResponse::~DeleteResponse() {
 
 inline void DeleteResponse::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  _impl_.error_.Destroy();
   if (this != internal_default_instance()) delete _impl_.header_;
 }
 
@@ -1883,12 +1705,10 @@ void DeleteResponse::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.error_.ClearToEmpty();
   if (GetArenaForAllocation() == nullptr && _impl_.header_ != nullptr) {
     delete _impl_.header_;
   }
   _impl_.header_ = nullptr;
-  _impl_.success_ = false;
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1902,23 +1722,6 @@ const char* DeleteResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr = ctx->ParseMessage(_internal_mutable_header(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bool success = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bytes error = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
-          auto str = _internal_mutable_error();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1959,18 +1762,6 @@ uint8_t* DeleteResponse::_InternalSerialize(
         _Internal::header(this).GetCachedSize(), target, stream);
   }
 
-  // bool success = 3;
-  if (this->_internal_success() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteBoolToArray(3, this->_internal_success(), target);
-  }
-
-  // bytes error = 4;
-  if (!this->_internal_error().empty()) {
-    target = stream->WriteBytesMaybeAliased(
-        4, this->_internal_error(), target);
-  }
-
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1987,23 +1778,11 @@ size_t DeleteResponse::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // bytes error = 4;
-  if (!this->_internal_error().empty()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-        this->_internal_error());
-  }
-
   // .foskv.rpc.ResponseHeader header = 1;
   if (this->_internal_has_header()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *_impl_.header_);
-  }
-
-  // bool success = 3;
-  if (this->_internal_success() != 0) {
-    total_size += 1 + 1;
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -2024,15 +1803,9 @@ void DeleteResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const :
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_error().empty()) {
-    _this->_internal_set_error(from._internal_error());
-  }
   if (from._internal_has_header()) {
     _this->_internal_mutable_header()->::foskv::rpc::ResponseHeader::MergeFrom(
         from._internal_header());
-  }
-  if (from._internal_success() != 0) {
-    _this->_internal_set_success(from._internal_success());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -2050,19 +1823,8 @@ bool DeleteResponse::IsInitialized() const {
 
 void DeleteResponse::InternalSwap(DeleteResponse* other) {
   using std::swap;
-  auto* lhs_arena = GetArenaForAllocation();
-  auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.error_, lhs_arena,
-      &other->_impl_.error_, rhs_arena
-  );
-  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(DeleteResponse, _impl_.success_)
-      + sizeof(DeleteResponse::_impl_.success_)
-      - PROTOBUF_FIELD_OFFSET(DeleteResponse, _impl_.header_)>(
-          reinterpret_cast<char*>(&_impl_.header_),
-          reinterpret_cast<char*>(&other->_impl_.header_));
+  swap(_impl_.header_, other->_impl_.header_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata DeleteResponse::GetMetadata() const {

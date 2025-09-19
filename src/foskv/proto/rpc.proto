@@ -8,8 +8,16 @@ message RpcHeader {
   uint32 payload_size = 4;
 }
 
+message Redirect {
+  string host = 1;
+  uint32 port = 2;
+}
+
 message ResponseHeader {
   uint64 cluster_id = 1;
   uint64 member_id = 2;
   uint64 term = 3;
+  bool success = 4;
+  int32 error_code = 5;
+  optional Redirect redirect = 6;
 }

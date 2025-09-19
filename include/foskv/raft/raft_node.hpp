@@ -33,16 +33,23 @@ public:
     // raft rpc invoke
     [[REMEMBER_CO_AWAIT]]
     auto handle_request_vote_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
+    -> kosio::async::Task<RpcResult<void>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_append_entries_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
+    -> kosio::async::Task<RpcResult<void>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
+    -> kosio::async::Task<RpcResult<void>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_internal_raft_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
+    -> kosio::async::Task<RpcResult<void>>;
+
+private:
+    /* Confirm that you have the lock */
+    auto generate_response_header() const noexcept -> ResponseHeader;
+    auto generate_internal_response_header(bool success, int error_code = 0,
+        std::optional<rpc::Redirect> redirect = std::nullopt) const noexcept -> rpc::ResponseHeader;
+    auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
 
 private:
     kosio::sync::Mutex mutex_;
@@ -50,6 +57,7 @@ private:
     detail::Persister  persister_;
     detail::Transport  transport_;
     detail::StateMachine state_machine_;
+    std::array<char, 2*rpc::detail::MAX_RPC_MESSAGE_SIZE> buffer_{};
     // election timeout last reset time ms
     std::atomic<uint64_t> last_reset_time_{0};
 

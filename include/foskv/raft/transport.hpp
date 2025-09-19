@@ -23,12 +23,12 @@ public:
 
 public:
     auto run() -> kosio::async::Task<>;
-    auto broadcast_request_vote(RequestVoteRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto broadcast_append_entries(AppendEntriesRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto broadcast_install_snapshot(InstallSnapshotRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto broadcast_request_vote_request(RequestVoteRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto broadcast_append_entries_request(AppendEntriesRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto broadcast_install_snapshot_request(InstallSnapshotRequest&& request, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
 
 private:
-    Config       config_;
+    Config           config_;
     rpc::RpcProvider provider_;
 };
 } // namespace foskv::raft::detail

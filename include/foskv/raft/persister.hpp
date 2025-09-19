@@ -15,8 +15,7 @@ public:
 
 public:
     [[nodiscard]]
-    // pair : [index, payload]
-    auto persist_entry(const std::pair<rocksdb::Slice, rocksdb::Slice> &entry) const -> RaftResult<void>;
+    auto persist_entry(const rocksdb::Slice& index_slice, const rocksdb::Slice &entry_payload_slice) const -> RaftResult<void>;
     [[nodiscard]]
     // pair : [index, payload]
     auto persist_entries(const std::vector<std::pair<rocksdb::Slice, rocksdb::Slice>>& entries) const -> RaftResult<void>;

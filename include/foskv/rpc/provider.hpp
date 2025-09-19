@@ -10,9 +10,9 @@ namespace foskv::rpc {
 class RpcProvider : util::Noncopyable {
     // Use ParseFromArray(req_payload.data(), req_payload.size()) to get the rpc request.
     // Use SerializeToArray(resp_payload.data(), resp_payload_size) to write the rpc
-    // response, return error if resp_payload_size > resp_payload.size() or failed
-    // to serialize
-    using Invoke = std::function<kosio::async::Task<RpcResult<std::size_t>>(std::string_view req_payload, std::span<char> resp_payload)>;
+    // response and let resp_payload = resp_payload.subspan{0, resp_payload_size}, return
+    // error if resp_payload_size > resp_payload.size() or failed to serialize
+    using Invoke = std::function<kosio::async::Task<RpcResult<void>>(std::string_view req_payload, std::span<char> resp_payload)>;
     using Service = std::unordered_map<std::string_view, Invoke>;
 
 public:

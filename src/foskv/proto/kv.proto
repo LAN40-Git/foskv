@@ -16,8 +16,6 @@ message PutRequest {
 message PutResponse {
   rpc.ResponseHeader header = 1;
   KeyValue prev_kv = 2;
-  bool success = 3;
-  bytes error = 4;
 }
 
 message GetRequest {
@@ -27,8 +25,6 @@ message GetRequest {
 message GetResponse {
   rpc.ResponseHeader header = 1;
   KeyValue kvs = 2;
-  bool success = 3;
-  bytes error = 4;
 }
 
 message DeleteRequest {
@@ -37,6 +33,4 @@ message DeleteRequest {
 
 message DeleteResponse {
   rpc.ResponseHeader header = 1;
-  bool success = 3;
-  bytes error = 4;
 }
