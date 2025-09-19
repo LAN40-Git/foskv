@@ -1,0 +1,18 @@
+syntax = "proto3";
+package foskvserverpb;
+import "foskv/api/foskvserverpb/rpc.proto";
+
+message RequestHeader {
+  uint64 ID = 1;
+}
+
+message InternalRaftRequest {
+  RequestHeader header = 100;
+
+  oneof type {
+    // KV
+    PutRequest put = 1;
+    GetRequest get = 2;
+    DeleteRequest delete = 3;
+  }
+}

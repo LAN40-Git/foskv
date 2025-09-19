@@ -1,4 +1,6 @@
 #pragma once
+#include "foskv/raft/raft.pb.h"
+#include "foskv/api/foskvserverpb/raft_internal.pb.h"
 #include "foskv/rpc/rpc.hpp"
 #include "foskv/storage/storage.hpp"
 

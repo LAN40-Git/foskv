@@ -54,28 +54,28 @@ auto foskv::rpc::RpcConsumer::call(
     RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>> {
     co_await mutex_.lock();
     std::lock_guard lock(mutex_, std::adopt_lock);
-    // Make request header
-    RequestHeader req_header;
-    req_header.set_request_id(request_id_);
-    req_header.set_service_name({service_name.data(), service_name.size()});
-    req_header.set_method_name({method_name.data(), method_name.size()});
-    req_header.set_payload_size(payload.size());
+    // Make rpc header
+    RpcHeader rpc_header;
+    rpc_header.set_request_id(request_id_);
+    rpc_header.set_service_name({service_name.data(), service_name.size()});
+    rpc_header.set_method_name({method_name.data(), method_name.size()});
+    rpc_header.set_payload_size(payload.size());
 
-    // Send [request header size -> request header -> request payload]
-    auto req_header_size = req_header.ByteSizeLong();
-    if (req_header_size > buffer_.capacity()) [[unlikely]] {
+    // Send [rpc header size -> rpc header -> request payload]
+    auto rpc_header_size = rpc_header.ByteSizeLong();
+    if (rpc_header_size > buffer_.capacity()) [[unlikely]] {
         co_return std::unexpected{make_rpc_error(RpcError::kMessageTooLarge)};
     }
-    req_header.SerializeToArray(buffer_.data(), static_cast<int>(req_header_size));
-    uint32_t req_header_size_net = htonl(static_cast<uint32_t>(req_header_size));
+    rpc_header.SerializeToArray(buffer_.data(), static_cast<int>(rpc_header_size));
+    uint32_t rpc_header_size_net = htonl(static_cast<uint32_t>(rpc_header_size));
 
     // Although it is not possible, the first insertion here is to
     // avoid receiving a reply and the callback has not been inserted yet.
     callbacks_.emplace(request_id_, std::move(callback));
 
     auto ret = co_await stream_.write_vectored(
-        std::span<const char>(reinterpret_cast<char*>(&req_header_size_net), sizeof(uint32_t)),
-        std::span<const char>(buffer_.data(), req_header_size),
+        std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
+        std::span<const char>(buffer_.data(), rpc_header_size),
         std::span<const char>(payload.data(), payload.size())
     );
 
@@ -111,36 +111,36 @@ auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
     std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
     // Break if failed to reconnect to the rpc server or receive invalid message
     while (true) {
-        // Recv response header size
-        uint32_t resp_header_size_net;
+        // Recv rpc header size
+        uint32_t rpc_header_size_net;
         auto ret = co_await stream_.read_exact(
-            {reinterpret_cast<char*>(&resp_header_size_net), sizeof(uint32_t)});
+            {reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             break;
         }
 
-        uint32_t resp_header_size = ntohl(resp_header_size_net);
-        if (resp_header_size > buffer.capacity()) [[unlikely]] {
+        uint32_t rpc_header_size = ntohl(rpc_header_size_net);
+        if (rpc_header_size > buffer.capacity()) [[unlikely]] {
             LOG_ERROR("Response header too large.");
             break;
         }
 
         // Recv response header
         ret = co_await stream_.read_exact(
-            {buffer.data(), resp_header_size});
+            {buffer.data(), rpc_header_size});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             break;
         }
 
-        ResponseHeader header;
-        if (!header.ParseFromArray(buffer.data(), static_cast<int>(resp_header_size))) {
+        RpcHeader rpc_header;
+        if (!rpc_header.ParseFromArray(buffer.data(), static_cast<int>(rpc_header_size))) {
             LOG_ERROR("Failed to parse response header.");
             break;
         }
-        auto request_id = header.request_id();
-        auto payload_size = header.payload_size();
+        auto request_id = rpc_header.request_id();
+        auto payload_size = rpc_header.payload_size();
         if (payload_size > buffer.capacity()) [[unlikely]] {
             LOG_ERROR("Response payload too large.");
             callbacks_.erase(request_id);

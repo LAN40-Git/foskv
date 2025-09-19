@@ -9,7 +9,7 @@ namespace detail {
     static constexpr std::string_view START_LOG_INDEX = "S";
     static constexpr std::string_view END_LOG_INDEX = "E";
     constexpr std::string_view PERSISTENT_PATH{"member/persistent"};
-    constexpr std::string_view KV_DATA_PATH{"kv_data"};
+    constexpr std::string_view USER_DATA_PATH{"usr/data"};
 } // namespace detail
 
 struct NodeInfo {

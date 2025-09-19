@@ -5,8 +5,9 @@
 
 namespace foskv::raft {
 class RaftNode {
+    friend class detail::StateMachine;
 private:
-    explicit RaftNode(Config&& config, detail::Persister&& persister);
+    explicit RaftNode(Config&& config, detail::Persister&& persister, detail::StateMachine&& state_machine);
 
 public:
     RaftNode(RaftNode&& other) noexcept;
@@ -40,7 +41,7 @@ public:
     auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
     -> kosio::async::Task<RpcResult<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
-    auto handle_client_request(std::string_view req_payload, std::span<char> resp_payload)
+    auto handle_internal_raft_request(std::string_view req_payload, std::span<char> resp_payload)
     -> kosio::async::Task<RpcResult<std::size_t>>;
 
 private:
@@ -48,6 +49,7 @@ private:
     std::atomic<bool>  is_shutdown_{false};
     detail::Persister  persister_;
     detail::Transport  transport_;
+    detail::StateMachine state_machine_;
     // election timeout last reset time ms
     std::atomic<uint64_t> last_reset_time_{0};
 

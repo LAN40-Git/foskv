@@ -1,6 +1,10 @@
 #pragma once
 #include "foskv/raft/peer.hpp"
 
+namespace foskv::raft {
+class RaftNode;
+}
+
 namespace foskv::raft::detail {
 class StateMachine {
 private:
@@ -14,7 +18,7 @@ public:
     static auto create(const std::filesystem::path& path) -> RaftResult<StateMachine>;
 
 public:
-    auto apply_entries(std::span<const LogEntry> entries) -> uint64_t;
+    auto apply(RaftNode& node, const LogEntry& entry) const -> RaftResult<std::pair<uint64_t, std::string>>;
 
 private:
     storage::Storage st_;

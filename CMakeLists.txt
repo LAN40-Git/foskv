@@ -35,6 +35,11 @@ pkg_check_modules(LIBURING REQUIRED liburing)
 
 find_package(Protobuf REQUIRED)
 if(Protobuf_FOUND)
+    set(PROTO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/src/api")
+    set(PROTOBUF_IMPORT_DIRS
+            ${PROTO_ROOT}
+            ${Protobuf_INCLUDE_DIRS}
+    )
     message(STATUS "Protobuf version: ${Protobuf_VERSION}")
 else()
     message(FATAL_ERROR "Protobuf not found")
@@ -49,6 +54,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(XXHASH REQUIRED libxxhash)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(include/foskv/api)
 
 # ====== LIBRARY ======
 set(ROCKSDB_LIBRARIES
@@ -68,6 +74,7 @@ set(DEPEND_LIBS
         ${XXHASH_LIBRARIES}
 )
 
+add_subdirectory(src/api)
 add_subdirectory(src/client)
 add_subdirectory(src/common)
 add_subdirectory(src/raft)
@@ -75,6 +82,7 @@ add_subdirectory(src/rpc)
 add_subdirectory(src/storage)
 
 set(SRC_FILES
+        ${PROTO_FILES}
         ${CLIENT_FILES}
         ${COMMON_FILES}
         ${RAFT_FILES}

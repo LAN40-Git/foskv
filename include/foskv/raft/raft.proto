@@ -1,0 +1,59 @@
+syntax = "proto3";
+package foskv.raft;
+import "foskv/api/foskvserverpb/rpc.proto";
+
+message RequestVoteRequest {
+    uint64 term = 1;
+    uint64 candidate_id = 2;
+    uint64 last_log_index = 3;
+    uint64 last_log_term = 4;
+}
+
+message RequestVoteResponse {
+    foskvserverpb.ResponseHeader header = 1;
+    bool vote_granted = 2;
+}
+
+message LogEntry {
+    uint64 term = 1;
+    uint64 index = 2;
+    bytes command = 3;
+}
+
+message AppendEntriesRequest {
+    uint64 term = 1;
+    uint64 leader_id = 2;
+    uint64 prev_log_index = 3;
+    uint64 prev_log_term = 4;
+    repeated LogEntry entries = 5;
+    uint64 leader_commit = 6;
+}
+
+message AppendEntriesResponse {
+    foskvserverpb.ResponseHeader header = 1;
+    bool success = 2;
+}
+
+message InstallSnapshotRequest {
+    uint64 term = 1;
+    uint64 leader_id = 2;
+    uint64 last_include_index = 3;
+    uint64 last_include_term = 4;
+    uint64 offset = 5;
+    bytes data = 6;
+    bool done = 7;
+}
+
+message InstallSnapshotResponse {
+    foskvserverpb.ResponseHeader header = 1;
+}
+
+message PersistState {
+    uint64 current_term = 1;
+    optional uint64 voted_for = 2;
+}
+
+message SnapshotMetadata {
+    uint64 last_include_index = 1;
+    uint64 last_include_term = 2;
+}

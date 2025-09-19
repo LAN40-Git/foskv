@@ -98,6 +98,8 @@ public:
         kLocalNodeNotFound,
         kStateMachineCreateFailed,
         kPeerCreateFailed,
+        kUnknownCommand,
+        kCommandParseFailed,
     };
 
 public:
