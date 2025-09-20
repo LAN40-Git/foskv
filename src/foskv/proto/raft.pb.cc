@@ -178,7 +178,9 @@ struct SnapshotMetadataDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SnapshotMetadataDefaultTypeInternal _SnapshotMetadata_default_instance_;
 PROTOBUF_CONSTEXPR InternalRaftRequest::InternalRaftRequest(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.type_)*/{}
+    /*decltype(_impl_.addr_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.request_id_)*/uint64_t{0u}
+  , /*decltype(_impl_.type_)*/{}
   , /*decltype(_impl_._cached_size_)*/{}
   , /*decltype(_impl_._oneof_case_)*/{}} {}
 struct InternalRaftRequestDefaultTypeInternal {
@@ -299,6 +301,8 @@ const uint32_t TableStruct_raft_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   PROTOBUF_FIELD_OFFSET(::foskv::raft::InternalRaftRequest, _impl_._oneof_case_[0]),
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::foskv::raft::InternalRaftRequest, _impl_.request_id_),
+  PROTOBUF_FIELD_OFFSET(::foskv::raft::InternalRaftRequest, _impl_.addr_),
   ::_pbi::kInvalidFieldOffsetTag,
   ::_pbi::kInvalidFieldOffsetTag,
   ::_pbi::kInvalidFieldOffsetTag,
@@ -358,18 +362,19 @@ const char descriptor_table_protodef_raft_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "\n\tvoted_for\030\002 \001(\004H\000\210\001\001\022\024\n\014commit_index\030\003"
   " \001(\004B\014\n\n_voted_for\"I\n\020SnapshotMetadata\022\032"
   "\n\022last_include_index\030\001 \001(\004\022\031\n\021last_inclu"
-  "de_term\030\002 \001(\004\"\222\001\n\023InternalRaftRequest\022#\n"
-  "\003put\030\001 \001(\0132\024.foskv.kv.PutRequestH\000\022#\n\003ge"
-  "t\030\002 \001(\0132\024.foskv.kv.GetRequestH\000\022)\n\006delet"
-  "e\030\003 \001(\0132\027.foskv.kv.DeleteRequestH\000B\006\n\004ty"
-  "peb\006proto3"
+  "de_term\030\002 \001(\004\"\264\001\n\023InternalRaftRequest\022\022\n"
+  "\nrequest_id\030\001 \001(\004\022\014\n\004addr\030\002 \001(\t\022#\n\003put\030\003"
+  " \001(\0132\024.foskv.kv.PutRequestH\000\022#\n\003get\030\004 \001("
+  "\0132\024.foskv.kv.GetRequestH\000\022)\n\006delete\030\005 \001("
+  "\0132\027.foskv.kv.DeleteRequestH\000B\006\n\004typeb\006pr"
+  "oto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_raft_2eproto_deps[1] = {
   &::descriptor_table_kv_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_raft_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_raft_2eproto = {
-    false, false, 1170, descriptor_table_protodef_raft_2eproto,
+    false, false, 1204, descriptor_table_protodef_raft_2eproto,
     "raft.proto",
     &descriptor_table_raft_2eproto_once, descriptor_table_raft_2eproto_deps, 1, 11,
     schemas, file_default_instances, TableStruct_raft_2eproto::offsets,
@@ -3010,11 +3015,22 @@ InternalRaftRequest::InternalRaftRequest(const InternalRaftRequest& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   InternalRaftRequest* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.type_){}
+      decltype(_impl_.addr_){}
+    , decltype(_impl_.request_id_){}
+    , decltype(_impl_.type_){}
     , /*decltype(_impl_._cached_size_)*/{}
     , /*decltype(_impl_._oneof_case_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _impl_.addr_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.addr_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_addr().empty()) {
+    _this->_impl_.addr_.Set(from._internal_addr(), 
+      _this->GetArenaForAllocation());
+  }
+  _this->_impl_.request_id_ = from._impl_.request_id_;
   clear_has_type();
   switch (from.type_case()) {
     case kPut: {
@@ -3044,10 +3060,16 @@ inline void InternalRaftRequest::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.type_){}
+      decltype(_impl_.addr_){}
+    , decltype(_impl_.request_id_){uint64_t{0u}}
+    , decltype(_impl_.type_){}
     , /*decltype(_impl_._cached_size_)*/{}
     , /*decltype(_impl_._oneof_case_)*/{}
   };
+  _impl_.addr_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.addr_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   clear_has_type();
 }
 
@@ -3062,6 +3084,7 @@ InternalRaftRequest::~InternalRaftRequest() {
 
 inline void InternalRaftRequest::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.addr_.Destroy();
   if (has_type()) {
     clear_type();
   }
@@ -3106,6 +3129,8 @@ void InternalRaftRequest::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  _impl_.addr_.ClearToEmpty();
+  _impl_.request_id_ = uint64_t{0u};
   clear_type();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
@@ -3116,25 +3141,43 @@ const char* InternalRaftRequest::_InternalParse(const char* ptr, ::_pbi::ParseCo
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // .foskv.kv.PutRequest put = 1;
+      // uint64 request_id = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.request_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string addr = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_addr();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, "foskv.raft.InternalRaftRequest.addr"));
+        } else
+          goto handle_unusual;
+        continue;
+      // .foskv.kv.PutRequest put = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
           ptr = ctx->ParseMessage(_internal_mutable_put(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // .foskv.kv.GetRequest get = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+      // .foskv.kv.GetRequest get = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_get(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // .foskv.kv.DeleteRequest delete = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+      // .foskv.kv.DeleteRequest delete = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
           ptr = ctx->ParseMessage(_internal_mutable_delete_(), ptr);
           CHK_(ptr);
         } else
@@ -3169,24 +3212,40 @@ uint8_t* InternalRaftRequest::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // .foskv.kv.PutRequest put = 1;
+  // uint64 request_id = 1;
+  if (this->_internal_request_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_request_id(), target);
+  }
+
+  // string addr = 2;
+  if (!this->_internal_addr().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_addr().data(), static_cast<int>(this->_internal_addr().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "foskv.raft.InternalRaftRequest.addr");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_addr(), target);
+  }
+
+  // .foskv.kv.PutRequest put = 3;
   if (_internal_has_put()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, _Internal::put(this),
+      InternalWriteMessage(3, _Internal::put(this),
         _Internal::put(this).GetCachedSize(), target, stream);
   }
 
-  // .foskv.kv.GetRequest get = 2;
+  // .foskv.kv.GetRequest get = 4;
   if (_internal_has_get()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(2, _Internal::get(this),
+      InternalWriteMessage(4, _Internal::get(this),
         _Internal::get(this).GetCachedSize(), target, stream);
   }
 
-  // .foskv.kv.DeleteRequest delete = 3;
+  // .foskv.kv.DeleteRequest delete = 5;
   if (_internal_has_delete_()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(3, _Internal::delete_(this),
+      InternalWriteMessage(5, _Internal::delete_(this),
         _Internal::delete_(this).GetCachedSize(), target, stream);
   }
 
@@ -3206,22 +3265,34 @@ size_t InternalRaftRequest::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  // string addr = 2;
+  if (!this->_internal_addr().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_addr());
+  }
+
+  // uint64 request_id = 1;
+  if (this->_internal_request_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_request_id());
+  }
+
   switch (type_case()) {
-    // .foskv.kv.PutRequest put = 1;
+    // .foskv.kv.PutRequest put = 3;
     case kPut: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *_impl_.type_.put_);
       break;
     }
-    // .foskv.kv.GetRequest get = 2;
+    // .foskv.kv.GetRequest get = 4;
     case kGet: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *_impl_.type_.get_);
       break;
     }
-    // .foskv.kv.DeleteRequest delete = 3;
+    // .foskv.kv.DeleteRequest delete = 5;
     case kDelete: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
@@ -3250,6 +3321,12 @@ void InternalRaftRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, co
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  if (!from._internal_addr().empty()) {
+    _this->_internal_set_addr(from._internal_addr());
+  }
+  if (from._internal_request_id() != 0) {
+    _this->_internal_set_request_id(from._internal_request_id());
+  }
   switch (from.type_case()) {
     case kPut: {
       _this->_internal_mutable_put()->::foskv::kv::PutRequest::MergeFrom(
@@ -3286,7 +3363,14 @@ bool InternalRaftRequest::IsInitialized() const {
 
 void InternalRaftRequest::InternalSwap(InternalRaftRequest* other) {
   using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.addr_, lhs_arena,
+      &other->_impl_.addr_, rhs_arena
+  );
+  swap(_impl_.request_id_, other->_impl_.request_id_);
   swap(_impl_.type_, other->_impl_.type_);
   swap(_impl_._oneof_case_[0], other->_impl_._oneof_case_[0]);
 }

@@ -26,11 +26,11 @@ auto foskv::raft::detail::StateMachine::create(const std::filesystem::path& path
 }
 
 auto foskv::raft::detail::StateMachine::apply(RaftNode& node, const LogEntry &entry)
-const -> RaftResult<void> {
-    InternalRaftRequest request;
-    if (!request.ParseFromString(entry.command())) {
-        return std::unexpected{make_raft_error(RaftError::kCommandParseFailed)};
-    }
+const -> kosio::async::Task<RaftResult<void>>{
+    auto& request = node.internal_raft_requests_[entry.index()];
+    rpc::detail::InvokeTask task;
+    task.request_id_ = request.request_id();
+    task.has_resp_payload_ = true;
     switch (request.type_case()) {
         case InternalRaftRequest::kPut: {
             auto& args = request.put();
@@ -45,7 +45,8 @@ const -> RaftResult<void> {
                 header = node.produce_internal_response_header(true);
             }
             response.set_allocated_header(&header);
-            // return std::make_pair(request.client_id(), response.SerializeAsString());
+            task.resp_payload_ = response.SerializeAsString();
+            break;
         }
         case InternalRaftRequest::kGet: {
             auto& args = request.get();
@@ -62,7 +63,8 @@ const -> RaftResult<void> {
                 }
             }
             response.set_allocated_header(&header);
-            // return std::make_pair(request.client_id(), response.SerializeAsString());
+            task.resp_payload_ = response.SerializeAsString();
+            break;
         }
         case InternalRaftRequest::kDelete: {
             auto& args = request.delete_();
@@ -76,13 +78,13 @@ const -> RaftResult<void> {
                 header = node.produce_internal_response_header(true);
             }
             response.set_allocated_header(&header);
-            // return std::make_pair(request.client_id(), response.SerializeAsString());
-        }
-        default: {
+            task.resp_payload_ = response.SerializeAsString();
             break;
         }
+        default: {
+            co_return std::unexpected{make_raft_error(RaftError::kUnknownCommand)};
+        }
     }
-    LOG_ERROR("Invalid internal raft request.");
-    return std::unexpected{make_raft_error(RaftError::kUnknownCommand)};
+    co_await node.transport_.provider_.add_invoke_task(request.addr(), std::move(task));
+    co_return RaftResult<void>{};
 }
-

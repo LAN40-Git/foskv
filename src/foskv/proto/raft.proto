@@ -66,10 +66,12 @@ message SnapshotMetadata {
 }
 
 message InternalRaftRequest {
+    uint64 request_id = 1;
+    string addr = 2;
     oneof type {
         // KV
-        kv.PutRequest put = 1;
-        kv.GetRequest get = 2;
-        kv.DeleteRequest delete = 3;
+        kv.PutRequest put = 3;
+        kv.GetRequest get = 4;
+        kv.DeleteRequest delete = 5;
     }
 }

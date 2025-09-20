@@ -44,14 +44,24 @@ private:
     auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
     -> kosio::async::Task<RpcResult<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
-    auto handle_internal_raft_request(std::string_view req_payload, std::span<char> resp_payload)
+    auto handle_kv_put_request(std::string_view addr, uint64_t request_id, std::string_view req_payload, std::span<char> resp_payload)
     -> kosio::async::Task<RpcResult<std::size_t>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_kv_get_request(std::string_view addr, uint64_t request_id, std::string_view req_payload, std::span<char> resp_payload)
+    -> kosio::async::Task<RpcResult<std::size_t>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_kv_delete_request(std::string_view addr, uint64_t request_id, std::string_view req_payload, std::span<char> resp_payload)
+    -> kosio::async::Task<RpcResult<std::size_t>>;
+
+private:
+    static auto append_entries_callback(RaftNode* node, uint64_t prev_log_index, std::size_t entries_size, std::string_view resp_payload) -> kosio::async::Task<>;
 
 private:
     /* Confirm that you have the lock */
     auto produce_response_header() const noexcept -> ResponseHeader;
     auto produce_internal_response_header(bool success, int error_code = 0,
         std::optional<rpc::Redirect> redirect = std::nullopt) const noexcept -> rpc::ResponseHeader;
+    auto produce_redirect() const noexcept -> rpc::Redirect;
     auto produce_request_vote_request() const noexcept -> RequestVoteRequest;
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
 
@@ -62,7 +72,6 @@ private:
     detail::Transport  transport_;
     detail::StateMachine state_machine_;
     std::array<char, 2*rpc::detail::MAX_RPC_MESSAGE_SIZE> buffer_{};
-    // log index -> request
     std::unordered_map<uint64_t, InternalRaftRequest> internal_raft_requests_;
     // election timeout last reset time ms
     std::atomic<uint64_t> last_reset_time_{0};
@@ -81,7 +90,7 @@ private:
 
     // Volatile state on leaders
     std::optional<uint64_t> leader_id_{std::nullopt};
-    std::vector<int> next_index_{};
-    std::vector<int> match_index_{};
+    std::unordered_map<uint64_t, uint64_t> next_index_{};
+    std::unordered_map<uint64_t, uint64_t> match_index_{};
 };
 } // namespace foskv::raft

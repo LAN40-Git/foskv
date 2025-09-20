@@ -8,6 +8,7 @@ class RaftNode;
 namespace foskv::raft::detail {
 class Transport {
     friend class foskv::raft::RaftNode;
+    friend class StateMachine;
 public:
     explicit Transport(Config&& config);
 

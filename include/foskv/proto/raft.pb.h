@@ -1928,9 +1928,9 @@ class InternalRaftRequest final :
     return *internal_default_instance();
   }
   enum TypeCase {
-    kPut = 1,
-    kGet = 2,
-    kDelete = 3,
+    kPut = 3,
+    kGet = 4,
+    kDelete = 5,
     TYPE_NOT_SET = 0,
   };
 
@@ -2012,11 +2012,36 @@ class InternalRaftRequest final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kPutFieldNumber = 1,
-    kGetFieldNumber = 2,
-    kDeleteFieldNumber = 3,
+    kAddrFieldNumber = 2,
+    kRequestIdFieldNumber = 1,
+    kPutFieldNumber = 3,
+    kGetFieldNumber = 4,
+    kDeleteFieldNumber = 5,
   };
-  // .foskv.kv.PutRequest put = 1;
+  // string addr = 2;
+  void clear_addr();
+  const std::string& addr() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_addr(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_addr();
+  PROTOBUF_NODISCARD std::string* release_addr();
+  void set_allocated_addr(std::string* addr);
+  private:
+  const std::string& _internal_addr() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_addr(const std::string& value);
+  std::string* _internal_mutable_addr();
+  public:
+
+  // uint64 request_id = 1;
+  void clear_request_id();
+  uint64_t request_id() const;
+  void set_request_id(uint64_t value);
+  private:
+  uint64_t _internal_request_id() const;
+  void _internal_set_request_id(uint64_t value);
+  public:
+
+  // .foskv.kv.PutRequest put = 3;
   bool has_put() const;
   private:
   bool _internal_has_put() const;
@@ -2034,7 +2059,7 @@ class InternalRaftRequest final :
       ::foskv::kv::PutRequest* put);
   ::foskv::kv::PutRequest* unsafe_arena_release_put();
 
-  // .foskv.kv.GetRequest get = 2;
+  // .foskv.kv.GetRequest get = 4;
   bool has_get() const;
   private:
   bool _internal_has_get() const;
@@ -2052,7 +2077,7 @@ class InternalRaftRequest final :
       ::foskv::kv::GetRequest* get);
   ::foskv::kv::GetRequest* unsafe_arena_release_get();
 
-  // .foskv.kv.DeleteRequest delete = 3;
+  // .foskv.kv.DeleteRequest delete = 5;
   bool has_delete_() const;
   private:
   bool _internal_has_delete_() const;
@@ -2086,6 +2111,8 @@ class InternalRaftRequest final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr addr_;
+    uint64_t request_id_;
     union TypeUnion {
       constexpr TypeUnion() : _constinit_{} {}
         ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized _constinit_;
@@ -3109,7 +3136,77 @@ inline void SnapshotMetadata::set_last_include_term(uint64_t value) {
 
 // InternalRaftRequest
 
-// .foskv.kv.PutRequest put = 1;
+// uint64 request_id = 1;
+inline void InternalRaftRequest::clear_request_id() {
+  _impl_.request_id_ = uint64_t{0u};
+}
+inline uint64_t InternalRaftRequest::_internal_request_id() const {
+  return _impl_.request_id_;
+}
+inline uint64_t InternalRaftRequest::request_id() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.request_id)
+  return _internal_request_id();
+}
+inline void InternalRaftRequest::_internal_set_request_id(uint64_t value) {
+  
+  _impl_.request_id_ = value;
+}
+inline void InternalRaftRequest::set_request_id(uint64_t value) {
+  _internal_set_request_id(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.InternalRaftRequest.request_id)
+}
+
+// string addr = 2;
+inline void InternalRaftRequest::clear_addr() {
+  _impl_.addr_.ClearToEmpty();
+}
+inline const std::string& InternalRaftRequest::addr() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.addr)
+  return _internal_addr();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void InternalRaftRequest::set_addr(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.addr_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:foskv.raft.InternalRaftRequest.addr)
+}
+inline std::string* InternalRaftRequest::mutable_addr() {
+  std::string* _s = _internal_mutable_addr();
+  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.addr)
+  return _s;
+}
+inline const std::string& InternalRaftRequest::_internal_addr() const {
+  return _impl_.addr_.Get();
+}
+inline void InternalRaftRequest::_internal_set_addr(const std::string& value) {
+  
+  _impl_.addr_.Set(value, GetArenaForAllocation());
+}
+inline std::string* InternalRaftRequest::_internal_mutable_addr() {
+  
+  return _impl_.addr_.Mutable(GetArenaForAllocation());
+}
+inline std::string* InternalRaftRequest::release_addr() {
+  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.addr)
+  return _impl_.addr_.Release();
+}
+inline void InternalRaftRequest::set_allocated_addr(std::string* addr) {
+  if (addr != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.addr_.SetAllocated(addr, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.addr_.IsDefault()) {
+    _impl_.addr_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:foskv.raft.InternalRaftRequest.addr)
+}
+
+// .foskv.kv.PutRequest put = 3;
 inline bool InternalRaftRequest::_internal_has_put() const {
   return type_case() == kPut;
 }
@@ -3175,7 +3272,7 @@ inline ::foskv::kv::PutRequest* InternalRaftRequest::mutable_put() {
   return _msg;
 }
 
-// .foskv.kv.GetRequest get = 2;
+// .foskv.kv.GetRequest get = 4;
 inline bool InternalRaftRequest::_internal_has_get() const {
   return type_case() == kGet;
 }
@@ -3241,7 +3338,7 @@ inline ::foskv::kv::GetRequest* InternalRaftRequest::mutable_get() {
   return _msg;
 }
 
-// .foskv.kv.DeleteRequest delete = 3;
+// .foskv.kv.DeleteRequest delete = 5;
 inline bool InternalRaftRequest::_internal_has_delete_() const {
   return type_case() == kDelete;
 }

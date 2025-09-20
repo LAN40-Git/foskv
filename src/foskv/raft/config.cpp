@@ -119,10 +119,15 @@ auto foskv::raft::Config::create(
     config_json["port"] = local_port.value();
     config_json["nodes"] = nodes_json;
 
-    auto config_json_payload = config_json.dump();
-    if (auto ret = co_await config_file.write_all(config_json_payload); !ret) {
+#ifdef ENABLE_HUMAN_READABLE_JSON
+    auto config_payload = config_json.dump(4);
+#else
+    auto config_payload = nodes_json.dump(-1);
+#endif
+    if (auto ret = co_await config_file.write_all(config_payload); !ret) {
         co_return std::unexpected{make_raft_error(RaftError::kConfigFileWriteFailed)};
     }
+    LOG_INFO("{}", config_payload);
     co_return RaftResult<void>{};
 }
 

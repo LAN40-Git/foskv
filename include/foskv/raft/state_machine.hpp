@@ -18,7 +18,7 @@ public:
     static auto create(const std::filesystem::path& path) -> RaftResult<StateMachine>;
 
 public:
-    auto apply(RaftNode& node, const LogEntry& entry) const -> RaftResult<void>;
+    auto apply(RaftNode& node, const LogEntry& entry) const -> kosio::async::Task<RaftResult<void>>;
 
 private:
     storage::Storage st_;

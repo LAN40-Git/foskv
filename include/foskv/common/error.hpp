@@ -103,7 +103,6 @@ public:
         kStateMachineCreateFailed,
         kPeerCreateFailed,
         kUnknownCommand,
-        kCommandParseFailed,
     };
 
 public:

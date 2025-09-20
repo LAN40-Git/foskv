@@ -74,8 +74,6 @@ auto foskv::RaftError::error_message() const noexcept -> std::string_view {
             return "Failed to create state machine.";
         case kPeerCreateFailed:
             return "Failed to create peer.";
-        case kCommandParseFailed:
-            return "Failed to parse command.";
         case kUnknownCommand:
             return "Unknown command.";
         default:
