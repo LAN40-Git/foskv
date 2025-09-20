@@ -81,19 +81,22 @@ auto foskv::raft::RaftNode::create(
     // Load config
     auto has_config = co_await Config::load(config_path);
     if (!has_config) [[unlikely]] {
+        LOG_ERROR("Failed to load config file");
         co_return std::unexpected{has_config.error()};
     }
 
     // Create persister and load persistent
     auto has_persister = detail::Persister::create(data_dir / detail::PERSISTENT_PATH);
     if (!has_persister) [[unlikely]] {
+        LOG_ERROR("Failed to load persistent data directory");
         co_return std::unexpected{has_persister.error()};
     }
 
     // Create state machine
     auto has_state_machine = detail::StateMachine::create(data_dir / detail::USER_DATA_PATH);
     if (!has_state_machine) {
-        throw std::runtime_error("Failed to create state machine");
+        LOG_ERROR("Failed to load state machine data directory");
+        co_return std::unexpected{has_state_machine.error()};
     }
     co_return RaftNode{std::move(has_config.value()), std::move(has_persister.value()), std::move(has_state_machine.value())};
 }
@@ -284,11 +287,15 @@ void foskv::raft::RaftNode::persist() {
     }
 }
 
-void foskv::raft::RaftNode::apply_commited_entries() {
+auto foskv::raft::RaftNode::apply_commited_entries() -> kosio::async::Task<void> {
     while (last_applied_ < commit_index_) {
         last_applied_ += 1;
-        state_machine_.apply(*this, logs_[last_applied_]);
-
+        auto ret = co_await state_machine_.apply(*this, logs_[last_applied_]);
+        if (!ret) {
+            LOG_FATAL("Failed to apply commited entries");
+            is_shutdown_.store(true, std::memory_order_release);
+            co_return;
+        }
     }
 }
 
@@ -706,7 +713,7 @@ auto foskv::raft::RaftNode::append_entries_callback(RaftNode *node, uint64_t pre
 
         node->try_commit_entries();
         node->persist();
-        node->apply_commited_entries();
+        co_await node->apply_commited_entries();
     } else {
         if (node->next_index_[member_id] > 1) {
             node->next_index_[member_id]--;

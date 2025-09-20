@@ -10,7 +10,6 @@ auto main_loop() -> kosio::async::Task<> {
     if (!has_config) {
         LOG_ERROR("Failed to create config file : {}", has_config.error());
     }
-    c
 }
 
 auto main() -> int {

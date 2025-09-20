@@ -30,7 +30,7 @@ private:
     void become_leader();
     void try_commit_entries();
     void persist();
-    void apply_commited_entries();
+    auto apply_commited_entries() -> kosio::async::Task<void>;
 
 private:
     // raft rpc invoke
