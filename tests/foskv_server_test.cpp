@@ -2,19 +2,18 @@
 #include "kosio/signal.hpp"
 
 auto server() -> kosio::async::Task<> {
-    std::filesystem::path config_path = "./config.json";
-    std::filesystem::path data_dir = "./data";
-    auto has_raft_node = co_await foskv::raft::RaftNode::create(config_path, data_dir);
-    if (!has_raft_node) {
-        LOG_ERROR("Failed to create raft node : {}", has_raft_node.error());
-        co_return;
+    auto has_consumer = co_await foskv::rpc::RpcConsumer::connect("127.0.0.1", 8080);
+    if (!has_consumer) {
+        kosio::log::console.error("Failed to connect to server : {}", has_consumer.error());
     }
-    try {
-        auto raft_node = std::move(has_raft_node.value());
-        co_await raft_node.run();
-    } catch (...) {
-        throw;
-    }
+    kosio::log::console.info("Connected");
+    co_await std::suspend_always {};
+}
+
+
+auto main_loop() -> kosio::async::Task<> {
+    kosio::spawn(server());
+    co_await kosio::signal::ctrl_c();
 }
 
 auto main() -> int {

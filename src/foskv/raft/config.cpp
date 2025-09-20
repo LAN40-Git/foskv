@@ -59,7 +59,7 @@ auto foskv::raft::Config::operator=(Config &&other) noexcept -> Config & {
     return *this;
 }
 
-auto foskv::raft::Config::create(
+auto foskv::raft::Config::save(
     const std::filesystem::path& path,
     uint64_t cluster_id,
     std::string_view local_name,
@@ -68,6 +68,7 @@ auto foskv::raft::Config::create(
 
     auto has_config_file = co_await kosio::fs::File::options()
         .create(true)
+        .read(true)
         .write(true)
         .truncate(true)
         .permission(0600)
@@ -135,16 +136,14 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
     std::ifstream config_stream(path);
 
     if (!config_stream) {
-        LOG_ERROR("Failed to open config file {} : {}", path.string(), strerror(errno));
+        LOG_VERBOSE("Failed to open config file {} : {}", path.string(), strerror(errno));
         co_return std::unexpected{make_raft_error(RaftError::kConfigFileOpenFailed)};
     }
 
     try {
         auto config_json = nlohmann::json::parse(config_stream);
         config_stream.close();
-
         auto tmp_file_path = path.parent_path() / "tmp.json";
-
         auto has_tmp_config_file = co_await kosio::fs::File::options()
             .create(true)
             .read(true)
@@ -153,7 +152,7 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
             .permission(0600)
             .open(tmp_file_path.string());
         if (!has_tmp_config_file) {
-            LOG_ERROR("Failed to open temp raft config file {} : {}", tmp_file_path.string(), strerror(errno));
+            LOG_VERBOSE("Failed to open temp raft config file {} : {}", tmp_file_path.string(), strerror(errno));
             co_return std::unexpected{make_raft_error(RaftError::kConfigFileOpenFailed)};
         }
         auto tmp_config_file = std::move(has_tmp_config_file.value());
@@ -200,11 +199,11 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
             std::move(config_json)
         };
     } catch (const nlohmann::json::parse_error& e) {
-        LOG_ERROR("Failed to parse json file : {}", e.what());
-        co_return std::unexpected{make_raft_error(RaftError::kJsonParseFailed)};
+        LOG_VERBOSE("Failed to parse json file", e.what());
+        throw;
     } catch (...) {
-        LOG_ERROR("Unknown exception while loading config");
-        co_return std::unexpected{make_raft_error(RaftError::kUnknown)};
+        LOG_VERBOSE("Unknown exception while loading config");
+        throw;
     }
 }
 

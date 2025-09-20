@@ -39,7 +39,7 @@ public:
 
 public:
     [[REMEMBER_CO_AWAIT]]
-    static auto create(
+    static auto save(
         const std::filesystem::path& path,
         uint64_t cluster_id,
         std::string_view local_name,

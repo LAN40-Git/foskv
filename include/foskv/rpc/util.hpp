@@ -4,10 +4,9 @@
 #include "foskv/common/error.hpp"
 #include "foskv/common/util/concurrent_queue.hpp"
 #include "foskv/common/util/noncopyable.hpp"
-#include <kosio/net.hpp>
-#include <kosio/core.hpp>
 #include <functional>
 #include <xxhash.h>
+#include <kosio/net.hpp>
 
 namespace foskv::rpc::detail {
 // addr -> request_id -> req_payload -> resp_payload
@@ -23,7 +22,6 @@ public:
     , has_resp_payload_(has_resp_payload)
     , resp_payload_(std::move(resp_payload)) {}
 
-public:
     InvokeTask(InvokeTask&& other) noexcept
         : request_id_(other.request_id_)
         , invoke_(std::move(other.invoke_))
@@ -40,13 +38,44 @@ public:
     }
 
 public:
-    uint64_t request_id_;
+    uint64_t request_id_{};
     Invoke invoke_;
     std::string req_payload_;
     bool has_resp_payload_{false};
     std::string resp_payload_;
 };
 
+using RpcCallback = std::function<kosio::async::Task<>(std::string_view resp_payload)>;
+using RpcCallbackMap = std::unordered_map<uint64_t, RpcCallback>;
+class CallTask : util::Noncopyable {
+public:
+    CallTask() = default;
+    explicit CallTask(std::string&& service_name, std::string&& method_name, std::string&& req_payload, RpcCallback&& callback)
+        : service_name_(std::move(service_name))
+        , method_name_(std::move(method_name))
+        , req_payload_(std::move(req_payload))
+        , callback_(std::move(callback)) {}
+
+    CallTask(CallTask&& other) noexcept
+        : service_name_(std::move(other.service_name_))
+        , method_name_(std::move(other.method_name_))
+        , req_payload_(std::move(other.req_payload_))
+        , callback_(std::move(other.callback_)) {}
+
+    auto operator=(CallTask&& other) noexcept -> CallTask& {
+        service_name_ = std::move(other.service_name_);
+        method_name_ = std::move(other.method_name_);
+        req_payload_ = std::move(other.req_payload_);
+        callback_ = std::move(other.callback_);
+        return *this;
+    }
+
+public:
+    std::string service_name_;
+    std::string method_name_;
+    std::string req_payload_;
+    RpcCallback callback_;
+};
 
 struct SocketAddrXXHash {
     std::size_t operator()(const kosio::net::SocketAddr& addr) const noexcept {

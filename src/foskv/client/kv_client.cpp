@@ -15,7 +15,7 @@ auto foskv::client::KVClient::connect(std::string_view host, uint16_t port)
         LOG_ERROR("Failed to connect to {}:{} : {}", host, port, has_consumer.error());
         co_return std::unexpected{make_client_error(ClientError::kConnectFailed)};
     }
-    co_return KVClient{std::move(has_consumer.value())};
+    // co_return KVClient{std::move(has_consumer.value())};
 }
 
 auto foskv::client::KVClient::shutdown() -> kosio::async::Task<> {
@@ -58,7 +58,7 @@ auto foskv::client::KVClient::Put(std::string &&key, std::string &&value) -> kos
                     co_return;
                 }
                 co_await shutdown();
-                consumer_ = std::move(has_consumer.value());
+                // consumer_ = std::move(has_consumer.value());
                 LOG_INFO("Redirect to {}:{}", host, port);
             } else {
                 co_return;
@@ -107,7 +107,7 @@ auto foskv::client::KVClient::Get(std::string &&key) -> kosio::async::Task<void>
                     co_return;
                 }
                 co_await shutdown();
-                consumer_ = std::move(has_consumer.value());
+                // consumer_ = std::move(has_consumer.value());
                 LOG_INFO("Redirect to {}:{}", host, port);
             } else {
                 co_return;
@@ -155,7 +155,7 @@ auto foskv::client::KVClient::Delete(std::string &&key) -> kosio::async::Task<vo
                     co_return;
                 }
                 co_await shutdown();
-                consumer_ = std::move(has_consumer.value());
+                // consumer_ = std::move(has_consumer.value());
                 LOG_INFO("Redirect to {}:{}", host, port);
             } else {
                 co_return;
