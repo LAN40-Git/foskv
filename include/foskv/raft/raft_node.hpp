@@ -15,7 +15,7 @@ public:
 
 public:
     [[REMEMBER_CO_AWAIT]]
-    static auto create(const std::filesystem::path& config_path, const std::filesystem::path& data_dir)
+    static auto create(std::filesystem::path config_path, std::filesystem::path data_dir)
     -> kosio::async::Task<RaftResult<RaftNode>>;
 
 public:

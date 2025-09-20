@@ -20,6 +20,7 @@ auto foskv::raft::detail::Persister::operator=(Persister &&other) noexcept -> Pe
 
 auto foskv::raft::detail::Persister::create(const std::filesystem::path& path)
 -> RaftResult<Persister> {
+    std::filesystem::create_directory(path.parent_path());
     rocksdb::Options options;
     options.create_if_missing = true;
     auto has_st = storage::Storage::Open(options, path);

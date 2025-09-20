@@ -26,7 +26,7 @@ foskv::raft::Config::Config(
     const kosio::net::SocketAddr &local_addr,
     std::unordered_map<uint64_t, detail::Peer>&& peers,
     kosio::fs::File&& tmp_file,
-    std::filesystem::path&& config_path,
+    const std::filesystem::path& config_path,
     nlohmann::json&& config_json)
     : cluster_id_(cluster_id)
     , local_member_id_(local_member_id)
@@ -34,7 +34,7 @@ foskv::raft::Config::Config(
     , local_addr_(local_addr)
     , peers_(std::move(peers))
     , tmp_file_(std::move(tmp_file))
-    , config_path_(std::move(config_path))
+    , config_path_(config_path)
     , config_json_(std::move(config_json)) {}
 
 foskv::raft::Config::Config(Config &&other) noexcept
@@ -196,7 +196,7 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
             has_node_addr.value(),
             std::move(peers),
             std::move(tmp_config_file),
-            static_cast<std::filesystem::path>(std::move(path)),
+            path,
             std::move(config_json)
         };
     } catch (const nlohmann::json::parse_error& e) {

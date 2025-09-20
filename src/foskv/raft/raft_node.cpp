@@ -76,8 +76,8 @@ auto foskv::raft::RaftNode::operator=(RaftNode &&other) noexcept -> RaftNode & {
 }
 
 auto foskv::raft::RaftNode::create(
-    const std::filesystem::path& config_path,
-    const std::filesystem::path& data_dir) -> kosio::async::Task<RaftResult<RaftNode>> {
+    std::filesystem::path config_path,
+    std::filesystem::path data_dir) -> kosio::async::Task<RaftResult<RaftNode>> {
     // Load config
     auto has_config = co_await Config::load(config_path);
     if (!has_config) [[unlikely]] {
@@ -213,10 +213,7 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
                     co_return;
                 }
 
-                auto cluster_id = response.header().cluster_id();
-                auto member_id = response.header().member_id();
                 auto resp_term = response.header().term();
-                auto success = response.success();
 
                 if (resp_term < current_term_.load(std::memory_order_acquire) ||
                     role_.load(std::memory_order_acquire) != kLeader) {

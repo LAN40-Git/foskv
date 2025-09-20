@@ -30,7 +30,7 @@ private:
         const kosio::net::SocketAddr& local_addr,
         std::unordered_map<uint64_t, detail::Peer>&& peers,
         kosio::fs::File&& tmp_file,
-        std::filesystem::path&& config_path,
+        const std::filesystem::path& config_path,
         nlohmann::json&& config_json);
 
 public:
