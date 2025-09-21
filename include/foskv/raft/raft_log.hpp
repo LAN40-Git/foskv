@@ -4,10 +4,7 @@
 namespace foskv::raft::detail {
 class RaftLog {
 private:
-    explicit RaftLog(uint64_t start_index, std::vector<LogEntry>&& entries, Persister&& persister)
-        : start_index_(start_index)
-        , entries_(std::move(entries))
-        , persister_(std::move(persister)) {}
+    explicit RaftLog(uint64_t first_index, std::vector<LogEntry>&& entries, Persister&& persister);
 
 public:
     RaftLog(const RaftLog&) = delete;
@@ -16,18 +13,20 @@ public:
     auto operator=(RaftLog&&) -> RaftLog& = default;
 
 public:
-    static auto create(std::string_view data_dir, uint64_t offset, uint64_t size) -> Result<RaftLog>;
+    static auto create(std::string_view data_dir) -> Result<RaftLog>;
 
 public:
     [[nodiscard]] auto last_log_index() const noexcept -> std::size_t;
     [[nodiscard]] auto last_log_term() const noexcept -> std::size_t;
-    [[nodiscard]] auto entry_at(std::size_t index) const noexcept -> LogEntry;
-
+    [[nodiscard]] auto prev_log_index() const noexcept -> std::size_t;
+    [[nodiscard]] auto prev_log_term() const noexcept -> std::size_t;
+    /// @return Return LogEntry whose index is index
+    [[nodiscard]] auto entry_at(std::size_t index) const noexcept -> Result<LogEntry>;
     void append(std::span<const LogEntry> entries);
-    void truncate(std::size_t from_index);
+    void truncate(std::size_t start_index, std::size_t end_index);
 
 private:
-    uint64_t              start_index_{1};
+    uint64_t              first_index_;
     std::vector<LogEntry> entries_;
     Persister             persister_;
 };

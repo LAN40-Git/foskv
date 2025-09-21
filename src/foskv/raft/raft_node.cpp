@@ -1,9 +1,12 @@
 #include "foskv/raft/raft_node.hpp"
 #include "kosio/common/util/random.hpp"
 
-foskv::raft::RaftNode::RaftNode(RaftConfig&& config, detail::Persister&& persister, detail::StateMachine&& state_machine)
-    : persister_(std::move(persister))
-    , state_machine_(std::move(state_machine))
+foskv::raft::RaftNode::RaftNode(
+    RaftConfig&& config,
+    detail::RaftLog logs,
+    detail::StateMachine&& state_machine)
+    : state_machine_(std::move(state_machine))
+    , logs_(std::move(logs))
     , transport_(std::move(config)) {
     // Register invokes
     using rpc::RaftService;
@@ -15,10 +18,6 @@ foskv::raft::RaftNode::RaftNode(RaftConfig&& config, detail::Persister&& persist
     transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::AppendEntries,
         [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_append_entries_request(req_payload, resp_payload);
-    });
-    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::InstallSnapshot,
-        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
-        co_return co_await this->handle_install_snapshot_request(req_payload, resp_payload);
     });
 }
 
@@ -47,7 +46,6 @@ auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_vie
     if (!has_state_machine) {
         co_return std::unexpected{has_state_machine.error()};
     }
-    co_return std::make_unique<RaftNode>(std::move(has_config.value()), std::move(has_persister.value()), std::move(has_state_machine.value()));
 }
 
 auto foskv::raft::RaftNode::run() -> kosio::async::Task<> {
@@ -158,7 +156,6 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
                 }
 
                 auto resp_term = response.header().term();
-
                 if (resp_term < current_term_.load(std::memory_order_acquire) ||
                     role_.load(std::memory_order_acquire) != kLeader) {
                     co_return;
@@ -209,10 +206,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     auto last_log_term = request.last_log_term();
 
     if (req_term < current_term_.load(std::memory_order_acquire)) {
-        RequestVoteResponse response;
-        auto header = produce_response_header();
-        response.set_allocated_header(&header);
-        response.set_vote_granted(false);
+        auto response = produce_request_vote_response(false);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_error(Error::kRequestVoteResponseSerializeFailed)};
@@ -226,10 +220,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     // Check again
     auto current_term = current_term_.load(std::memory_order_relaxed);
     if (req_term < current_term) {
-        RequestVoteResponse response;
-        auto header = produce_response_header();
-        response.set_allocated_header(&header);
-        response.set_vote_granted(false);
+        auto response = produce_request_vote_response(false);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
             co_return std::unexpected{make_error(Error::kRequestVoteResponseSerializeFailed)};
@@ -249,15 +240,13 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     // Whether the logs of candidate are up to date
     bool up_to_date_log = false;
 
-    if (last_log_index > logs_.size() ||
-        (last_log_index == logs_.size() && last_log_term == logs_[last_log_index].term())) {
+    if (last_log_index > logs_.last_log_index() ||
+        (last_log_index == logs_.last_log_index() &&
+            last_log_term == logs_.last_log_term())) {
         up_to_date_log = true;
     }
 
-    RequestVoteResponse response;
-    auto header = produce_response_header();
-    response.set_allocated_header(&header);
-    response.set_vote_granted(can_vote && up_to_date_log);
+    auto response = produce_request_vote_response(can_vote && up_to_date_log);
     resp_payload_size = response.ByteSizeLong();
     if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
         co_return std::unexpected{make_error(Error::kRequestVoteResponseSerializeFailed)};
@@ -269,7 +258,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
 -> kosio::async::Task<Result<std::size_t>> {
     AppendEntriesRequest request;
     if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
-        co_return std::unexpected{make_error(Error::kProtobufParseFailed)};
+        co_return std::unexpected{make_error(Error::kAppendEntriesRequestParseFailed)};
     }
 
     std::size_t resp_payload_size;
@@ -281,13 +270,10 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     auto leader_commit = request.leader_commit();
 
     if (req_term < current_term_.load(std::memory_order_relaxed)) {
-        AppendEntriesResponse response;
-        auto header = produce_response_header();
-        response.set_allocated_header(&header);
-        response.set_success(false);
+        auto response = produce_append_entries_response(false);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-            co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+            co_return std::unexpected{make_error(Error::kAppendEntriesResponseSerializeFailed)};
         }
         co_return resp_payload_size;
     }
@@ -298,13 +284,10 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     // Check again
     auto current_term = current_term_.load(std::memory_order_relaxed);
     if (req_term < current_term) {
-        AppendEntriesResponse response;
-        auto header = produce_response_header();
-        response.set_allocated_header(&header);
-        response.set_success(false);
+        auto response = produce_append_entries_response(false);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-            co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+            co_return std::unexpected{make_error(Error::kAppendEntriesResponseSerializeFailed)};
         }
         co_return resp_payload_size;
     }
@@ -317,7 +300,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     }
 
     leader_id_ = leader_id;
-    auto last_log_index = logs_.size();
+    auto last_log_index = logs_.last_log_index();
 
     // Heartbeat
     if (entries.empty()) {
@@ -325,26 +308,20 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         if (leader_commit > commit_index_) {
             commit_index_ = std::min(last_log_index, leader_commit);
         }
-        AppendEntriesResponse response;
-        auto header = produce_response_header();
-        response.set_allocated_header(&header);
-        response.set_success(true);
+        auto response = produce_append_entries_response(true);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-            co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+            co_return std::unexpected{make_error(Error::kAppendEntriesResponseSerializeFailed)};
         }
         co_return resp_payload_size;
     }
 
     if (prev_log_index > last_log_index) {
         // Our log is too old, return false
-        AppendEntriesResponse response;
-        auto header = produce_response_header();
-        response.set_allocated_header(&header);
-        response.set_success(false);
+        auto response = produce_append_entries_response(false);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-            co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+            co_return std::unexpected{make_error(Error::kAppendEntriesResponseSerializeFailed)};
         }
         co_return resp_payload_size;
     }
@@ -360,24 +337,12 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
         commit_index_ = std::min(last_log_index, leader_commit);
     }
 
-    AppendEntriesResponse response;
-    auto header = produce_response_header();
-    response.set_allocated_header(&header);
-    response.set_success(true);
+    auto response = produce_append_entries_response(true);
     resp_payload_size = response.ByteSizeLong();
     if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-        co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+        co_return std::unexpected{make_error(Error::kAppendEntriesResponseSerializeFailed)};
     }
     co_return resp_payload_size;
-}
-
-auto foskv::raft::RaftNode::handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
--> kosio::async::Task<Result<std::size_t>> {
-    InstallSnapshotRequest request;
-    if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
-        co_return std::unexpected{make_error(Error::kProtobufParseFailed)};
-    }
-
 }
 
 // auto foskv::raft::RaftNode::append_entries_callback(RaftNode *node, uint64_t prev_log_index, std::size_t entries_size,
@@ -452,6 +417,15 @@ auto foskv::raft::RaftNode::produce_request_vote_request() const noexcept -> Req
     return request;
 }
 
+auto foskv::raft::RaftNode::produce_request_vote_response(bool vote_granted)
+const noexcept -> RequestVoteResponse {
+    RequestVoteResponse response;
+    auto response_header = produce_response_header();
+    response.set_allocated_header(&response_header);
+    response.set_vote_granted(vote_granted);
+    return response;
+}
+
 auto foskv::raft::RaftNode::produce_append_entries_request()
 const noexcept -> AppendEntriesRequest {
     AppendEntriesRequest request;
@@ -463,4 +437,12 @@ const noexcept -> AppendEntriesRequest {
     request.set_prev_log_term(prev_log_term);
     request.set_leader_commit(commit_index_);
     return request;
+}
+
+auto foskv::raft::RaftNode::produce_append_entries_response(bool success) const noexcept -> AppendEntriesResponse {
+    AppendEntriesResponse response;
+    auto response_header = produce_response_header();
+    response.set_allocated_header(&response_header);
+    response.set_success(success);
+    return response;
 }

@@ -1673,7 +1673,6 @@ class PersistState final :
   enum : int {
     kCurrentTermFieldNumber = 1,
     kVotedForFieldNumber = 2,
-    kCommitIndexFieldNumber = 3,
   };
   // uint64 current_term = 1;
   void clear_current_term();
@@ -1697,15 +1696,6 @@ class PersistState final :
   void _internal_set_voted_for(uint64_t value);
   public:
 
-  // uint64 commit_index = 3;
-  void clear_commit_index();
-  uint64_t commit_index() const;
-  void set_commit_index(uint64_t value);
-  private:
-  uint64_t _internal_commit_index() const;
-  void _internal_set_commit_index(uint64_t value);
-  public:
-
   // @@protoc_insertion_point(class_scope:foskv.raft.PersistState)
  private:
   class _Internal;
@@ -1718,7 +1708,6 @@ class PersistState final :
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     uint64_t current_term_;
     uint64_t voted_for_;
-    uint64_t commit_index_;
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_raft_2eproto;
@@ -2012,26 +2001,11 @@ class InternalRaftRequest final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kAddrFieldNumber = 2,
     kRequestIdFieldNumber = 1,
     kPutFieldNumber = 3,
     kGetFieldNumber = 4,
     kDeleteFieldNumber = 5,
   };
-  // string addr = 2;
-  void clear_addr();
-  const std::string& addr() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_addr(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_addr();
-  PROTOBUF_NODISCARD std::string* release_addr();
-  void set_allocated_addr(std::string* addr);
-  private:
-  const std::string& _internal_addr() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_addr(const std::string& value);
-  std::string* _internal_mutable_addr();
-  public:
-
   // uint64 request_id = 1;
   void clear_request_id();
   uint64_t request_id() const;
@@ -2111,7 +2085,6 @@ class InternalRaftRequest final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr addr_;
     uint64_t request_id_;
     union TypeUnion {
       constexpr TypeUnion() : _constinit_{} {}
@@ -3068,26 +3041,6 @@ inline void PersistState::set_voted_for(uint64_t value) {
   // @@protoc_insertion_point(field_set:foskv.raft.PersistState.voted_for)
 }
 
-// uint64 commit_index = 3;
-inline void PersistState::clear_commit_index() {
-  _impl_.commit_index_ = uint64_t{0u};
-}
-inline uint64_t PersistState::_internal_commit_index() const {
-  return _impl_.commit_index_;
-}
-inline uint64_t PersistState::commit_index() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.PersistState.commit_index)
-  return _internal_commit_index();
-}
-inline void PersistState::_internal_set_commit_index(uint64_t value) {
-  
-  _impl_.commit_index_ = value;
-}
-inline void PersistState::set_commit_index(uint64_t value) {
-  _internal_set_commit_index(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.PersistState.commit_index)
-}
-
 // -------------------------------------------------------------------
 
 // SnapshotMetadata
@@ -3154,56 +3107,6 @@ inline void InternalRaftRequest::_internal_set_request_id(uint64_t value) {
 inline void InternalRaftRequest::set_request_id(uint64_t value) {
   _internal_set_request_id(value);
   // @@protoc_insertion_point(field_set:foskv.raft.InternalRaftRequest.request_id)
-}
-
-// string addr = 2;
-inline void InternalRaftRequest::clear_addr() {
-  _impl_.addr_.ClearToEmpty();
-}
-inline const std::string& InternalRaftRequest::addr() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.addr)
-  return _internal_addr();
-}
-template <typename ArgT0, typename... ArgT>
-inline PROTOBUF_ALWAYS_INLINE
-void InternalRaftRequest::set_addr(ArgT0&& arg0, ArgT... args) {
- 
- _impl_.addr_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:foskv.raft.InternalRaftRequest.addr)
-}
-inline std::string* InternalRaftRequest::mutable_addr() {
-  std::string* _s = _internal_mutable_addr();
-  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.addr)
-  return _s;
-}
-inline const std::string& InternalRaftRequest::_internal_addr() const {
-  return _impl_.addr_.Get();
-}
-inline void InternalRaftRequest::_internal_set_addr(const std::string& value) {
-  
-  _impl_.addr_.Set(value, GetArenaForAllocation());
-}
-inline std::string* InternalRaftRequest::_internal_mutable_addr() {
-  
-  return _impl_.addr_.Mutable(GetArenaForAllocation());
-}
-inline std::string* InternalRaftRequest::release_addr() {
-  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.addr)
-  return _impl_.addr_.Release();
-}
-inline void InternalRaftRequest::set_allocated_addr(std::string* addr) {
-  if (addr != nullptr) {
-    
-  } else {
-    
-  }
-  _impl_.addr_.SetAllocated(addr, GetArenaForAllocation());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.addr_.IsDefault()) {
-    _impl_.addr_.Set("", GetArenaForAllocation());
-  }
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:foskv.raft.InternalRaftRequest.addr)
 }
 
 // .foskv.kv.PutRequest put = 3;

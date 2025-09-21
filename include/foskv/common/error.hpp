@@ -15,8 +15,14 @@ public:
         kInvalidPeerAddress,
         kInvalidLocalAddress,
         kInvalidDataDirectory,
-        kMetadataRecoverFailed,
+        kInvalidLogIndex,
+        kPersistStateGetFailed,
+        kFirstLogIndexPutFailed,
+        kLastLogIndexPutFailed,
+        kLogIndexToUllFailed,
         kLogEntriesRecoverFailed,
+        kPersistStateParseFailed,
+        kPersistStateSerializeFailed,
         kLogEntryParseFailed,
         kLogEntrySerializeFailed,
         kRequestVoteRequestRequestParseFailed,
@@ -66,10 +72,22 @@ public:
                 return "Invalid local address.";
             case kInvalidDataDirectory:
                 return "Invalid data directory.";
-            case kMetadataRecoverFailed:
-                return "Metadata recover failed.";
+            case kInvalidLogIndex:
+                return "Invalid first or last log index.";
+            case kPersistStateGetFailed:
+                return "Persist state get failed.";
+            case kFirstLogIndexPutFailed:
+                return "First log index put failed.";
+            case kLastLogIndexPutFailed:
+                return "Last log index put failed.";
+            case kLogIndexToUllFailed:
+                return "Log index to ull failed.";
             case kLogEntriesRecoverFailed:
                 return "Log entries recover failed.";
+            case kPersistStateParseFailed:
+                return "Persist state parse failed.";
+            case kPersistStateSerializeFailed:
+                return "Persist state serialize failed.";
             case kLogEntryParseFailed:
                 return "Log entry parse failed.";
             case kLogEntrySerializeFailed:
