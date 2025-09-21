@@ -11,6 +11,38 @@ foskv::raft::RaftNode::RaftNode(Config&& config, detail::Persister&& persister, 
     state.has_voted_for() ? voted_for_ = state.voted_for() : voted_for_ = std::nullopt;
     commit_index_ = state.commit_index();
     logs_ = persister_.load_entries();
+
+}
+
+auto foskv::raft::RaftNode::create(
+    std::filesystem::path config_path,
+    std::filesystem::path data_dir) -> kosio::async::Task<RaftResult<RaftNode>> {
+    // Load config
+    auto has_config = co_await Config::load(config_path);
+    if (!has_config) [[unlikely]] {
+        LOG_ERROR("Failed to load config file");
+        co_return std::unexpected{has_config.error()};
+    }
+
+    // Create persister and load persistent
+    auto has_persister = detail::Persister::create(data_dir / detail::PERSISTENT_PATH);
+    if (!has_persister) [[unlikely]] {
+        LOG_ERROR("Failed to load persistent data directory");
+        co_return std::unexpected{has_persister.error()};
+    }
+
+    // Create state machine
+    auto has_state_machine = detail::StateMachine::create(data_dir / detail::USER_DATA_PATH);
+    if (!has_state_machine) {
+        LOG_ERROR("Failed to load state machine data directory");
+        co_return std::unexpected{has_state_machine.error()};
+    }
+    co_return RaftNode{std::move(has_config.value()), std::move(has_persister.value()), std::move(has_state_machine.value())};
+}
+
+foskv::raft::RaftNode::RaftNode(std::string_view config_path, std::string_view data_dir)
+    : config_path_(config_path)
+    , data_dir_(data_dir) {
     using rpc::RaftService;
     using rpc::KVService;
     // Register invokes
@@ -40,75 +72,15 @@ foskv::raft::RaftNode::RaftNode(Config&& config, detail::Persister&& persister, 
     });
 }
 
-foskv::raft::RaftNode::RaftNode(RaftNode &&other) noexcept
-    : is_shutdown_(other.is_shutdown_.load(std::memory_order_relaxed))
-    , persister_(std::move(other.persister_))
-    , transport_(std::move(other.transport_))
-    , state_machine_(std::move(other.state_machine_))
-    , last_reset_time_(other.last_reset_time_.load(std::memory_order_relaxed))
-    , role_(other.role_.load(std::memory_order_relaxed))
-    , current_term_(other.current_term_.load(std::memory_order_relaxed))
-    , voted_for_(other.voted_for_)
-    , logs_(std::move(other.logs_))
-    , commit_index_(other.commit_index_)
-    , last_applied_(other.last_applied_)
-    , leader_id_(other.leader_id_)
-    , next_index_(std::move(other.next_index_))
-    , match_index_(std::move(other.match_index_)) {
-}
+auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_view data_dir)
+-> kosio::async::Task<RaftResult<std::unique_ptr<RaftNode>>> {
 
-auto foskv::raft::RaftNode::operator=(RaftNode &&other) noexcept -> RaftNode & {
-    is_shutdown_ = other.is_shutdown_.load(std::memory_order_relaxed);
-    persister_ = std::move(other.persister_);
-    transport_ = std::move(other.transport_);
-    last_reset_time_ = other.last_reset_time_.load(std::memory_order_relaxed);
-    state_machine_ = std::move(other.state_machine_);
-    role_ = other.role_.load(std::memory_order_relaxed);
-    current_term_ = other.current_term_.load(std::memory_order_relaxed);
-    voted_for_ = other.voted_for_;
-    logs_ = std::move(other.logs_);
-    commit_index_ = other.commit_index_;
-    last_applied_ = other.last_applied_;
-    leader_id_ = other.leader_id_;
-    next_index_ = std::move(other.next_index_);
-    match_index_ = std::move(other.match_index_);
-    return *this;
-}
-
-auto foskv::raft::RaftNode::create(
-    std::filesystem::path config_path,
-    std::filesystem::path data_dir) -> kosio::async::Task<RaftResult<RaftNode>> {
-    // Load config
-    auto has_config = co_await Config::load(config_path);
-    if (!has_config) [[unlikely]] {
-        LOG_ERROR("Failed to load config file");
-        co_return std::unexpected{has_config.error()};
-    }
-
-    // Create persister and load persistent
-    auto has_persister = detail::Persister::create(data_dir / detail::PERSISTENT_PATH);
-    if (!has_persister) [[unlikely]] {
-        LOG_ERROR("Failed to load persistent data directory");
-        co_return std::unexpected{has_persister.error()};
-    }
-
-    // Create state machine
-    auto has_state_machine = detail::StateMachine::create(data_dir / detail::USER_DATA_PATH);
-    if (!has_state_machine) {
-        LOG_ERROR("Failed to load state machine data directory");
-        co_return std::unexpected{has_state_machine.error()};
-    }
-    co_return RaftNode{std::move(has_config.value()), std::move(has_persister.value()), std::move(has_state_machine.value())};
 }
 
 auto foskv::raft::RaftNode::run() -> kosio::async::Task<> {
     kosio::spawn(start_election_timeout());
     kosio::spawn(start_heartbeat_timeout());
-    try {
-        co_await transport_.run();
-    } catch (...) {
-        throw;
-    }
+    co_await transport_.run();
 }
 
 auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {

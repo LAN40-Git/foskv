@@ -48,8 +48,8 @@ auto foskv::RaftError::error_message() const noexcept -> std::string_view {
     switch (static_cast<Code>(error_code_)) {
         case kUnknown:
             return "Unknown raft error.";
-        case kConfigFileOpenFailed:
-            return "Failed to open raft configuration file.";
+        case kTempConfigFileOpenFailed:
+            return "Failed to open temp config file.";
         case kConfigFileWriteFailed:
             return "Failed to write raft configuration file.";
         case kConfigFileReadFailed:

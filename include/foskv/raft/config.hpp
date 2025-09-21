@@ -18,19 +18,21 @@ struct NodeInfo {
     uint16_t    port;
 
     auto operator==(const NodeInfo& other) const noexcept -> bool;
+    [[nodiscard]]
     auto hash() const noexcept -> uint64_t;
 };
 
 class Config {
+    using PeerPtr = std::unique_ptr<detail::Peer>;
 private:
     explicit Config(
         uint64_t cluster_id,
-        uint64_t local_member_id,
-        std::string&& local_name,
-        const kosio::net::SocketAddr& local_addr,
-        std::unordered_map<uint64_t, detail::Peer>&& peers,
+        uint64_t member_id,
+        std::string&& name,
+        const kosio::net::SocketAddr& addr,
+        std::unordered_map<uint64_t, PeerPtr>&& peers,
         kosio::fs::File&& tmp_file,
-        const std::filesystem::path& config_path,
+        std::string_view config_path,
         nlohmann::json&& config_json);
 
 public:
@@ -42,11 +44,11 @@ public:
     static auto save(
         const std::filesystem::path& path,
         uint64_t cluster_id,
-        std::string_view local_name,
+        std::string_view name,
         const std::unordered_set<NodeInfo>& node_infos) -> kosio::async::Task<RaftResult<void>>;
 
     [[REMEMBER_CO_AWAIT]]
-    static auto load(const std::filesystem::path& path) -> kosio::async::Task<RaftResult<Config>>;
+    static auto load(std::string_view path) -> kosio::async::Task<RaftResult<Config>>;
 
 public:
     auto add_peer(uint64_t member_id, std::string_view name,
@@ -57,14 +59,14 @@ private:
     auto save() -> kosio::async::Task<RaftResult<void>>;
 
 public:
-    uint64_t                                   cluster_id_;
-    uint64_t                                   local_member_id_;
-    std::string                                local_name_;
-    kosio::net::SocketAddr                     local_addr_;
-    std::unordered_map<uint64_t, detail::Peer> peers_;
-    kosio::fs::File                            tmp_file_;
-    std::filesystem::path                      config_path_;
-    nlohmann::json                             config_json_;
+    uint64_t                              cluster_id_;
+    uint64_t                              member_id_;
+    std::string                           name_;
+    kosio::net::SocketAddr                addr_;
+    std::unordered_map<uint64_t, PeerPtr> peers_;
+    kosio::fs::File                       tmp_file_;
+    std::filesystem::path                 config_path_;
+    nlohmann::json                        config_json_;
 };
 } // namespace foskv::raft
 

@@ -89,7 +89,7 @@ class RaftError : public detail::BaseError<RaftError> {
 public:
     enum Code {
         kUnknown = detail::RaftErrorCodeBase,
-        kConfigFileOpenFailed,
+        kTempConfigFileOpenFailed,
         kConfigFileWriteFailed,
         kConfigFileReadFailed,
         kConfigFileRenameFailed,

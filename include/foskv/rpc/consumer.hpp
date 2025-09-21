@@ -11,6 +11,14 @@ public:
         : server_addr_(server_addr) {}
     ~RpcConsumer() { assert(is_shutdown_.load(std::memory_order_acquire)); }
 
+    // Delete copy
+    RpcConsumer(const RpcConsumer&) = delete;
+    auto operator=(const RpcConsumer&) -> RpcConsumer& = delete;
+
+    // Delete move
+    RpcConsumer(RpcConsumer&&) = delete;
+    auto operator=(RpcConsumer&&) -> RpcConsumer& = delete;
+
 public:
     /// @brief Call a rpc invoke
     /// @param service_name The invoke service name
@@ -36,6 +44,8 @@ public:
               std::string&& req_payload,
               detail::RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>>;
 
+    /// @brief Shutdown the consumer and never use it again
+    /// @note Never forget to call this method
     [[REMEMBER_CO_AWAIT]]
     auto shutdown() -> kosio::async::Task<>;
 

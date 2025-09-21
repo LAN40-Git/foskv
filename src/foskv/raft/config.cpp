@@ -21,17 +21,17 @@ auto foskv::raft::NodeInfo::hash() const noexcept -> uint64_t {
 
 foskv::raft::Config::Config(
     const uint64_t cluster_id,
-    const uint64_t local_member_id,
-    std::string&& local_name,
-    const kosio::net::SocketAddr &local_addr,
-    std::unordered_map<uint64_t, detail::Peer>&& peers,
+    const uint64_t member_id,
+    std::string&& name,
+    const kosio::net::SocketAddr &addr,
+    std::unordered_map<uint64_t, PeerPtr>&& peers,
     kosio::fs::File&& tmp_file,
-    const std::filesystem::path& config_path,
+    std::string_view config_path,
     nlohmann::json&& config_json)
     : cluster_id_(cluster_id)
-    , local_member_id_(local_member_id)
-    , local_name_(local_name)
-    , local_addr_(local_addr)
+    , member_id_(member_id)
+    , name_(name)
+    , addr_(addr)
     , peers_(std::move(peers))
     , tmp_file_(std::move(tmp_file))
     , config_path_(config_path)
@@ -39,9 +39,9 @@ foskv::raft::Config::Config(
 
 foskv::raft::Config::Config(Config &&other) noexcept
     : cluster_id_(other.cluster_id_)
-    , local_member_id_(other.local_member_id_)
-    , local_name_(std::move(other.local_name_))
-    , local_addr_(other.local_addr_)
+    , member_id_(other.member_id_)
+    , name_(std::move(other.name_))
+    , addr_(other.addr_)
     , peers_(std::move(other.peers_))
     , tmp_file_(std::move(other.tmp_file_))
     , config_path_(std::move(other.config_path_))
@@ -49,9 +49,9 @@ foskv::raft::Config::Config(Config &&other) noexcept
 
 auto foskv::raft::Config::operator=(Config &&other) noexcept -> Config & {
     cluster_id_ = other.cluster_id_;
-    local_member_id_ = other.local_member_id_;
-    local_name_ = std::move(other.local_name_);
-    local_addr_ = other.local_addr_;
+    member_id_ = other.member_id_;
+    name_ = std::move(other.name_);
+    addr_ = other.addr_;
     peers_ = std::move(other.peers_);
     tmp_file_ = std::move(other.tmp_file_);
     config_path_ = std::move(other.config_path_);
@@ -62,7 +62,7 @@ auto foskv::raft::Config::operator=(Config &&other) noexcept -> Config & {
 auto foskv::raft::Config::save(
     const std::filesystem::path& path,
     uint64_t cluster_id,
-    std::string_view local_name,
+    std::string_view name,
     const std::unordered_set<NodeInfo>& node_infos) -> kosio::async::Task<RaftResult<void>> {
     std::filesystem::create_directories(path.parent_path());
 
@@ -75,9 +75,8 @@ auto foskv::raft::Config::save(
         .open(path.string());
     if (!has_config_file) {
         LOG_ERROR("Failed to open config file {} : {}", path.string(), has_config_file.error());
-        co_return std::unexpected{make_raft_error(RaftError::kConfigFileOpenFailed)};
+        co_return std::unexpected{make_raft_error(RaftError::kTempConfigFileOpenFailed)};
     }
-
     auto config_file = std::move(has_config_file.value());
 
     nlohmann::json config_json;
@@ -95,7 +94,7 @@ auto foskv::raft::Config::save(
 
         // Generate member_id
         auto member_id = node_info.hash();
-        if (node_info.name == local_name) {
+        if (node_info.name == name) {
             local_member_id = member_id;
             local_host = node_info.host;
             local_port = node_info.port;
@@ -115,7 +114,7 @@ auto foskv::raft::Config::save(
 
     config_json["cluster_id"] = cluster_id;
     config_json["member_id"] = local_member_id.value();
-    config_json["name"] = local_name;
+    config_json["name"] = name;
     config_json["host"] = local_host.value();
     config_json["port"] = local_port.value();
     config_json["nodes"] = nodes_json;
@@ -128,22 +127,22 @@ auto foskv::raft::Config::save(
     if (auto ret = co_await config_file.write_all(config_payload); !ret) {
         co_return std::unexpected{make_raft_error(RaftError::kConfigFileWriteFailed)};
     }
-    LOG_INFO("{}", config_payload);
     co_return RaftResult<void>{};
 }
 
-auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::async::Task<RaftResult<Config>> {
-    std::ifstream config_stream(path);
+auto foskv::raft::Config::load(std::string_view path)
+-> kosio::async::Task<RaftResult<Config>> {
+    std::filesystem::path config_file_path(path);
+    std::ifstream config_stream(config_file_path);
 
     if (!config_stream) {
-        LOG_VERBOSE("Failed to open config file {} : {}", path.string(), strerror(errno));
-        co_return std::unexpected{make_raft_error(RaftError::kConfigFileOpenFailed)};
+        co_return std::unexpected{make_raft_error(errno)};
     }
 
     try {
         auto config_json = nlohmann::json::parse(config_stream);
         config_stream.close();
-        auto tmp_file_path = path.parent_path() / "tmp.json";
+        auto tmp_file_path = config_file_path.parent_path() / "tmp.json";
         auto has_tmp_config_file = co_await kosio::fs::File::options()
             .create(true)
             .read(true)
@@ -152,8 +151,7 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
             .permission(0600)
             .open(tmp_file_path.string());
         if (!has_tmp_config_file) {
-            LOG_VERBOSE("Failed to open temp raft config file {} : {}", tmp_file_path.string(), strerror(errno));
-            co_return std::unexpected{make_raft_error(RaftError::kConfigFileOpenFailed)};
+            co_return std::unexpected{make_raft_error(errno)};
         }
         auto tmp_config_file = std::move(has_tmp_config_file.value());
 
@@ -167,7 +165,7 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
             co_return std::unexpected{make_raft_error(RaftError::kInvalidLocalAddress)};
         }
 
-        std::unordered_map<uint64_t, detail::Peer> peers;
+        std::unordered_map<uint64_t, PeerPtr> peers;
         const auto& nodes_json = config_json["nodes"];
         for (const auto& node_json : nodes_json) {
             NodeInfo node_info;
@@ -181,11 +179,11 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
                 co_return std::unexpected{make_raft_error(RaftError::kRepeatedPeer)};
             }
 
-            auto has_peer = co_await detail::Peer::create(member_id, node_info.name, node_info.host, node_info.port);
-            if (!has_peer) {
-                co_return std::unexpected{has_peer.error()};
+            auto has_addr = kosio::net::SocketAddr::parse(node_info.host, node_info.port);
+            if (!has_addr) {
+                co_return std::unexpected{make_raft_error(RaftError::kInvalidPeerAddress)};
             }
-            peers.emplace(member_id, std::move(has_peer.value()));
+            peers.emplace(member_id, std::make_unique<detail::Peer>(member_id, node_info.name, has_addr.value()));
         }
 
         co_return Config{
@@ -210,10 +208,11 @@ auto foskv::raft::Config::load(const std::filesystem::path& path) -> kosio::asyn
 auto foskv::raft::Config::add_peer(uint64_t member_id, std::string_view name,
         std::string_view host, uint16_t port) -> kosio::async::Task<RaftResult<void>> {
     // Hold raft node's mutex
-    auto has_peer = co_await detail::Peer::create(member_id, name, host, port);
-    if (!has_peer) [[unlikely]] {
-        co_return std::unexpected{has_peer.error()};
+    auto has_addr = kosio::net::SocketAddr::parse(host, port);
+    if (!has_addr) {
+        co_return std::unexpected{make_raft_error(RaftError::kInvalidPeerAddress)};
     }
+    peers_.emplace(member_id, std::make_unique<detail::Peer>(member_id, name, has_addr.value()));
 
     auto& nodes_json = config_json_["nodes"];
     nlohmann::json node_entry;

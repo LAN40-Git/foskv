@@ -4,6 +4,8 @@
 
 namespace foskv::raft::detail {
 class Peer {
+    using RpcCallback = rpc::detail::RpcCallback;
+    friend class Transport;
 public:
     explicit Peer(uint64_t member_id, std::string_view name, const kosio::net::SocketAddr& server_addr);
 
@@ -13,9 +15,12 @@ public:
 
 public:
     // raft rpc
-    auto request_vote(std::string_view req_payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto append_entries(std::string_view req_payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
-    auto install_snapshot(std::string_view req_payload, rpc::RpcCallback&& callback) -> kosio::async::Task<>;
+    auto request_vote(std::string_view req_payload, RpcCallback&& callback) -> kosio::async::Task<>;
+    auto append_entries(std::string_view req_payload, RpcCallback&& callback) -> kosio::async::Task<>;
+    auto install_snapshot(std::string_view req_payload, RpcCallback&& callback) -> kosio::async::Task<>;
+    auto request_vote(std::string&& req_payload, RpcCallback&& callback) -> kosio::async::Task<>;
+    auto append_entries(std::string&& req_payload, RpcCallback&& callback) -> kosio::async::Task<>;
+    auto install_snapshot(std::string&& req_payload, RpcCallback&& callback) -> kosio::async::Task<>;
 
 private:
     uint64_t               member_id_;
