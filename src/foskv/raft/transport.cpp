@@ -4,7 +4,7 @@
 
 foskv::raft::detail::Transport::Transport(Config&& config)
     : config_(std::move(config))
-    , provider_(config_.local_addr_) {}
+    , provider_(config_.addr_) {}
 
 auto foskv::raft::detail::Transport::run() -> kosio::async::Task<kosio::Result<void>> {
     co_return co_await provider_.run();

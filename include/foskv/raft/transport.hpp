@@ -21,13 +21,19 @@ public:
     auto operator=(Transport &&other) -> Transport & = delete;
 
 public:
+    [[nodiscard]]
     auto cluster_id() const noexcept -> uint64_t { return config_.cluster_id_; }
-    auto member_id() const noexcept -> uint64_t { return config_.local_member_id_; }
-    auto name() const noexcept -> std::string { return config_.local_name_; }
+    [[nodiscard]]
+    auto member_id() const noexcept -> uint64_t { return config_.member_id_; }
+    [[nodiscard]]
+    auto name() const noexcept -> std::string { return config_.name_; }
+    [[nodiscard]]
     auto peer_count() const noexcept -> std::size_t { return config_.peers_.size(); }
 
 public:
     auto run() -> kosio::async::Task<kosio::Result<void>>;
+
+public:
     auto broadcast_request_vote_request(RequestVoteRequest&& request, Peer::RpcCallback&& callback) -> kosio::async::Task<>;
     auto broadcast_append_entries_request(AppendEntriesRequest&& request, Peer::RpcCallback&& callback) -> kosio::async::Task<>;
     auto broadcast_install_snapshot_request(InstallSnapshotRequest&& request, Peer::RpcCallback&& callback) -> kosio::async::Task<>;

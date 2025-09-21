@@ -18,60 +18,60 @@ auto foskv::raft::detail::Persister::operator=(Persister &&other) noexcept -> Pe
     return *this;
 }
 
-auto foskv::raft::detail::Persister::create(const std::filesystem::path& path)
--> RaftResult<Persister> {
-    std::filesystem::create_directory(path.parent_path());
+auto foskv::raft::detail::Persister::create(std::string_view data_dir)
+-> Result<Persister> {
     rocksdb::Options options;
     options.create_if_missing = true;
+    std::filesystem::path path(data_dir);
+    path = path / PERSISTENT_PATH;
     auto has_st = storage::Storage::Open(options, path);
     if (!has_st) [[unlikely]] {
-        LOG_ERROR("{}", has_st.error());
-        return std::unexpected{make_raft_error(RaftError::kPersisterCreateFailed)};
+        return std::unexpected{has_st.error()};
     }
     return Persister{std::move(has_st.value())};
 }
 
-auto foskv::raft::detail::Persister::persist_entry(const rocksdb::Slice &index_slice,
-    const rocksdb::Slice &entry_payload_slice) const -> RaftResult<void> {
+auto foskv::raft::detail::Persister::persist_log_entry(const rocksdb::Slice &index_slice,
+    const rocksdb::Slice &entry_payload_slice) const -> Result<void> {
     auto status = st_.Put(index_slice, entry_payload_slice);
     if (!status.ok()) [[unlikely]] {
-        LOG_ERROR("Failed to persist entry at {} : {}", index_slice.ToString(), status.ToString());
-        return std::unexpected{make_raft_error(RaftError::kPersistentSaveFailed)};
+        LOG_ERROR("{}", status.ToString());
+        return std::unexpected{make_error(Error::kLogEntryPersistFailed)};
     }
-    return RaftResult<void>{};
+    return Result<void>{};
 }
 
-auto foskv::raft::detail::Persister::persist_entries(
-    const std::unordered_map<uint64_t, rocksdb::Slice> &entries) const -> RaftResult<void> {
+auto foskv::raft::detail::Persister::persist_log_entries(
+    const std::unordered_map<uint64_t, rocksdb::Slice> &entries) const -> Result<void> {
     rocksdb::WriteBatch write_batch;
     for (auto& entry : entries) {
         write_batch.Put(std::to_string(entry.first), entry.second);
     }
     auto status = st_.BatchWrite(write_batch);
     if (!status.ok()) [[unlikely]] {
-        LOG_ERROR("Failed to persist entries : {}", status.ToString());
-        return std::unexpected{make_raft_error(RaftError::kPersistentSaveFailed)};
+        LOG_ERROR("{}", status.ToString());
+        return std::unexpected{make_error(Error::kLogEntryPersistFailed)};
     }
-    return RaftResult<void>{};
+    return Result<void>{};
 }
 
 auto foskv::raft::detail::Persister::persist_state(
-    const rocksdb::Slice& state_payload) const -> RaftResult<void> {
+    const rocksdb::Slice& state_payload) const -> Result<void> {
     auto status = st_.Put(PERSISTENT_KEY, state_payload);
     if (!status.ok()) [[unlikely]] {
-        LOG_ERROR("Failed to persist state : {}", status.ToString());
-        return std::unexpected{make_raft_error(RaftError::kPersistentSaveFailed)};
+        LOG_ERROR("{}", status.ToString());
+        return std::unexpected{make_error(Error::kStatePersistFailed)};
     }
-    return RaftResult<void>{};
+    return Result<void>{};
 }
 
-auto foskv::raft::detail::Persister::persist_state(PersistState &&state) const -> RaftResult<void> {
+auto foskv::raft::detail::Persister::persist_state(PersistState &&state) const -> Result<void> {
     auto status = st_.Put(PERSISTENT_KEY, state.SerializeAsString());
     if (!status.ok()) [[unlikely]] {
         LOG_ERROR("Failed to persist state : {}", status.ToString());
-        return std::unexpected{make_raft_error(RaftError::kPersistentSaveFailed)};
+        return std::unexpected{make_error(Error::kStatePersistFailed)};
     }
-    return RaftResult<void>{};
+    return Result<void>{};
 }
 
 auto foskv::raft::detail::Persister::load_state() const -> PersistState {

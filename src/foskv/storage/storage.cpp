@@ -1,4 +1,5 @@
 #include "foskv/storage/storage.hpp"
+#include <kosio/common/debug.hpp>
 
 foskv::storage::Storage::Storage(rocksdb::DB *db)
     : db_(db) {}
@@ -19,12 +20,13 @@ auto foskv::storage::Storage::operator=(Storage &&other) noexcept -> Storage & {
 }
 
 auto foskv::storage::Storage::Open(const rocksdb::Options &options, const std::filesystem::path& db_path)
--> StorageResult<Storage> {
+-> Result<Storage> {
     rocksdb::DB* db = nullptr;
     rocksdb::Status status = rocksdb::DB::Open(options, db_path, &db);
 
     if (!status.ok()) {
-        return std::unexpected{make_storage_error(StorageError::kDBOpenFailed)};
+        LOG_ERROR("{}", status.ToString());
+        return std::unexpected{make_error(Error::kRocksDBFileOpenFailed)};
     }
 
     return Storage{db};

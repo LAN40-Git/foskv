@@ -1,34 +1,54 @@
 #include "foskv/rpc/consumer.hpp"
 
+auto foskv::rpc::RpcConsumer::create(std::string_view host, uint16_t port)
+-> kosio::async::Task<Result<std::unique_ptr<RpcConsumer>>> {
+    auto has_addr = kosio::net::SocketAddr::parse(host, port);
+    if (!has_addr) {
+        co_return std::unexpected{make_error(Error::kInvalidRpcServerAddress)};
+    }
+    auto consumer = std::make_unique<RpcConsumer>(has_addr.value());
+    auto has_connect = co_await consumer->connect();
+    if (!has_connect) {
+        co_return std::unexpected{has_connect.error()};
+    }
+    co_return std::move(consumer);
+}
+
 auto foskv::rpc::RpcConsumer::call(
     std::string_view service_name,
     std::string_view method_name,
     std::string_view req_payload,
-    detail::RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>> {
+    detail::RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
     detail::CallTask task{
         std::string{service_name},
         std::string{method_name},
         std::string{req_payload},
         std::move(callback)};
     co_await tasks_.push(std::move(task));
+
+    // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) == -1) {
         co_return co_await this->connect();
     }
-    co_return RpcResult<void>{};
+
+    co_return Result<void>{};
 }
 
 auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&method_name, std::string &&req_payload,
-    detail::RpcCallback &&callback) -> kosio::async::Task<RpcResult<void>> {
+    detail::RpcCallback &&callback) -> kosio::async::Task<Result<void>> {
     detail::CallTask task{
         std::move(service_name),
         std::move(method_name),
         std::move(req_payload),
         std::move(callback)};
     co_await tasks_.push(std::move(task));
+
+    // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) == -1) {
         co_return co_await this->connect();
     }
-    co_return RpcResult<void>{};
+
+    co_return Result<void>{};
 }
 
 auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
@@ -54,18 +74,21 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
     co_await latch_.wait();
 }
 
-auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<RpcResult<void>> {
+auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
     auto has_stream = co_await kosio::net::TcpStream::connect(server_addr_);
     if (!has_stream) {
-        co_return std::unexpected{make_rpc_error(RpcError::kConnectFailed)};
+        LOG_ERROR("{}", has_stream.error());
+        co_return std::unexpected{make_error(Error::kConnectRpcServerFailed)};
     }
+
     // Start produce and consume
+    fd_.store(has_stream.value().fd(), std::memory_order_release);
     auto [reader, writer] = has_stream.value().into_split();
     is_producing_.store(true, std::memory_order_release);
     is_consuming_.store(true, std::memory_order_release);
     kosio::spawn(produce_callbacks(std::move(writer)));
     kosio::spawn(consume_callbacks(std::move(reader)));
-    co_return RpcResult<void>{};
+    co_return Result<void>{};
 }
 
 auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter writer) -> kosio::async::Task<> {

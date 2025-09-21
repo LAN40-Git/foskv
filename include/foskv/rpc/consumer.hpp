@@ -2,13 +2,14 @@
 #include "foskv/rpc/util.hpp"
 
 namespace foskv::rpc {
-// One RpcConsumer will approximately cost 8MB
-// Remember to co_await shutdown(), otherwise,
-// there is a risk of the program crashing
+// A running RpcConsumer takes up about 8MB of memory,
+// remember to co_await shutdown(), otherwise the program may crash
 class RpcConsumer {
 public:
     explicit RpcConsumer(const kosio::net::SocketAddr& server_addr)
         : server_addr_(server_addr) {}
+
+public:
     ~RpcConsumer() { assert(is_shutdown_.load(std::memory_order_acquire)); }
 
     // Delete copy
@@ -18,6 +19,10 @@ public:
     // Delete move
     RpcConsumer(RpcConsumer&&) = delete;
     auto operator=(RpcConsumer&&) -> RpcConsumer& = delete;
+
+public:
+    [[REMEMBER_CO_AWAIT]]
+    static auto create(std::string_view host, uint16_t port) -> kosio::async::Task<Result<std::unique_ptr<RpcConsumer>>>;
 
 public:
     /// @brief Call a rpc invoke
@@ -30,7 +35,7 @@ public:
     auto call(std::string_view service_name,
               std::string_view method_name,
               std::string_view req_payload,
-              detail::RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>>;
+              detail::RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
     /// @brief Call a rpc invoke
     /// @param service_name The invoke service name
@@ -42,7 +47,7 @@ public:
     auto call(std::string&& service_name,
               std::string&& method_name,
               std::string&& req_payload,
-              detail::RpcCallback&& callback) -> kosio::async::Task<RpcResult<void>>;
+              detail::RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
     /// @brief Shutdown the consumer and never use it again
     /// @note Never forget to call this method
@@ -51,7 +56,7 @@ public:
 
 private:
     [[REMEMBER_CO_AWAIT]]
-    auto connect() -> kosio::async::Task<RpcResult<void>>;
+    auto connect() -> kosio::async::Task<Result<void>>;
     auto produce_callbacks(kosio::net::OwnedTcpStreamWriter writer) -> kosio::async::Task<>;
     auto consume_callbacks(kosio::net::OwnedTcpStreamReader reader) -> kosio::async::Task<>;
 

@@ -17,7 +17,7 @@ public:
 public:
     [[nodiscard]]
     static auto Open(const rocksdb::Options &options, const std::filesystem::path& db_path)
-    -> StorageResult<Storage>;
+    -> Result<Storage>;
 
 public:
     void SetWriteOptions(const rocksdb::WriteOptions &write_options);

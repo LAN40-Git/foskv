@@ -10,7 +10,7 @@
 
 namespace foskv::rpc::detail {
 // addr -> request_id -> req_payload -> resp_payload
-using Invoke = std::function<kosio::async::Task<RpcResult<std::size_t>>(std::string_view, uint64_t, std::string_view, std::span<char>)>;
+using Invoke = std::function<kosio::async::Task<Result<std::size_t>>(std::string_view, uint64_t, std::string_view, std::span<char>)>;
 using Service = std::unordered_map<std::string_view, Invoke>;
 class InvokeTask : util::Noncopyable {
 public:

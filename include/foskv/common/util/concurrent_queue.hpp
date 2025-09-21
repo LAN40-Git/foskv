@@ -5,6 +5,14 @@ namespace foskv {
 template <typename T>
 class ConcurrentQueue {
 public:
+    ConcurrentQueue() = default;
+    ~ConcurrentQueue() = default;
+public:
+    ConcurrentQueue(const ConcurrentQueue&) = delete;
+    ConcurrentQueue& operator=(const ConcurrentQueue&) = delete;
+    ConcurrentQueue(ConcurrentQueue&&) = delete;
+    ConcurrentQueue& operator=(ConcurrentQueue&&) = delete;
+public:
     [[REMEMBER_CO_AWAIT]]
     auto push(T value) -> kosio::async::Task<> {
         queue_.enqueue(std::move(value));

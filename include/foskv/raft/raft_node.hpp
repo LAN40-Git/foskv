@@ -7,10 +7,10 @@ namespace foskv::raft {
 class RaftNode {
     friend class detail::StateMachine;
 public:
-    explicit RaftNode(std::string_view config_path, std::string_view data_dir);
+    explicit RaftNode(Config&& config, detail::Persister&& persister, detail::StateMachine&& state_machine);
 
 public:
-    static auto create(std::string_view config_path, std::string_view data_dir) -> kosio::async::Task<RaftResult<std::unique_ptr<RaftNode>>>;
+    static auto create(std::string_view config_path, std::string_view data_dir) -> kosio::async::Task<Result<std::unique_ptr<RaftNode>>>;
 
 public:
     auto run() -> kosio::async::Task<>;
@@ -22,30 +22,18 @@ private:
 private:
     void increase_term_to(uint64_t term);
     void become_leader();
-    void try_commit_entries();
-    void persist();
-    auto apply_commited_entries() -> kosio::async::Task<void>;
 
 private:
     // raft rpc invoke
     [[REMEMBER_CO_AWAIT]]
     auto handle_request_vote_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
+    -> kosio::async::Task<Result<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_append_entries_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
+    -> kosio::async::Task<Result<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
-    [[REMEMBER_CO_AWAIT]]
-    auto handle_kv_put_request(std::string_view addr, uint64_t request_id, std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
-    [[REMEMBER_CO_AWAIT]]
-    auto handle_kv_get_request(std::string_view addr, uint64_t request_id, std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
-    [[REMEMBER_CO_AWAIT]]
-    auto handle_kv_delete_request(std::string_view addr, uint64_t request_id, std::string_view req_payload, std::span<char> resp_payload)
-    -> kosio::async::Task<RpcResult<std::size_t>>;
+    -> kosio::async::Task<Result<std::size_t>>;
 
 private:
     static auto append_entries_callback(RaftNode* node, uint64_t prev_log_index, std::size_t entries_size, std::string_view resp_payload) -> kosio::async::Task<>;
@@ -55,7 +43,6 @@ private:
     auto produce_response_header() const noexcept -> ResponseHeader;
     auto produce_internal_response_header(bool success, int error_code = 0,
         std::optional<rpc::Redirect> redirect = std::nullopt) const noexcept -> rpc::ResponseHeader;
-    auto produce_redirect() const noexcept -> rpc::Redirect;
     auto produce_request_vote_request() const noexcept -> RequestVoteRequest;
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
 
