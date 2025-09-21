@@ -3,8 +3,8 @@
 
 foskv::raft::RaftNode::RaftNode(RaftConfig&& config, detail::Persister&& persister, detail::StateMachine&& state_machine)
     : persister_(std::move(persister))
-    , transport_(std::move(config))
-    , state_machine_(std::move(state_machine)) {
+    , state_machine_(std::move(state_machine))
+    , transport_(std::move(config)) {
     // Load Persist state
     PersistState state = persister_.load_state();
     current_term_.store(state.current_term());
@@ -18,21 +18,22 @@ foskv::raft::RaftNode::RaftNode(RaftConfig&& config, detail::Persister&& persist
     using rpc::RaftService;
     using rpc::KVService;
     transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::RequestVote,
-        [this](std::string_view, uint64_t, std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>>  {
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>>  {
         co_return co_await this->handle_request_vote_request(req_payload, resp_payload);
     });
     transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::AppendEntries,
-        [this](std::string_view, uint64_t, std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_append_entries_request(req_payload, resp_payload);
     });
     transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::InstallSnapshot,
-        [this](std::string_view, uint64_t, std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_install_snapshot_request(req_payload, resp_payload);
     });
 }
 
 auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_view data_dir)
 -> kosio::async::Task<Result<std::unique_ptr<RaftNode>>> {
+    // Check data_dir
     std::filesystem::path dir(data_dir);
     if (!std::filesystem::is_directory(data_dir)) {
         co_return std::unexpected{make_error(Error::kInvalidDataDirectory)};
@@ -40,13 +41,13 @@ auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_vie
 
     // Load config
     auto has_config = co_await RaftConfig::load(config_path);
-    if (!has_config) [[unlikely]] {
+    if (!has_config) {
         co_return std::unexpected{has_config.error()};
     }
 
     // Create persister and load persistent
     auto has_persister = detail::Persister::create(data_dir);
-    if (!has_persister) [[unlikely]] {
+    if (!has_persister) {
         co_return std::unexpected{has_persister.error()};
     }
 
@@ -388,57 +389,57 @@ auto foskv::raft::RaftNode::handle_install_snapshot_request(std::string_view req
 
 }
 
-auto foskv::raft::RaftNode::append_entries_callback(RaftNode *node, uint64_t prev_log_index, std::size_t entries_size,
-                                                    std::string_view resp_payload) -> kosio::async::Task<> {
-    AppendEntriesResponse response;
-    if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) [[unlikely]] {
-        LOG_ERROR("Failed to parse request vote response");
-        co_return;
-    }
-
-    auto cluster_id = response.header().cluster_id();
-    auto member_id = response.header().member_id();
-    auto resp_term = response.header().term();
-    auto success = response.success();
-
-    if (resp_term < node->current_term_.load(std::memory_order_acquire) ||
-        node->role_.load(std::memory_order_acquire) != kLeader) {
-        co_return;
-        }
-
-    co_await node->mutex_.lock();
-    std::lock_guard lock(node->mutex_, std::adopt_lock);
-
-    // Check again
-    auto current_term = node->current_term_.load(std::memory_order_relaxed);
-    if (resp_term < current_term ||
-        node->role_.load(std::memory_order_relaxed) != kLeader) {
-        co_return;
-    }
-
-    if (resp_term > current_term) {
-        current_term = resp_term;
-        node->increase_term_to(resp_term);
-        node->role_.store(kFollower, std::memory_order_acquire);
-        node->last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
-        co_return;
-    }
-
-    if (success) {
-        // Update next_index_ and match_index_ for follower
-        node->match_index_[member_id] = prev_log_index + entries_size;
-        node->next_index_[member_id] = node->match_index_[member_id] + 1;
-
-        // node->try_commit_entries();
-        // node->persist();
-        // co_await node->apply_commited_entries();
-    } else {
-        if (node->next_index_[member_id] > 1) {
-            node->next_index_[member_id]--;
-        }
-        // TODO: Handle conflict
-    }
-}
+// auto foskv::raft::RaftNode::append_entries_callback(RaftNode *node, uint64_t prev_log_index, std::size_t entries_size,
+//                                                     std::string_view resp_payload) -> kosio::async::Task<> {
+//     AppendEntriesResponse response;
+//     if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) [[unlikely]] {
+//         LOG_ERROR("Failed to parse request vote response");
+//         co_return;
+//     }
+//
+//     auto cluster_id = response.header().cluster_id();
+//     auto member_id = response.header().member_id();
+//     auto resp_term = response.header().term();
+//     auto success = response.success();
+//
+//     if (resp_term < node->current_term_.load(std::memory_order_acquire) ||
+//         node->role_.load(std::memory_order_acquire) != kLeader) {
+//         co_return;
+//         }
+//
+//     co_await node->mutex_.lock();
+//     std::lock_guard lock(node->mutex_, std::adopt_lock);
+//
+//     // Check again
+//     auto current_term = node->current_term_.load(std::memory_order_relaxed);
+//     if (resp_term < current_term ||
+//         node->role_.load(std::memory_order_relaxed) != kLeader) {
+//         co_return;
+//     }
+//
+//     if (resp_term > current_term) {
+//         current_term = resp_term;
+//         node->increase_term_to(resp_term);
+//         node->role_.store(kFollower, std::memory_order_acquire);
+//         node->last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
+//         co_return;
+//     }
+//
+//     if (success) {
+//         // Update next_index_ and match_index_ for follower
+//         node->match_index_[member_id] = prev_log_index + entries_size;
+//         node->next_index_[member_id] = node->match_index_[member_id] + 1;
+//
+//         // node->try_commit_entries();
+//         // node->persist();
+//         // co_await node->apply_commited_entries();
+//     } else {
+//         if (node->next_index_[member_id] > 1) {
+//             node->next_index_[member_id]--;
+//         }
+//         // TODO: Handle conflict
+//     }
+// }
 
 auto foskv::raft::RaftNode::produce_response_header()
 const noexcept -> ResponseHeader {

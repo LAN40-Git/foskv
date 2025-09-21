@@ -63,7 +63,6 @@ public:
     std::string            name_;
     kosio::net::SocketAddr addr_;
     PeerMap                peers_;
-    // Config
     std::filesystem::path  path_;
     nlohmann::json         json_;
 };

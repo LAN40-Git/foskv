@@ -9,11 +9,11 @@ public:
 
     // Delete copy
     RpcProvider(const RpcProvider&) = delete;
-    RpcProvider& operator=(const RpcProvider&) = delete;
+    auto operator=(const RpcProvider&) -> RpcProvider& = delete;
 
     // Delete move
     RpcProvider(RpcProvider&&) = delete;
-    RpcProvider& operator=(RpcProvider&&) = delete;
+    auto operator=(RpcProvider&&) -> RpcProvider&  = delete;
 
 public:
     [[REMEMBER_CO_AWAIT]]
@@ -24,10 +24,6 @@ public:
         std::string_view service_name,
         std::string_view method_name,
         detail::Invoke&& invoke);
-
-public:
-    [[REMEMBER_CO_AWAIT]]
-    auto add_invoke_task(const std::string& addr, detail::InvokeTask&& task) -> kosio::async::Task<>;
 
 private:
     auto produce_invoke_tasks(kosio::net::OwnedTcpStreamReader reader, std::string addr) -> kosio::async::Task<>;

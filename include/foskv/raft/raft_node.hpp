@@ -36,10 +36,7 @@ private:
     -> kosio::async::Task<Result<std::size_t>>;
 
 private:
-    static auto append_entries_callback(RaftNode* node, uint64_t prev_log_index, std::size_t entries_size, std::string_view resp_payload) -> kosio::async::Task<>;
-
-private:
-    /* Confirm that you have the lock */
+    /* Confirm that you have hold mutex_ */
     auto produce_response_header() const noexcept -> ResponseHeader;
     auto produce_internal_response_header(bool success, int error_code = 0,
         std::optional<rpc::Redirect> redirect = std::nullopt) const noexcept -> rpc::ResponseHeader;
@@ -47,19 +44,18 @@ private:
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
 
 private:
-    kosio::sync::Mutex mutex_;
-    std::atomic<bool>  is_shutdown_{false};
-    detail::Persister  persister_;
-    detail::Transport  transport_;
-    detail::StateMachine state_machine_;
-    std::array<char, 2*rpc::detail::MAX_RPC_MESSAGE_SIZE> buffer_{};
-    std::unordered_map<uint64_t, InternalRaftRequest> internal_raft_requests_;
-    // election timeout last reset time ms
-    std::atomic<uint64_t> last_reset_time_{0};
+    enum Role { kLeader, kFollower, kCandidate};
+
+    kosio::sync::Mutex      mutex_;
+    std::atomic<bool>       is_shutdown_{false};
+    detail::Persister       persister_;
+    detail::StateMachine    state_machine_;
+    detail::Transport       transport_;
+    std::atomic<uint64_t>   last_reset_time_{0};
+    std::atomic<Role>       role_ = kFollower;
+    std::optional<uint64_t> leader_id_{std::nullopt};
 
     /* RaftState from https://raft.github.io/raft.pdf */
-    enum Role { kLeader, kFollower, kCandidate};
-    std::atomic<Role> role_ = kFollower;
     // Persistent state on all servers
     std::atomic<uint64_t>   current_term_;
     std::optional<uint64_t> voted_for_;
@@ -70,7 +66,6 @@ private:
     uint64_t                last_applied_{0};
 
     // Volatile state on leaders
-    std::optional<uint64_t> leader_id_{std::nullopt};
     std::unordered_map<uint64_t, uint64_t> next_index_{};
     std::unordered_map<uint64_t, uint64_t> match_index_{};
 };

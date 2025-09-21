@@ -1,2 +1,2 @@
-protoc -I=src/foskv/proto src/foskv/proto/*.proto --cpp_out=include/foskv/proto
-mv include/foskv/proto/*.cc src/foskv/proto
+protoc -I=src/foskv/rpc/pb src/foskv/rpc/pb/*.proto --cpp_out=include/foskv/rpc/pb
+mv include/foskv/rpc/pb/*.cc src/foskv/rpc/pb

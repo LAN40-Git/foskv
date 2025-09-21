@@ -1,6 +1,6 @@
 #pragma once
-#include "foskv/proto/kv.pb.h"
-#include "foskv/proto/raft.pb.h"
+#include "foskv/rpc/pb/kv.pb.h"
+#include "foskv/rpc/pb/raft.pb.h"
 #include <string_view>
 
 namespace foskv::rpc {

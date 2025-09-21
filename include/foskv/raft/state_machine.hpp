@@ -1,9 +1,5 @@
 #pragma once
-#include "foskv/raft/peer.hpp"
-
-namespace foskv::raft {
-class RaftNode;
-}
+#include "foskv/storage/storage.hpp"
 
 namespace foskv::raft::detail {
 class StateMachine {

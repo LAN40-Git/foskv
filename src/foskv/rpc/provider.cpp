@@ -30,13 +30,6 @@ void foskv::rpc::RpcProvider::register_invoke(
     invokes_[service_name][method_name] = std::move(invoke);
 }
 
-auto foskv::rpc::RpcProvider::add_invoke_task(
-    const std::string& addr,
-    detail::InvokeTask &&task) -> kosio::async::Task<> {
-    auto& tasks = task_queues_[addr];
-    co_await tasks.push(std::move(task));
-}
-
 auto foskv::rpc::RpcProvider::produce_invoke_tasks(kosio::net::OwnedTcpStreamReader reader, std::string addr)
 -> kosio::async::Task<> {
     auto& tasks = task_queues_[addr];
@@ -111,68 +104,41 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(kosio::net::OwnedTcpStreamWri
     while (true) {
         auto task = co_await tasks.pop();
 
-        if (!task.has_resp_payload_) {
-            auto has_resp_payload = co_await task.invoke_(
-            addr, task.request_id_,task.req_payload_, {resp_buffer.data(), resp_buffer.max_size()});
-            if (!has_resp_payload) [[unlikely]] {
-                LOG_ERROR("Failed to get resp payload from invoke : {}", has_resp_payload.error());
-                continue;
-            }
+        auto has_resp_payload = co_await task.invoke_(task.req_payload_, {resp_buffer.data(), resp_buffer.max_size()});
+        if (!has_resp_payload) [[unlikely]] {
+            LOG_ERROR("Failed to get resp payload from invoke : {}", has_resp_payload.error());
+            continue;
+        }
 
-            auto resp_payload_size = has_resp_payload.value();
-            // It may be an empty reply because the client request needs to
-            // be wrapped in a log and synchronized
-            if (resp_payload_size == 0) {
-                continue;
-            }
+        auto resp_payload_size = has_resp_payload.value();
+        // It may be an empty reply because the client request needs to
+        // be wrapped in a log and synchronized
+        if (resp_payload_size == 0) {
+            continue;
+        }
 
-            // Make rpc header
-            RpcHeader rpc_header;
-            rpc_header.set_request_id(task.request_id_);
-            rpc_header.set_payload_size(resp_payload_size);
-            auto rpc_header_size = rpc_header.ByteSizeLong();
-            if (!rpc_header.SerializeToArray(buffer.data(), rpc_header_size)) [[unlikely]] {
-                LOG_ERROR("Failed to serialize response.");
-                continue;
-            }
+        // Make rpc header
+        RpcHeader rpc_header;
+        rpc_header.set_request_id(task.request_id_);
+        rpc_header.set_payload_size(resp_payload_size);
+        auto rpc_header_size = rpc_header.ByteSizeLong();
+        if (!rpc_header.SerializeToArray(buffer.data(), rpc_header_size)) [[unlikely]] {
+            LOG_ERROR("Failed to serialize response.");
+            continue;
+        }
 
-            // Send [rpc header size -> rpc header -> resp_payload]
-            auto rpc_header_size_net = htonl(rpc_header_size);
+        // Send [rpc header size -> rpc header -> resp_payload]
+        auto rpc_header_size_net = htonl(rpc_header_size);
 
-            auto send_ret = co_await writer.write_vectored(
-                std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
-                std::span<const char>(buffer.data(), rpc_header_size),
-                std::span<const char>(resp_buffer.data(), resp_payload_size)
-            );
+        auto ret = co_await writer.write_vectored(
+            std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
+            std::span<const char>(buffer.data(), rpc_header_size),
+            std::span<const char>(resp_buffer.data(), resp_payload_size)
+        );
 
-            if (!send_ret) [[unlikely]] {
-                LOG_ERROR("{}", send_ret.error());
-                break;
-            }
-        } else {
-            // Make rpc header
-            RpcHeader rpc_header;
-            rpc_header.set_request_id(task.request_id_);
-            rpc_header.set_payload_size(task.resp_payload_.size());
-            auto rpc_header_size = rpc_header.ByteSizeLong();
-            if (!rpc_header.SerializeToArray(buffer.data(), rpc_header_size)) [[unlikely]] {
-                LOG_ERROR("Failed to serialize response.");
-                continue;
-            }
-
-            // Send [rpc header size -> rpc header -> resp_payload]
-            auto rpc_header_size_net = htonl(rpc_header_size);
-
-            auto send_ret = co_await writer.write_vectored(
-                std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
-                std::span<const char>(buffer.data(), rpc_header_size),
-                std::span<const char>(task.resp_payload_.data(), task.resp_payload_.size())
-            );
-
-            if (!send_ret) [[unlikely]] {
-                LOG_ERROR("{}", send_ret.error());
-                break;
-            }
+        if (!ret) [[unlikely]] {
+            LOG_ERROR("{}", ret.error());
+            break;
         }
     }
 }

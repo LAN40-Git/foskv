@@ -54,7 +54,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(XXHASH REQUIRED libxxhash)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(include/foskv/proto)
+include_directories(include/foskv/rpc/pb)
 
 # ====== LIBRARY ======
 set(ROCKSDB_LIBRARIES
