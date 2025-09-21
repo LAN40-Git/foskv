@@ -22,6 +22,10 @@ auto foskv::raft::detail::Peer::create(
     co_return Peer{member_id, name, host, port, std::move(has_consumer.value())};
 }
 
+auto foskv::raft::detail::Peer::shutdown() const -> kosio::async::Task<> {
+    co_await consumer_->shutdown();
+}
+
 auto foskv::raft::detail::Peer::request_vote(std::string_view req_payload, RpcCallback &&callback)
 const -> kosio::async::Task<> {
     auto ret = co_await consumer_->call(

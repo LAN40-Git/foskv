@@ -7,7 +7,7 @@ namespace foskv::raft {
 class RaftNode {
     friend class detail::StateMachine;
 public:
-    explicit RaftNode(Config&& config, detail::Persister&& persister, detail::StateMachine&& state_machine);
+    explicit RaftNode(RaftConfig&& config, detail::Persister&& persister, detail::StateMachine&& state_machine);
 
 public:
     static auto create(std::string_view config_path, std::string_view data_dir) -> kosio::async::Task<Result<std::unique_ptr<RaftNode>>>;

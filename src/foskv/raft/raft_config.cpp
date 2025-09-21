@@ -1,4 +1,4 @@
-#include "foskv/raft/config.hpp"
+#include "foskv/raft/raft_config.hpp"
 #include <kosio/common/debug.hpp>
 #include <xxh3.h>
 
@@ -19,7 +19,7 @@ auto foskv::raft::NodeInfo::hash() const noexcept -> uint64_t {
     return XXH3_64bits_digest(&state);
 }
 
-foskv::raft::Config::Config(
+foskv::raft::RaftConfig::RaftConfig(
     const uint64_t cluster_id,
     const uint64_t member_id,
     std::string&& name,
@@ -35,7 +35,7 @@ foskv::raft::Config::Config(
     , path_(path)
     , json_(std::move(json)) {}
 
-foskv::raft::Config::Config(Config &&other) noexcept
+foskv::raft::RaftConfig::RaftConfig(RaftConfig &&other) noexcept
     : cluster_id_(other.cluster_id_)
     , member_id_(other.member_id_)
     , name_(std::move(other.name_))
@@ -44,7 +44,7 @@ foskv::raft::Config::Config(Config &&other) noexcept
     , path_(std::move(other.path_))
     , json_(std::move(other.json_)) {}
 
-auto foskv::raft::Config::operator=(Config &&other) noexcept -> Config & {
+auto foskv::raft::RaftConfig::operator=(RaftConfig &&other) noexcept -> RaftConfig & {
     cluster_id_ = other.cluster_id_;
     member_id_ = other.member_id_;
     name_ = std::move(other.name_);
@@ -55,7 +55,7 @@ auto foskv::raft::Config::operator=(Config &&other) noexcept -> Config & {
     return *this;
 }
 
-auto foskv::raft::Config::save(
+auto foskv::raft::RaftConfig::save(
     std::string_view path,
     uint64_t cluster_id,
     std::string_view name,
@@ -128,8 +128,8 @@ auto foskv::raft::Config::save(
     co_return Result<void>{};
 }
 
-auto foskv::raft::Config::load(std::string_view path)
--> kosio::async::Task<Result<Config>> {
+auto foskv::raft::RaftConfig::load(std::string_view path)
+-> kosio::async::Task<Result<RaftConfig>> {
     std::filesystem::path config_file_path(path);
     std::ifstream config_file(config_file_path);
 
@@ -173,7 +173,7 @@ auto foskv::raft::Config::load(std::string_view path)
             peers.emplace(member_id, std::move(has_peer.value()));
         }
 
-        co_return Config{
+        co_return RaftConfig{
             cluster_id,
             local_member_id,
             std::move(local_name),
@@ -190,7 +190,7 @@ auto foskv::raft::Config::load(std::string_view path)
     }
 }
 
-auto foskv::raft::Config::add_peer(NodeInfo peer_node_info) -> kosio::async::Task<Result<void>> {
+auto foskv::raft::RaftConfig::add_peer(NodeInfo peer_node_info) -> kosio::async::Task<Result<void>> {
     auto member_id = peer_node_info.hash();
     auto has_peer = co_await detail::Peer::create(member_id, peer_node_info.name, peer_node_info.host, peer_node_info.port);
     if (!has_peer) {
@@ -210,7 +210,7 @@ auto foskv::raft::Config::add_peer(NodeInfo peer_node_info) -> kosio::async::Tas
     co_return co_await this->save();
 }
 
-auto foskv::raft::Config::remove_peer(NodeInfo peer_node_info) -> kosio::async::Task<Result<void>> {
+auto foskv::raft::RaftConfig::remove_peer(NodeInfo peer_node_info) -> kosio::async::Task<Result<void>> {
     auto member_id = peer_node_info.hash();
     peers_.erase(member_id);
     auto& nodes_json = json_["nodes"];
@@ -222,7 +222,7 @@ auto foskv::raft::Config::remove_peer(NodeInfo peer_node_info) -> kosio::async::
     co_return co_await save();
 }
 
-auto foskv::raft::Config::remove_peer(uint64_t member_id)
+auto foskv::raft::RaftConfig::remove_peer(uint64_t member_id)
 -> kosio::async::Task<Result<void>> {
     peers_.erase(member_id);
     auto& nodes_json = json_["nodes"];
@@ -234,7 +234,7 @@ auto foskv::raft::Config::remove_peer(uint64_t member_id)
     co_return co_await save();
 }
 
-auto foskv::raft::Config::save() -> kosio::async::Task<Result<void>> {
+auto foskv::raft::RaftConfig::save() -> kosio::async::Task<Result<void>> {
 #ifdef ENABLE_HUMAN_READABLE_JSON
     auto config_payload = json_.dump(4);
 #else

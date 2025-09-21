@@ -1,5 +1,5 @@
 #pragma once
-#include "foskv/rpc/rpc.hpp"
+#include "foskv/rpc/service.hpp"
 #include "foskv/rpc/consumer.hpp"
 
 namespace foskv::client {

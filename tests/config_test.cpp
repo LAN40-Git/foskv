@@ -1,4 +1,4 @@
-#include "foskv/raft/config.hpp"
+#include "foskv/raft/raft_config.hpp"
 
 constexpr std::string_view config_path = "config.json";
 
@@ -7,15 +7,15 @@ auto save() -> kosio::async::Task<foskv::Result<void>> {
     nodes.emplace("node1", "127.0.0.1", 8080);
     nodes.emplace("node2", "127.0.0.1", 8081);
     nodes.emplace("node3", "127.0.0.1", 8082);
-    auto has_save = co_await foskv::raft::Config::save(config_path, 0, "node1", nodes);
+    auto has_save = co_await foskv::raft::RaftConfig::save(config_path, 0, "node1", nodes);
     if (!has_save) {
         co_return std::unexpected{has_save.error()};
     }
     co_return foskv::Result<void>{};
 }
 
-auto load() -> kosio::async::Task<foskv::Result<foskv::raft::Config>> {
-    auto has_config = co_await foskv::raft::Config::load(config_path);
+auto load() -> kosio::async::Task<foskv::Result<foskv::raft::RaftConfig>> {
+    auto has_config = co_await foskv::raft::RaftConfig::load(config_path);
     if (!has_config) {
         co_return std::unexpected{has_config.error()};
     }

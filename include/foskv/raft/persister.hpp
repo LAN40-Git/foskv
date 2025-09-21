@@ -1,5 +1,5 @@
 #pragma once
-#include "foskv/raft/config.hpp"
+#include "foskv/raft/raft_config.hpp"
 #include <vector>
 
 namespace foskv::raft::detail {

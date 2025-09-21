@@ -1,5 +1,5 @@
 #pragma once
-#include "foskv/rpc/util.hpp"
+#include "foskv/rpc/call_task.hpp"
 
 namespace foskv::rpc {
 // A running RpcConsumer takes up about 8MB of memory,
@@ -37,7 +37,7 @@ public:
     auto call(std::string_view service_name,
               std::string_view method_name,
               std::string_view req_payload,
-              detail::RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
+              RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
     /// @brief Call a rpc invoke
     /// @param service_name The invoke service name
@@ -49,7 +49,7 @@ public:
     auto call(std::string&& service_name,
               std::string&& method_name,
               std::string&& req_payload,
-              detail::RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
+              RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
     /// @brief Shutdown the consumer and never use it again
     /// @note Never forget to call this method

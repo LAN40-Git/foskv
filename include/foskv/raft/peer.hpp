@@ -1,10 +1,10 @@
 #pragma once
-#include "foskv/rpc/rpc.hpp"
+#include "foskv/rpc.hpp"
 #include "foskv/storage/storage.hpp"
 
 namespace foskv::raft::detail {
 class Peer {
-    using RpcCallback = rpc::detail::RpcCallback;
+    using RpcCallback = rpc::RpcCallback;
     friend class Transport;
 private:
     explicit Peer(uint64_t member_id, std::string_view name,
@@ -18,9 +18,14 @@ public:
     Peer& operator=(Peer&&) = default;
 
 public:
+    [[REMEMBER_CO_AWAIT]]
     static auto create(
         uint64_t member_id, std::string_view name,
         std::string_view host, uint16_t port) -> kosio::async::Task<Result<Peer>>;
+
+public:
+    [[REMEMBER_CO_AWAIT]]
+    auto shutdown() const -> kosio::async::Task<>;
 
 public:
     [[nodiscard]]
@@ -34,11 +39,17 @@ public:
 
 public:
     // raft rpc
+    [[REMEMBER_CO_AWAIT]]
     auto request_vote(std::string_view req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
     auto append_entries(std::string_view req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
     auto install_snapshot(std::string_view req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
     auto request_vote(std::string&& req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
     auto append_entries(std::string&& req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
     auto install_snapshot(std::string&& req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
 
 private:

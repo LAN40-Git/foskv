@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-foskv::raft::detail::Transport::Transport(Config&& config)
+foskv::raft::detail::Transport::Transport(RaftConfig&& config)
     : config_(std::move(config))
     , provider_(config_.addr_) {}
 

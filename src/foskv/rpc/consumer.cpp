@@ -14,7 +14,7 @@ auto foskv::rpc::RpcConsumer::call(
     std::string_view service_name,
     std::string_view method_name,
     std::string_view req_payload,
-    detail::RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
+    RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
     detail::CallTask task{
         std::string{service_name},
         std::string{method_name},
@@ -31,7 +31,7 @@ auto foskv::rpc::RpcConsumer::call(
 }
 
 auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&method_name, std::string &&req_payload,
-    detail::RpcCallback &&callback) -> kosio::async::Task<Result<void>> {
+    RpcCallback &&callback) -> kosio::async::Task<Result<void>> {
     detail::CallTask task{
         std::move(service_name),
         std::move(method_name),

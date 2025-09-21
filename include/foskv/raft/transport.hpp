@@ -1,5 +1,5 @@
 #pragma once
-#include "foskv/raft/config.hpp"
+#include "foskv/raft/raft_config.hpp"
 
 namespace foskv::raft {
 class RaftNode;
@@ -10,7 +10,7 @@ class Transport {
     friend class foskv::raft::RaftNode;
     friend class StateMachine;
 public:
-    explicit Transport(Config&& config);
+    explicit Transport(RaftConfig&& config);
 
     // Delete copy
     Transport(const Transport&) = delete;
@@ -39,7 +39,7 @@ public:
     auto broadcast_install_snapshot_request(InstallSnapshotRequest&& request, Peer::RpcCallback&& callback) -> kosio::async::Task<>;
 
 private:
-    Config           config_;
+    RaftConfig       config_;
     rpc::RpcProvider provider_;
 };
 } // namespace foskv::raft::detail

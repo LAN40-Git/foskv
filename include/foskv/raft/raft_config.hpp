@@ -22,10 +22,10 @@ struct NodeInfo {
     auto hash() const noexcept -> uint64_t;
 };
 
-class Config {
+class RaftConfig {
     using PeerMap = std::unordered_map<uint64_t, detail::Peer>;
 private:
-    explicit Config(
+    explicit RaftConfig(
         uint64_t cluster_id,
         uint64_t member_id,
         std::string&& name,
@@ -35,8 +35,8 @@ private:
         nlohmann::json&& json);
 
 public:
-    Config(Config&& other) noexcept;
-    auto operator=(Config&& other) noexcept -> Config&;
+    RaftConfig(RaftConfig&& other) noexcept;
+    auto operator=(RaftConfig&& other) noexcept -> RaftConfig&;
 
 public:
     [[REMEMBER_CO_AWAIT]]
@@ -47,7 +47,7 @@ public:
         const std::unordered_set<NodeInfo>& node_infos) -> kosio::async::Task<Result<void>>;
 
     [[REMEMBER_CO_AWAIT]]
-    static auto load(std::string_view path) -> kosio::async::Task<Result<Config>>;
+    static auto load(std::string_view path) -> kosio::async::Task<Result<RaftConfig>>;
 
 public:
     auto add_peer(NodeInfo peer_node_info) -> kosio::async::Task<Result<void>>;

@@ -1,7 +1,7 @@
 #include "foskv/raft/raft_node.hpp"
 #include "kosio/common/util/random.hpp"
 
-foskv::raft::RaftNode::RaftNode(Config&& config, detail::Persister&& persister, detail::StateMachine&& state_machine)
+foskv::raft::RaftNode::RaftNode(RaftConfig&& config, detail::Persister&& persister, detail::StateMachine&& state_machine)
     : persister_(std::move(persister))
     , transport_(std::move(config))
     , state_machine_(std::move(state_machine)) {
@@ -39,7 +39,7 @@ auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_vie
     }
 
     // Load config
-    auto has_config = co_await Config::load(config_path);
+    auto has_config = co_await RaftConfig::load(config_path);
     if (!has_config) [[unlikely]] {
         co_return std::unexpected{has_config.error()};
     }
