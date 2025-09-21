@@ -38,10 +38,10 @@ private:
 private:
     /* Confirm that you have hold mutex_ */
     auto produce_response_header() const noexcept -> ResponseHeader;
-    auto produce_internal_response_header(bool success, int error_code = 0,
-        std::optional<rpc::Redirect> redirect = std::nullopt) const noexcept -> rpc::ResponseHeader;
     auto produce_request_vote_request() const noexcept -> RequestVoteRequest;
+    auto produce_request_vote_response() const noexcept -> RequestVoteResponse;
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
+    auto produce_append_entries_response() const noexcept -> AppendEntriesResponse;
 
 private:
     enum Role { kLeader, kFollower, kCandidate};

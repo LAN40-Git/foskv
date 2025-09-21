@@ -4,14 +4,6 @@
 #include <nlohmann/json.hpp>
 
 namespace foskv::raft {
-namespace detail {
-    constexpr std::string_view PERSISTENT_KEY = "P";
-    constexpr std::string_view START_LOG_INDEX = "S";
-    constexpr std::string_view END_LOG_INDEX = "E";
-    constexpr std::string_view PERSISTENT_PATH{"member/persistent"};
-    constexpr std::string_view USER_DATA_PATH{"usr/data"};
-} // namespace detail
-
 struct NodeInfo {
     std::string name;
     std::string host;
@@ -41,10 +33,9 @@ public:
 public:
     [[REMEMBER_CO_AWAIT]]
     static auto save(
-        std::string_view path,
-        uint64_t cluster_id,
-        std::string_view name,
-        const std::unordered_set<NodeInfo>& node_infos) -> kosio::async::Task<Result<void>>;
+        std::string_view path, uint64_t cluster_id,
+        std::string_view name, const std::unordered_set<NodeInfo>& node_infos)
+        -> kosio::async::Task<Result<void>>;
 
     [[REMEMBER_CO_AWAIT]]
     static auto load(std::string_view path) -> kosio::async::Task<Result<RaftConfig>>;

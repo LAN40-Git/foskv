@@ -1,6 +1,5 @@
 #pragma once
 #include "foskv/rpc.hpp"
-#include "foskv/storage/storage.hpp"
 
 namespace foskv::raft::detail {
 class Peer {

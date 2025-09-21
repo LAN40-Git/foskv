@@ -15,8 +15,22 @@ public:
         kInvalidPeerAddress,
         kInvalidLocalAddress,
         kInvalidDataDirectory,
-        kProtobufSerializeFailed,
-        kProtobufParseFailed,
+        kMetadataRecoverFailed,
+        kLogEntriesRecoverFailed,
+        kLogEntryParseFailed,
+        kLogEntrySerializeFailed,
+        kRequestVoteRequestRequestParseFailed,
+        kRequestVoteRequestRequestSerializeFailed,
+        kRequestVoteResponseParseFailed,
+        kRequestVoteResponseSerializeFailed,
+        kAppendEntriesRequestParseFailed,
+        kAppendEntriesRequestSerializeFailed,
+        kAppendEntriesResponseParseFailed,
+        kAppendEntriesResponseSerializeFailed,
+        kInstallSnapshotRequestParseFailed,
+        kInstallSnapshotRequestSerializeFailed,
+        kInstallSnapshotResponseParseFailed,
+        kInstallSnapshotResponseSerializeFailed,
         kConnectRpcServerFailed,
         kRaftConfigFileOpenFailed,
         kRaftConfigFileReadFailed,
@@ -52,10 +66,38 @@ public:
                 return "Invalid local address.";
             case kInvalidDataDirectory:
                 return "Invalid data directory.";
-            case kProtobufSerializeFailed:
-                return "Protobuf serialize failed.";
-            case kProtobufParseFailed:
-                return "Protobuf parse failed.";
+            case kMetadataRecoverFailed:
+                return "Metadata recover failed.";
+            case kLogEntriesRecoverFailed:
+                return "Log entries recover failed.";
+            case kLogEntryParseFailed:
+                return "Log entry parse failed.";
+            case kLogEntrySerializeFailed:
+                return "Log entry serialize failed.";
+            case kRequestVoteRequestRequestParseFailed:
+                return "Request vote request parse failed.";
+            case kRequestVoteRequestRequestSerializeFailed:
+                return "Request vote request serialize failed.";
+            case kRequestVoteResponseParseFailed:
+                return "Request vote response parse failed.";
+            case kRequestVoteResponseSerializeFailed:
+                return "Request vote response serialize failed.";
+            case kAppendEntriesRequestParseFailed:
+                return "Append entries request parse failed.";
+            case kAppendEntriesRequestSerializeFailed:
+                return "Append entries request serialize failed.";
+            case kAppendEntriesResponseParseFailed:
+                return "Append entries response parse failed.";
+            case kAppendEntriesResponseSerializeFailed:
+                return "Append entries response serialize failed.";
+            case kInstallSnapshotRequestParseFailed:
+                return "Install snapshot request parse failed.";
+            case kInstallSnapshotRequestSerializeFailed:
+                return "Install snapshot request serialize failed.";
+            case kInstallSnapshotResponseParseFailed:
+                return "Install snapshot response parse failed.";
+            case kInstallSnapshotResponseSerializeFailed:
+                return "Install snapshot response serialize failed.";
             case kConnectRpcServerFailed:
                 return "Failed to connect to rpc server.";
             case kRaftConfigFileOpenFailed:

@@ -5,15 +5,6 @@ foskv::raft::RaftNode::RaftNode(RaftConfig&& config, detail::Persister&& persist
     : persister_(std::move(persister))
     , state_machine_(std::move(state_machine))
     , transport_(std::move(config)) {
-    // Load Persist state
-    PersistState state = persister_.load_state();
-    current_term_.store(state.current_term());
-    state.has_voted_for() ? voted_for_ = state.voted_for() : voted_for_ = std::nullopt;
-    commit_index_ = state.commit_index();
-
-    // Load Persist log entries
-    logs_ = persister_.load_entries();
-
     // Register invokes
     using rpc::RaftService;
     using rpc::KVService;
@@ -208,7 +199,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
 -> kosio::async::Task<Result<std::size_t>> {
     RequestVoteRequest request;
     if (!request.ParseFromArray(req_payload.data(), req_payload.size())) [[unlikely]] {
-        co_return std::unexpected{make_error(Error::kProtobufParseFailed)};
+        co_return std::unexpected{make_error(Error::kRequestVoteRequestRequestParseFailed)};
     }
 
     std::size_t resp_payload_size;
@@ -224,7 +215,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
         response.set_vote_granted(false);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-            co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+            co_return std::unexpected{make_error(Error::kRequestVoteResponseSerializeFailed)};
         }
         co_return resp_payload_size;
     }
@@ -241,7 +232,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
         response.set_vote_granted(false);
         resp_payload_size = response.ByteSizeLong();
         if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-            co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+            co_return std::unexpected{make_error(Error::kRequestVoteResponseSerializeFailed)};
         }
         co_return resp_payload_size;
     }
@@ -269,7 +260,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(std::string_view req_pay
     response.set_vote_granted(can_vote && up_to_date_log);
     resp_payload_size = response.ByteSizeLong();
     if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
-        co_return std::unexpected{make_error(Error::kProtobufSerializeFailed)};
+        co_return std::unexpected{make_error(Error::kRequestVoteResponseSerializeFailed)};
     }
     co_return resp_payload_size;
 }
@@ -447,20 +438,6 @@ const noexcept -> ResponseHeader {
     header.set_cluster_id(transport_.cluster_id());
     header.set_member_id(transport_.member_id());
     header.set_term(current_term_.load(std::memory_order_relaxed));
-    return header;
-}
-
-auto foskv::raft::RaftNode::produce_internal_response_header(bool success, int error_code, std::optional<rpc::Redirect> redirect)
-const noexcept -> rpc::ResponseHeader {
-    rpc::ResponseHeader header;
-    header.set_cluster_id(transport_.cluster_id());
-    header.set_member_id(transport_.member_id());
-    header.set_term(current_term_.load(std::memory_order_relaxed));
-    header.set_success(success);
-    header.set_error_code(error_code);
-    if (redirect.has_value()) {
-        header.set_allocated_redirect(&redirect.value());
-    }
     return header;
 }
 
