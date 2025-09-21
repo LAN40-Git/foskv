@@ -14,6 +14,7 @@ public:
         kInvalidRpcServerAddress,
         kInvalidPeerAddress,
         kInvalidLocalAddress,
+        kInvalidDataDirectory,
         kProtobufSerializeFailed,
         kProtobufParseFailed,
         kConnectRpcServerFailed,
@@ -47,6 +48,10 @@ public:
                 return "Invalid rpc server address.";
             case kInvalidPeerAddress:
                 return "Invalid peer address.";
+            case kInvalidLocalAddress:
+                return "Invalid local address.";
+            case kInvalidDataDirectory:
+                return "Invalid data directory.";
             case kProtobufSerializeFailed:
                 return "Protobuf serialize failed.";
             case kProtobufParseFailed:

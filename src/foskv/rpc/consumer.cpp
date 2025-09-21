@@ -7,10 +7,6 @@ auto foskv::rpc::RpcConsumer::create(std::string_view host, uint16_t port)
         co_return std::unexpected{make_error(Error::kInvalidRpcServerAddress)};
     }
     auto consumer = std::make_unique<RpcConsumer>(has_addr.value());
-    auto has_connect = co_await consumer->connect();
-    if (!has_connect) {
-        co_return std::unexpected{has_connect.error()};
-    }
     co_return std::move(consumer);
 }
 

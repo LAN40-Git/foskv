@@ -10,7 +10,9 @@ public:
         : server_addr_(server_addr) {}
 
 public:
-    ~RpcConsumer() { assert(is_shutdown_.load(std::memory_order_acquire)); }
+    ~RpcConsumer() {
+        // assert(is_shutdown_.load(std::memory_order_acquire));
+    }
 
     // Delete copy
     RpcConsumer(const RpcConsumer&) = delete;

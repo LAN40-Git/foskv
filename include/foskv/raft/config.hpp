@@ -5,9 +5,9 @@
 
 namespace foskv::raft {
 namespace detail {
-    static constexpr std::string_view PERSISTENT_KEY = "P";
-    static constexpr std::string_view START_LOG_INDEX = "S";
-    static constexpr std::string_view END_LOG_INDEX = "E";
+    constexpr std::string_view PERSISTENT_KEY = "P";
+    constexpr std::string_view START_LOG_INDEX = "S";
+    constexpr std::string_view END_LOG_INDEX = "E";
     constexpr std::string_view PERSISTENT_PATH{"member/persistent"};
     constexpr std::string_view USER_DATA_PATH{"usr/data"};
 } // namespace detail
@@ -26,10 +26,13 @@ class Config {
     using PeerMap = std::unordered_map<uint64_t, detail::Peer>;
 private:
     explicit Config(
-        uint64_t cluster_id,          uint64_t member_id,
-        std::string&& name,           const kosio::net::SocketAddr& addr,
-        PeerMap&& peers,              kosio::fs::File&& tmp_file,
-        std::string_view config_path, nlohmann::json&& config_json);
+        uint64_t cluster_id,
+        uint64_t member_id,
+        std::string&& name,
+        const kosio::net::SocketAddr& addr,
+        PeerMap&& peers,
+        std::string_view path,
+        nlohmann::json&& json);
 
 public:
     Config(Config&& other) noexcept;
@@ -60,9 +63,9 @@ public:
     std::string            name_;
     kosio::net::SocketAddr addr_;
     PeerMap                peers_;
-    kosio::fs::File        tmp_file_;
-    std::filesystem::path  config_path_;
-    nlohmann::json         config_json_;
+    // Config
+    std::filesystem::path  path_;
+    nlohmann::json         json_;
 };
 } // namespace foskv::raft
 

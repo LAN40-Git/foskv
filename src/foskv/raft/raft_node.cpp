@@ -33,6 +33,11 @@ foskv::raft::RaftNode::RaftNode(Config&& config, detail::Persister&& persister, 
 
 auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_view data_dir)
 -> kosio::async::Task<Result<std::unique_ptr<RaftNode>>> {
+    std::filesystem::path dir(data_dir);
+    if (!std::filesystem::is_directory(data_dir)) {
+        co_return std::unexpected{make_error(Error::kInvalidDataDirectory)};
+    }
+
     // Load config
     auto has_config = co_await Config::load(config_path);
     if (!has_config) [[unlikely]] {

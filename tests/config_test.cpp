@@ -34,11 +34,24 @@ auto main_loop() -> kosio::async::Task<void> {
     }
     auto config = std::move(has_config.value());
     while (true) {
-        co_await kosio::time::sleep(10000);
-        auto ret = co_await config.add_peer(0, "TEST", "127.0.0.1", 8084);
+        co_await kosio::time::sleep(3000);
+        auto has_add = co_await config.add_peer(foskv::raft::NodeInfo{"lan", "127.0.0.1", 8084});
+        if (!has_add) {
+            LOG_ERROR("{}", has_add.error());
+            break;
+        }
+        LOG_INFO("Successfully add peer.");
+        co_await kosio::time::sleep(3000);
+        auto has_remove = co_await config.remove_peer(foskv::raft::NodeInfo{"lan", "127.0.0.1", 8084});
+        if (!has_remove) {
+            LOG_ERROR("{}", has_remove.error());
+            break;
+        }
+        LOG_INFO("Successfully remove peer.");
     }
 }
 
 auto main() -> int {
+    SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
     kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
 }
