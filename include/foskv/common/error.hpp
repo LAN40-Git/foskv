@@ -16,15 +16,16 @@ public:
         kInvalidLocalAddress,
         kInvalidDataDirectory,
         kInvalidLogIndex,
-        kPersistStateGetFailed,
         kFirstLogIndexPutFailed,
         kLastLogIndexPutFailed,
         kLogIndexToUllFailed,
         kLogEntriesRecoverFailed,
-        kPersistStateParseFailed,
-        kPersistStateSerializeFailed,
         kLogEntryParseFailed,
         kLogEntrySerializeFailed,
+        kPersistStatePutFailed,
+        kPersistStateGetFailed,
+        kPersistStateParseFailed,
+        kPersistStateSerializeFailed,
         kRequestVoteRequestRequestParseFailed,
         kRequestVoteRequestRequestSerializeFailed,
         kRequestVoteResponseParseFailed,
@@ -75,8 +76,6 @@ public:
                 return "Invalid data directory.";
             case kInvalidLogIndex:
                 return "Invalid first or last log index.";
-            case kPersistStateGetFailed:
-                return "Persist state get failed.";
             case kFirstLogIndexPutFailed:
                 return "First log index put failed.";
             case kLastLogIndexPutFailed:
@@ -85,14 +84,18 @@ public:
                 return "Log index to ull failed.";
             case kLogEntriesRecoverFailed:
                 return "Log entries recover failed.";
-            case kPersistStateParseFailed:
-                return "Persist state parse failed.";
-            case kPersistStateSerializeFailed:
-                return "Persist state serialize failed.";
             case kLogEntryParseFailed:
                 return "Log entry parse failed.";
             case kLogEntrySerializeFailed:
                 return "Log entry serialize failed.";
+            case kPersistStateGetFailed:
+                return "Persist state get failed.";
+            case kPersistStatePutFailed:
+                return "Persist state put failed.";
+            case kPersistStateParseFailed:
+                return "Persist state parse failed.";
+            case kPersistStateSerializeFailed:
+                return "Persist state serialize failed.";
             case kRequestVoteRequestRequestParseFailed:
                 return "Request vote request parse failed.";
             case kRequestVoteRequestRequestSerializeFailed:

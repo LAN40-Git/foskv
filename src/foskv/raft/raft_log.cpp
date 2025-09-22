@@ -21,7 +21,7 @@ auto foskv::raft::detail::RaftLog::create(std::string_view data_dir) -> Result<R
     }
     auto entries = std::move(has_entries.value());
     uint64_t first_index = entries.empty() ? 1 : entries.front().index();
-    return RaftLog{first_index, std::move(has_entries.value()), std::move(persister)};
+    return RaftLog{first_index, std::move(entries), std::move(persister)};
 }
 
 auto foskv::raft::detail::RaftLog::last_log_index()
@@ -53,7 +53,7 @@ const noexcept -> uint64_t {
     }
     if (entries_.size() == 1) {
         // TODO: Load from snapshot metadata
-        // return first_index_ == 1 ? 0 : ;
+        return first_index_ == 1 ? 0 : 0;
     }
     return entries_[entries_.size() - 2].term();
 }
@@ -66,32 +66,36 @@ const noexcept -> Result<LogEntry> {
     return entries_[index-first_index_];
 }
 
-void foskv::raft::detail::RaftLog::append_entries(std::span<const LogEntry> entries) {
-    // Copy from span
-    entries_.insert(entries_.end(), entries.begin(), entries.end());
+auto foskv::raft::detail::RaftLog::term_at(uint64_t index)
+const noexcept -> uint64_t {
+    if (index < first_index_ || index > last_log_index()) {
+        return 0;
+    }
+    return entries_[index-first_index_].term();
+}
+
+void foskv::raft::detail::RaftLog::append_entries(std::vector<LogEntry>&& entries) {
     // persist
     auto has_persist = persister_.persist_batch(entries);
+    entries_.insert(
+        entries_.end(),
+        std::make_move_iterator(entries.begin()),
+        std::make_move_iterator(entries.end())
+    );
     // TODO: Handle this
     if (!has_persist) {
         LOG_FATAL("Failed to persist entries.");
     }
 }
 
-void foskv::raft::detail::RaftLog::truncate_entries(uint64_t start_index) const {
+void foskv::raft::detail::RaftLog::truncate_entries(uint64_t start_index) {
     if (start_index < first_index_ || start_index > last_log_index()) {
         return;
     }
+    entries_.erase(entries_.begin() + start_index - first_index_, entries_.end());
     auto has_truncate = persister_.truncate_batch(start_index, last_log_index());
     // TODO: Handle this
     if (!has_truncate) {
         LOG_FATAL("Failed to truncate entries.");
     }
 }
-
-// void foskv::raft::detail::RaftLog::truncate(std::size_t start_index, std::size_t end_index) {
-//     if (start_index < first_index_ || start_index > entries_.size()) {
-//         return;
-//     }
-//     entries_.erase(entries_.begin() + (start_index - first_index_), entries_.end());
-//     persister_.truncate_log(start_index, end_index);
-// }

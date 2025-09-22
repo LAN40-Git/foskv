@@ -25,10 +25,27 @@ public:
     [[nodiscard]] auto last_log_term() const noexcept -> uint64_t;
     [[nodiscard]] auto prev_log_index() const noexcept -> uint64_t;
     [[nodiscard]] auto prev_log_term() const noexcept -> uint64_t;
-    /// @return Return LogEntry whose index is index
     [[nodiscard]] auto entry_at(uint64_t index) const noexcept -> Result<LogEntry>;
-    void append_entries(std::span<const LogEntry> entries);
-    void truncate_entries(uint64_t start_index) const;
+    [[nodiscard]] auto term_at(uint64_t index) const noexcept -> uint64_t;
+    void append_entries(std::vector<LogEntry>&& entries);
+    void truncate_entries(uint64_t start_index);
+
+public:
+    // For test
+    auto recover_state_test() const -> Result<PersistState> {
+        return persister_.recover_state();
+    }
+
+    void persist_state_test(uint64_t current_term, std::optional<uint64_t> voted_for) {
+        auto ret = persister_.persist(current_term, voted_for);
+        if (!ret) {
+            LOG_ERROR("{}", ret.error());
+        }
+    }
+
+    auto entries_test() const noexcept -> std::vector<LogEntry> {
+        return entries_;
+    }
 
 private:
     uint64_t              first_index_;

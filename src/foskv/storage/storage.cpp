@@ -5,7 +5,9 @@ foskv::storage::Storage::Storage(rocksdb::DB *db)
     : db_(db) {}
 
 foskv::storage::Storage::~Storage() {
-    db_->Close();
+    if (db_ != nullptr) {
+        db_->Close();
+    }
 }
 
 foskv::storage::Storage::Storage(Storage &&other) noexcept {

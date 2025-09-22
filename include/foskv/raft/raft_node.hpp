@@ -8,7 +8,8 @@ namespace foskv::raft {
 class RaftNode {
     friend class detail::StateMachine;
 public:
-    explicit RaftNode(RaftConfig&& config, detail::RaftLog logs, detail::StateMachine&& state_machine);
+    explicit RaftNode(RaftConfig&& config, detail::StateMachine&& state_machine,
+        PersistState&& state, detail::RaftLog&& logs);
 
 public:
     static auto create(std::string_view config_path, std::string_view data_dir) -> kosio::async::Task<Result<std::unique_ptr<RaftNode>>>;
@@ -37,20 +38,20 @@ private:
     /* Confirm that you have hold mutex_ */
     auto produce_response_header() const noexcept -> ResponseHeader;
     auto produce_request_vote_request() const noexcept -> RequestVoteRequest;
-    auto produce_request_vote_response(bool vote_granted) const noexcept -> RequestVoteResponse;
+    auto produce_request_vote_response(bool vote_granted, std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
-    auto produce_append_entries_response(bool success) const noexcept -> AppendEntriesResponse;
+    auto produce_append_entries_response(bool success, std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
 
 private:
     enum Role { kLeader, kFollower, kCandidate};
 
     kosio::sync::Mutex      mutex_;
     std::atomic<bool>       is_shutdown_{false};
-    detail::StateMachine    state_machine_;
-    detail::Transport       transport_;
     std::atomic<uint64_t>   last_reset_time_{0};
-    std::atomic<Role>       role_ = kFollower;
+    detail::Transport       transport_;
+    std::atomic<Role>       role_{kFollower};
     std::optional<uint64_t> leader_id_{std::nullopt};
+    detail::StateMachine    state_machine_;
 
     /* RaftState from https://raft.github.io/raft.pdf */
     // Persistent state on all servers
