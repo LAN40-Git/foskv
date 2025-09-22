@@ -23,42 +23,6 @@ auto foskv::raft::detail::Persister::create(std::string_view data_dir)
     return Persister{std::move(has_st.value())};
 }
 
-auto foskv::raft::detail::Persister::persist(const rocksdb::Slice &index,
-    const rocksdb::Slice &payload) const -> Result<void> {
-    rocksdb::WriteBatch batch;
-    batch.Put(index, payload);
-    batch.Put(LAST_INDEX_KEY, index);
-    if (auto status = st_.BatchWrite(batch); !status.ok()) {
-        LOG_ERROR("Batch write failed: {}", status.ToString());
-        return std::unexpected{make_error(Error::kLogEntryPersistFailed)};
-    }
-    return {};
-}
-
-auto foskv::raft::detail::Persister::persist(uint64_t current_term,
-    std::optional<uint64_t> voted_for) -> Result<void> {
-    PersistState state;
-    state.set_current_term(current_term);
-    if (voted_for.has_value()) {
-        state.set_voted_for(voted_for.value());
-    }
-    if (!state.SerializeToArray(buffer_.data(), state.ByteSizeLong())) {
-        return std::unexpected{make_error(Error::kPersistStateSerializeFailed)};
-    }
-    return Result<void>{};
-}
-
-auto foskv::raft::detail::Persister::persist_batch(
-    std::vector<std::pair<uint64_t, rocksdb::Slice>> batch) const -> Result<void> {
-    rocksdb::WriteBatch wb;
-    for (auto& [index, payload] : batch) {
-        wb.Put(std::to_string(index), payload);
-    }
-    wb.Put(LAST_INDEX_KEY, std::to_string(batch.back().first));
-    return st_.BatchWrite(wb).ok() ? Result<void>{}
-    : std::unexpected{make_error(Error::kLogEntryPersistFailed)};
-}
-
 auto foskv::raft::detail::Persister::recover_state() const -> Result<PersistState> {
     std::string value;
     if (auto status = st_.Get(PERSIST_STATE_KEY, &value); status.ok()) {
@@ -97,7 +61,7 @@ auto foskv::raft::detail::Persister::recover_entries() const -> Result<std::vect
         wb.Put(LAST_INDEX_KEY, last_index_value);
         if (auto status = st_.BatchWrite(wb); !status.ok()) {
             LOG_ERROR("Batch write failed: {}", status.ToString());
-            return std::unexpected{make_error(Error::kLogEntryPersistFailed)};
+            return std::unexpected{make_error(Error::kLogEntriesPersistFailed)};
         }
         return {};
     } else {
@@ -163,4 +127,45 @@ auto foskv::raft::detail::Persister::recover_entries() const -> Result<std::vect
         entries.emplace_back(std::move(entry));
     }
     return entries;
+}
+
+auto foskv::raft::detail::Persister::persist(uint64_t current_term,
+    std::optional<uint64_t> voted_for) -> Result<void> {
+    PersistState state;
+    state.set_current_term(current_term);
+    if (voted_for.has_value()) {
+        state.set_voted_for(voted_for.value());
+    }
+    if (!state.SerializeToArray(buffer_.data(), state.ByteSizeLong())) {
+        return std::unexpected{make_error(Error::kPersistStateSerializeFailed)};
+    }
+    return Result<void>{};
+}
+
+auto foskv::raft::detail::Persister::persist_batch(std::span<const LogEntry> entries)
+const -> Result<void> {
+    std::vector<std::pair<std::string, std::string>> entries_copy;
+    entries_copy.reserve(entries.size());
+    for (const auto &entry : entries) {
+        entries_copy.emplace_back(std::make_pair(std::to_string(entry.index()), entry.SerializeAsString()));
+    }
+    rocksdb::WriteBatch wb;
+    for (auto& [index, payload] : entries_copy) {
+        wb.Put(index, payload);
+    }
+    wb.Put(LAST_INDEX_KEY, entries_copy.back().first);
+    return st_.BatchWrite(wb).ok() ?
+    Result<void>{} : std::unexpected{make_error(Error::kLogEntriesPersistFailed)};
+}
+
+auto foskv::raft::detail::Persister::truncate_batch(uint64_t start_index, uint64_t end_index) const -> Result<void> {
+    std::vector<std::string> keys;
+    rocksdb::WriteBatch wb;
+    keys.reserve(end_index - start_index + 1);
+    for (uint64_t i = start_index; i <= end_index; ++i) {
+        keys.emplace_back(std::to_string(i));
+        wb.Delete(keys[i]);
+    }
+    return st_.BatchWrite(wb).ok() ?
+    Result<void>{} : std::unexpected{make_error(Error::kLogEntriesTruncateFailed)};
 }

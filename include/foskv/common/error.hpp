@@ -48,7 +48,8 @@ public:
         kTempRaftConfigFileWriteFailed,
         kTempRaftConfigFileRenameFailed,
         kRocksDBFileOpenFailed,
-        kLogEntryPersistFailed,
+        kLogEntriesPersistFailed,
+        kLogEntriesTruncateFailed,
         kStatePersistFailed,
         kKVPutFailed,
     };
@@ -138,8 +139,10 @@ public:
                 return "Failed to rename temp raft config file.";
             case kRocksDBFileOpenFailed:
                 return "Failed to open RocksDB file.";
-            case kLogEntryPersistFailed:
-                return "Failed to persist log entry.";
+            case kLogEntriesPersistFailed:
+                return "Failed to persist log entries.";
+            case kLogEntriesTruncateFailed:
+                return "Failed to truncate log entries.";
             case kStatePersistFailed:
                 return "Failed to persist state.";
             default:

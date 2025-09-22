@@ -22,12 +22,16 @@ public:
     static auto create(std::string_view data_dir) -> Result<Persister>;
 
 public:
-    auto persist(const rocksdb::Slice& index, const rocksdb::Slice& payload) const -> Result<void>;
-    auto persist(uint64_t current_term, std::optional<uint64_t> voted_for) -> Result<void>;
-    auto persist_batch(std::vector<std::pair<uint64_t, rocksdb::Slice>> batch) const -> Result<void>;
+    [[nodiscard]]
     auto recover_state() const -> Result<PersistState>;
+    [[nodiscard]]
     auto recover_entries() const -> Result<std::vector<LogEntry>>;
-    auto remove_entries(std::size_t start_index, std::size_t end_index);
+    [[nodiscard]]
+    auto persist(uint64_t current_term, std::optional<uint64_t> voted_for) -> Result<void>;
+    [[nodiscard]]
+    auto persist_batch(std::span<const LogEntry> entries) const -> Result<void>;
+    [[nodiscard]]
+    auto truncate_batch(uint64_t start_index, uint64_t end_index) const -> Result<void>;
 
 private:
     storage::Storage  st_;
