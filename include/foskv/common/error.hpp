@@ -171,24 +171,24 @@ static auto make_error(int error_code) -> Error {
 } // namespace foskv
 
 namespace std {
-    template <>
-    struct formatter<foskv::Error> {
-    public:
-        constexpr auto parse(format_parse_context &context) {
-            auto it{context.begin()};
-            auto end{context.end()};
-            if (it == end || *it == '}') {
-                return it;
-            }
-            ++it;
-            if (it != end && *it != '}') {
-                throw format_error("Invalid format specifier for Error");
-            }
+template <>
+struct formatter<foskv::Error> {
+public:
+    constexpr auto parse(format_parse_context &context) {
+        auto it{context.begin()};
+        auto end{context.end()};
+        if (it == end || *it == '}') {
             return it;
         }
-
-        auto format(const foskv::Error &error, auto &context) const noexcept {
-            return format_to(context.out(), "{} (error {})", error.message(), error.value());
+        ++it;
+        if (it != end && *it != '}') {
+            throw format_error("Invalid format specifier for Error");
         }
-    };
+        return it;
+    }
+
+    auto format(const foskv::Error &error, auto &context) const noexcept {
+        return format_to(context.out(), "{} (error {})", error.message(), error.value());
+    }
+};
 } // namespace std

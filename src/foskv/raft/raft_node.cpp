@@ -24,6 +24,10 @@ foskv::raft::RaftNode::RaftNode(
         [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_append_entries_request(req_payload, resp_payload);
     });
+    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::InstallSnapshot,
+        [this](std::string_view req_payload, std::span<char> resp_payload) -> kosio::async::Task<Result<std::size_t>> {
+        co_return co_await this->handle_install_snapshot_request(req_payload, resp_payload);
+    });
 }
 
 auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_view data_dir)
@@ -327,6 +331,42 @@ auto foskv::raft::RaftNode::handle_append_entries_request(std::string_view req_p
     co_return produce_append_entries_response(true, resp_payload);
 }
 
+auto foskv::raft::RaftNode::handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
+-> kosio::async::Task<Result<std::size_t>> {
+    InstallSnapshotRequest request;
+    if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
+        co_return std::unexpected{make_error(Error::kInstallSnapshotRequestParseFailed)};
+    }
+
+    auto req_term = request.term();
+    auto leader_id = request.leader_id();
+    auto last_include_index = request.last_include_index();
+    auto last_include_term = request.last_include_term();
+    auto offset = request.offset();
+    auto data = request.data();
+    bool done = request.done();
+
+    if (req_term < current_term_.load(std::memory_order_acquire)) {
+        co_return produce_install_snapshot_response(resp_payload);
+    }
+
+    co_await mutex_.lock();
+    std::lock_guard lock(mutex_, std::adopt_lock);
+
+    // Check again
+    auto current_term = current_term_.load(std::memory_order_relaxed);
+    if (req_term < current_term) {
+        co_return produce_install_snapshot_response(resp_payload);
+    }
+
+    if (offset == 0) {
+        // TODO: Create new snapshot file
+    }
+
+    // TODO: Write data into snapshot file at given offset
+
+}
+
 // auto foskv::raft::RaftNode::append_entries_callback(RaftNode *node, uint64_t prev_log_index, std::size_t entries_size,
 //                                                     std::string_view resp_payload) -> kosio::async::Task<> {
 //     AppendEntriesResponse response;
@@ -434,6 +474,31 @@ const noexcept -> Result<std::size_t> {
     auto resp_payload_size = response.ByteSizeLong();
     if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
         return std::unexpected{make_error(Error::kAppendEntriesResponseSerializeFailed)};
+    }
+    return resp_payload_size;
+}
+
+auto foskv::raft::RaftNode::produce_install_snapshot_request(uint64_t last_include_index, uint64_t last_include_term,
+    uint64_t offset, std::string &&data, bool done) const noexcept -> InstallSnapshotRequest {
+    InstallSnapshotRequest request;
+    request.set_leader_id(transport_.member_id());
+    request.set_term(current_term_.load(std::memory_order_relaxed));
+    request.set_last_include_index(last_include_index);
+    request.set_last_include_term(last_include_term);
+    request.set_offset(offset);
+    request.set_data(std::move(data));
+    request.set_done(done);
+    return request;
+}
+
+auto foskv::raft::RaftNode::produce_install_snapshot_response(std::span<char> resp_payload)
+const noexcept -> Result<std::size_t> {
+    InstallSnapshotResponse response;
+    auto response_header = produce_response_header();
+    response.set_allocated_header(&response_header);
+    auto resp_payload_size = response.ByteSizeLong();
+    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) [[unlikely]] {
+        return std::unexpected{make_error(Error::kInstallSnapshotResponseSerializeFailed)};
     }
     return resp_payload_size;
 }

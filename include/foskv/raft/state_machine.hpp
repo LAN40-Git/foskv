@@ -13,6 +13,8 @@ public:
 public:
     static auto create(std::string_view data_dir) -> Result<StateMachine>;
 
+public:
+
 private:
     storage::Storage st_;
 };

@@ -92,7 +92,7 @@ void foskv::raft::detail::RaftLog::truncate_entries(uint64_t start_index) {
     if (start_index < first_index_ || start_index > last_log_index()) {
         return;
     }
-    entries_.erase(entries_.begin() + start_index - first_index_, entries_.end());
+    entries_.erase(entries_.begin() + (start_index - first_index_), entries_.end());
     auto has_truncate = persister_.truncate_batch(start_index, last_log_index());
     // TODO: Handle this
     if (!has_truncate) {
