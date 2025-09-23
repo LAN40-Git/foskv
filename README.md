@@ -1,4 +1,7 @@
 # FosKV
+
+![C++](https://img.shields.io/badge/standard-C++23-00599C?logo=cplusplus&logoColor=white) ![Linux](https://img.shields.io/badge/platform-linux-dimgray)
+
 FosKV 是一个基于 kosio （本人参考tokio和zedio开发）异步运行时的分布式kv存储系统
 
 ## Rpc
