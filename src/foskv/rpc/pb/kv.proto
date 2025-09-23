@@ -10,12 +10,10 @@ message KeyValue {
 message PutRequest {
   bytes key = 1;
   bytes value = 2;
-  bool prev_kv = 3;
 }
 
 message PutResponse {
   rpc.ResponseHeader header = 1;
-  KeyValue prev_kv = 2;
 }
 
 message GetRequest {
@@ -24,7 +22,7 @@ message GetRequest {
 
 message GetResponse {
   rpc.ResponseHeader header = 1;
-  KeyValue kvs = 2;
+  KeyValue kv = 2;
 }
 
 message DeleteRequest {

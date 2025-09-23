@@ -40,6 +40,18 @@ auto foskv::raft::detail::Persister::persist(uint64_t current_term,
     return Result<void>{};
 }
 
+auto foskv::raft::detail::Persister::persist(const LogEntry &entry) -> Result<void> {
+    auto key = std::to_string(entry.index());
+    if (!entry.SerializeToArray(buffer_.data(), entry.ByteSizeLong())) {
+        return std::unexpected{make_error(Error::kLogEntrySerializeFailed)};
+    }
+    rocksdb::WriteBatch wb;
+    wb.Put(key, {buffer_.data(), entry.ByteSizeLong()});
+    wb.Put(LAST_INDEX_KEY, key);
+    return st_.BatchWrite(wb).ok() ?
+    Result<void>{} : std::unexpected{make_error(Error::kLogEntriesPersistFailed)};
+}
+
 auto foskv::raft::detail::Persister::persist_batch(std::span<const LogEntry> entries)
 const -> Result<void> {
     if (entries.empty()) {

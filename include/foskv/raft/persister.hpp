@@ -28,6 +28,8 @@ public:
     [[nodiscard]]
     auto persist(uint64_t current_term, std::optional<uint64_t> voted_for) -> Result<void>;
     [[nodiscard]]
+    auto persist(const LogEntry& entry) -> Result<void>;
+    [[nodiscard]]
     auto persist_batch(std::span<const LogEntry> entries) const -> Result<void>;
     [[nodiscard]]
     auto truncate_batch(uint64_t start_index, uint64_t end_index) const -> Result<void>;

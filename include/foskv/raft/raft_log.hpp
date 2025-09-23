@@ -27,7 +27,8 @@ public:
     [[nodiscard]] auto prev_log_term() const noexcept -> uint64_t;
     [[nodiscard]] auto entry_at(uint64_t index) const noexcept -> Result<LogEntry>;
     [[nodiscard]] auto term_at(uint64_t index) const noexcept -> uint64_t;
-    void append_entries(std::vector<LogEntry>&& entries);
+    [[nodiscard]] auto append_entry(LogEntry&& entry) -> Result<void>;
+    [[nodiscard]] auto append_entries(std::vector<LogEntry>&& entries) -> Result<void>;
     void truncate_entries(uint64_t start_index);
 
 public:

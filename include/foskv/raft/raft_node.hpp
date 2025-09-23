@@ -1,7 +1,6 @@
 #pragma once
-#include "raft_log.hpp"
+#include "foskv/raft/raft_log.hpp"
 #include "foskv/raft/transport.hpp"
-#include "foskv/raft/persister.hpp"
 #include "foskv/raft/state_machine.hpp"
 
 namespace foskv::raft {
@@ -15,7 +14,10 @@ public:
     static auto create(std::string_view config_path, std::string_view data_dir) -> kosio::async::Task<Result<std::unique_ptr<RaftNode>>>;
 
 public:
-    auto run() -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
+    auto run() -> kosio::async::Task<Result<void>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto shutdown() -> kosio::async::Task<>;
 
 private:
     auto start_election_timeout() -> kosio::async::Task<>;
@@ -28,24 +30,48 @@ private:
 private:
     // raft rpc invoke
     [[REMEMBER_CO_AWAIT]]
-    auto handle_request_vote_request(std::string_view req_payload, std::span<char> resp_payload)
+    auto handle_request_vote_request(
+        std::string_view req_payload, std::span<char> resp_payload,
+        uint64_t session_id = 0, uint64_t request_id = 0) -> kosio::async::Task<Result<std::size_t>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_append_entries_request(
+        std::string_view req_payload, std::span<char> resp_payload,
+        uint64_t session_id = 0, uint64_t request_id = 0) -> kosio::async::Task<Result<std::size_t>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload,
+        uint64_t session_id = 0, uint64_t request_id = 0) -> kosio::async::Task<Result<std::size_t>>;
+
+    // business rpc invoke
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_kv_put_request(std::string_view req_payload, std::span<char> resp_payload,
+        uint64_t session_id, uint64_t request_id)
     -> kosio::async::Task<Result<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
-    auto handle_append_entries_request(std::string_view req_payload, std::span<char> resp_payload)
+    auto handle_kv_get_request(std::string_view req_payload, std::span<char> resp_payload,
+        uint64_t session_id, uint64_t request_id)
     -> kosio::async::Task<Result<std::size_t>>;
     [[REMEMBER_CO_AWAIT]]
-    auto handle_install_snapshot_request(std::string_view req_payload, std::span<char> resp_payload)
+    auto handle_kv_delete_request(std::string_view req_payload, std::span<char> resp_payload,
+        uint64_t session_id, uint64_t request_id)
     -> kosio::async::Task<Result<std::size_t>>;
 
+
 private:
-    /* Confirm that you have hold mutex_ */
+    /* For raft */
+    [[nodiscard]]
     auto produce_response_header() const noexcept -> ResponseHeader;
+    [[nodiscard]]
     auto produce_request_vote_request() const noexcept -> RequestVoteRequest;
+    [[nodiscard]]
     auto produce_request_vote_response(bool vote_granted, std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
+    [[nodiscard]]
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
+    [[nodiscard]]
     auto produce_append_entries_response(bool success, std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
-    auto produce_install_snapshot_request(uint64_t last_include_index, uint64_t last_include_term,
+    [[nodiscard]]
+    auto produce_install_snapshot_request(uint64_t last_included_index, uint64_t last_included_term,
         uint64_t offset, std::string&& data, bool done) const noexcept -> InstallSnapshotRequest;
+    [[nodiscard]]
     auto produce_install_snapshot_response(std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
 
 private:

@@ -1,0 +1,85 @@
+#pragma once
+#include "foskv/rpc.hpp"
+
+namespace foskv::raft::detail {
+[[nodiscard]]
+static auto produce_log_entry(uint64_t current_term,
+    uint64_t log_index, std::string&& command) -> LogEntry {
+    LogEntry entry;
+    entry.set_term(current_term);
+    entry.set_index(log_index);
+    entry.set_command(std::move(command));
+    return entry;
+}
+
+[[nodiscard]]
+static auto produce_redirect(std::string&& host, uint16_t port) -> rpc::Redirect {
+    rpc::Redirect redirect;
+    redirect.set_allocated_host(&host);
+    redirect.set_port(port);
+    return redirect;
+}
+
+[[nodiscard]]
+static auto produce_kv(std::string&& key, std::string&& value) -> kv::KeyValue {
+    kv::KeyValue kv;
+    kv.set_key(std::move(key));
+    kv.set_value(std::move(value));
+    return kv;
+}
+
+[[nodiscard]]
+static auto produce_rpc_response_header(bool success, uint32_t error_code,
+    std::optional<rpc::Redirect>&& redirect) -> rpc::ResponseHeader {
+    rpc::ResponseHeader header;
+    header.set_success(success);
+    header.set_error_code(error_code);
+    if (redirect) {
+        header.set_allocated_redirect(&redirect.value());
+    }
+    return header;
+}
+
+[[nodiscard]]
+static auto produce_kv_put_response(bool success, uint32_t error_code,
+    std::optional<rpc::Redirect>&& redirect, std::span<char> resp_payload) -> Result<std::size_t> {
+    kv::PutResponse response;
+    auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
+    response.set_allocated_header(&header);
+    auto resp_payload_size = response.ByteSizeLong();
+    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+        return std::unexpected{make_error(Error::kKVPutResponseSerializeFailed)};
+    }
+    return resp_payload_size;
+}
+
+[[nodiscard]]
+static auto produce_kv_get_response(bool success, uint32_t error_code,
+    std::optional<rpc::Redirect>&& redirect, std::optional<kv::KeyValue>&& kv,
+    std::span<char> resp_payload) -> Result<std::size_t> {
+    kv::GetResponse response;
+    auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
+    response.set_allocated_header(&header);
+    if (kv) {
+        response.set_allocated_kv(&kv.value());
+    }
+    auto resp_payload_size = response.ByteSizeLong();
+    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+        return std::unexpected{make_error(Error::kKVPutResponseSerializeFailed)};
+    }
+    return resp_payload_size;
+}
+
+[[nodiscard]]
+static auto produce_kv_delete_response(bool success, uint32_t error_code,
+    std::optional<rpc::Redirect>&& redirect, std::span<char> resp_payload) -> Result<std::size_t> {
+    kv::DeleteResponse response;
+    auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
+    response.set_allocated_header(&header);
+    auto resp_payload_size = response.ByteSizeLong();
+    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+        return std::unexpected{make_error(Error::kKVDeleteResponseSerializeFailed)};
+    }
+    return resp_payload_size;
+}
+} // namespace foskv::raft::detail

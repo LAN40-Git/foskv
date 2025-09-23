@@ -17,7 +17,7 @@ public:
 
 public:
     [[REMEMBER_CO_AWAIT]]
-    auto run() -> kosio::async::Task<kosio::Result<void>>;
+    auto run() -> kosio::async::Task<Result<void>>;
 
 public:
     void register_invoke(

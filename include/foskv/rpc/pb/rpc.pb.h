@@ -46,6 +46,9 @@ struct TableStruct_rpc_2eproto {
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_rpc_2eproto;
 namespace foskv {
 namespace rpc {
+class Redirect;
+struct RedirectDefaultTypeInternal;
+extern RedirectDefaultTypeInternal _Redirect_default_instance_;
 class ResponseHeader;
 struct ResponseHeaderDefaultTypeInternal;
 extern ResponseHeaderDefaultTypeInternal _ResponseHeader_default_instance_;
@@ -55,6 +58,7 @@ extern RpcHeaderDefaultTypeInternal _RpcHeader_default_instance_;
 }  // namespace rpc
 }  // namespace foskv
 PROTOBUF_NAMESPACE_OPEN
+template<> ::foskv::rpc::Redirect* Arena::CreateMaybeMessage<::foskv::rpc::Redirect>(Arena*);
 template<> ::foskv::rpc::ResponseHeader* Arena::CreateMaybeMessage<::foskv::rpc::ResponseHeader>(Arena*);
 template<> ::foskv::rpc::RpcHeader* Arena::CreateMaybeMessage<::foskv::rpc::RpcHeader>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
@@ -62,6 +66,170 @@ namespace foskv {
 namespace rpc {
 
 // ===================================================================
+
+class Redirect final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.Redirect) */ {
+ public:
+  inline Redirect() : Redirect(nullptr) {}
+  ~Redirect() override;
+  explicit PROTOBUF_CONSTEXPR Redirect(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Redirect(const Redirect& from);
+  Redirect(Redirect&& from) noexcept
+    : Redirect() {
+    *this = ::std::move(from);
+  }
+
+  inline Redirect& operator=(const Redirect& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Redirect& operator=(Redirect&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Redirect& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Redirect* internal_default_instance() {
+    return reinterpret_cast<const Redirect*>(
+               &_Redirect_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    0;
+
+  friend void swap(Redirect& a, Redirect& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Redirect* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Redirect* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Redirect* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Redirect>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Redirect& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Redirect& from) {
+    Redirect::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Redirect* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "foskv.rpc.Redirect";
+  }
+  protected:
+  explicit Redirect(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kHostFieldNumber = 1,
+    kPortFieldNumber = 2,
+  };
+  // bytes host = 1;
+  void clear_host();
+  const std::string& host() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_host(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_host();
+  PROTOBUF_NODISCARD std::string* release_host();
+  void set_allocated_host(std::string* host);
+  private:
+  const std::string& _internal_host() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_host(const std::string& value);
+  std::string* _internal_mutable_host();
+  public:
+
+  // uint32 port = 2;
+  void clear_port();
+  uint32_t port() const;
+  void set_port(uint32_t value);
+  private:
+  uint32_t _internal_port() const;
+  void _internal_set_port(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:foskv.rpc.Redirect)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr host_;
+    uint32_t port_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_rpc_2eproto;
+};
+// -------------------------------------------------------------------
 
 class RpcHeader final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.rpc.RpcHeader) */ {
@@ -111,7 +279,7 @@ class RpcHeader final :
                &_RpcHeader_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    0;
+    1;
 
   friend void swap(RpcHeader& a, RpcHeader& b) {
     a.Swap(&b);
@@ -302,7 +470,7 @@ class ResponseHeader final :
                &_ResponseHeader_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    2;
 
   friend void swap(ResponseHeader& a, ResponseHeader& b) {
     a.Swap(&b);
@@ -375,35 +543,44 @@ class ResponseHeader final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kClusterIdFieldNumber = 1,
-    kMemberIdFieldNumber = 2,
-    kTermFieldNumber = 3,
+    kRedirectFieldNumber = 3,
+    kSuccessFieldNumber = 1,
+    kErrorCodeFieldNumber = 2,
   };
-  // uint64 cluster_id = 1;
-  void clear_cluster_id();
-  uint64_t cluster_id() const;
-  void set_cluster_id(uint64_t value);
+  // optional .foskv.rpc.Redirect redirect = 3;
+  bool has_redirect() const;
   private:
-  uint64_t _internal_cluster_id() const;
-  void _internal_set_cluster_id(uint64_t value);
+  bool _internal_has_redirect() const;
+  public:
+  void clear_redirect();
+  const ::foskv::rpc::Redirect& redirect() const;
+  PROTOBUF_NODISCARD ::foskv::rpc::Redirect* release_redirect();
+  ::foskv::rpc::Redirect* mutable_redirect();
+  void set_allocated_redirect(::foskv::rpc::Redirect* redirect);
+  private:
+  const ::foskv::rpc::Redirect& _internal_redirect() const;
+  ::foskv::rpc::Redirect* _internal_mutable_redirect();
+  public:
+  void unsafe_arena_set_allocated_redirect(
+      ::foskv::rpc::Redirect* redirect);
+  ::foskv::rpc::Redirect* unsafe_arena_release_redirect();
+
+  // bool success = 1;
+  void clear_success();
+  bool success() const;
+  void set_success(bool value);
+  private:
+  bool _internal_success() const;
+  void _internal_set_success(bool value);
   public:
 
-  // uint64 member_id = 2;
-  void clear_member_id();
-  uint64_t member_id() const;
-  void set_member_id(uint64_t value);
+  // uint32 error_code = 2;
+  void clear_error_code();
+  uint32_t error_code() const;
+  void set_error_code(uint32_t value);
   private:
-  uint64_t _internal_member_id() const;
-  void _internal_set_member_id(uint64_t value);
-  public:
-
-  // uint64 term = 3;
-  void clear_term();
-  uint64_t term() const;
-  void set_term(uint64_t value);
-  private:
-  uint64_t _internal_term() const;
-  void _internal_set_term(uint64_t value);
+  uint32_t _internal_error_code() const;
+  void _internal_set_error_code(uint32_t value);
   public:
 
   // @@protoc_insertion_point(class_scope:foskv.rpc.ResponseHeader)
@@ -414,10 +591,11 @@ class ResponseHeader final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    uint64_t cluster_id_;
-    uint64_t member_id_;
-    uint64_t term_;
+    ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+    ::foskv::rpc::Redirect* redirect_;
+    bool success_;
+    uint32_t error_code_;
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_rpc_2eproto;
@@ -431,6 +609,80 @@ class ResponseHeader final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
+// Redirect
+
+// bytes host = 1;
+inline void Redirect::clear_host() {
+  _impl_.host_.ClearToEmpty();
+}
+inline const std::string& Redirect::host() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.Redirect.host)
+  return _internal_host();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Redirect::set_host(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.host_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:foskv.rpc.Redirect.host)
+}
+inline std::string* Redirect::mutable_host() {
+  std::string* _s = _internal_mutable_host();
+  // @@protoc_insertion_point(field_mutable:foskv.rpc.Redirect.host)
+  return _s;
+}
+inline const std::string& Redirect::_internal_host() const {
+  return _impl_.host_.Get();
+}
+inline void Redirect::_internal_set_host(const std::string& value) {
+  
+  _impl_.host_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Redirect::_internal_mutable_host() {
+  
+  return _impl_.host_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Redirect::release_host() {
+  // @@protoc_insertion_point(field_release:foskv.rpc.Redirect.host)
+  return _impl_.host_.Release();
+}
+inline void Redirect::set_allocated_host(std::string* host) {
+  if (host != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.host_.SetAllocated(host, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.host_.IsDefault()) {
+    _impl_.host_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.Redirect.host)
+}
+
+// uint32 port = 2;
+inline void Redirect::clear_port() {
+  _impl_.port_ = 0u;
+}
+inline uint32_t Redirect::_internal_port() const {
+  return _impl_.port_;
+}
+inline uint32_t Redirect::port() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.Redirect.port)
+  return _internal_port();
+}
+inline void Redirect::_internal_set_port(uint32_t value) {
+  
+  _impl_.port_ = value;
+}
+inline void Redirect::set_port(uint32_t value) {
+  _internal_set_port(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.Redirect.port)
+}
+
+// -------------------------------------------------------------------
+
 // RpcHeader
 
 // uint64 request_id = 1;
@@ -577,69 +829,141 @@ inline void RpcHeader::set_payload_size(uint32_t value) {
 
 // ResponseHeader
 
-// uint64 cluster_id = 1;
-inline void ResponseHeader::clear_cluster_id() {
-  _impl_.cluster_id_ = uint64_t{0u};
+// bool success = 1;
+inline void ResponseHeader::clear_success() {
+  _impl_.success_ = false;
 }
-inline uint64_t ResponseHeader::_internal_cluster_id() const {
-  return _impl_.cluster_id_;
+inline bool ResponseHeader::_internal_success() const {
+  return _impl_.success_;
 }
-inline uint64_t ResponseHeader::cluster_id() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.cluster_id)
-  return _internal_cluster_id();
+inline bool ResponseHeader::success() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.success)
+  return _internal_success();
 }
-inline void ResponseHeader::_internal_set_cluster_id(uint64_t value) {
+inline void ResponseHeader::_internal_set_success(bool value) {
   
-  _impl_.cluster_id_ = value;
+  _impl_.success_ = value;
 }
-inline void ResponseHeader::set_cluster_id(uint64_t value) {
-  _internal_set_cluster_id(value);
-  // @@protoc_insertion_point(field_set:foskv.rpc.ResponseHeader.cluster_id)
+inline void ResponseHeader::set_success(bool value) {
+  _internal_set_success(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.ResponseHeader.success)
 }
 
-// uint64 member_id = 2;
-inline void ResponseHeader::clear_member_id() {
-  _impl_.member_id_ = uint64_t{0u};
+// uint32 error_code = 2;
+inline void ResponseHeader::clear_error_code() {
+  _impl_.error_code_ = 0u;
 }
-inline uint64_t ResponseHeader::_internal_member_id() const {
-  return _impl_.member_id_;
+inline uint32_t ResponseHeader::_internal_error_code() const {
+  return _impl_.error_code_;
 }
-inline uint64_t ResponseHeader::member_id() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.member_id)
-  return _internal_member_id();
+inline uint32_t ResponseHeader::error_code() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.error_code)
+  return _internal_error_code();
 }
-inline void ResponseHeader::_internal_set_member_id(uint64_t value) {
+inline void ResponseHeader::_internal_set_error_code(uint32_t value) {
   
-  _impl_.member_id_ = value;
+  _impl_.error_code_ = value;
 }
-inline void ResponseHeader::set_member_id(uint64_t value) {
-  _internal_set_member_id(value);
-  // @@protoc_insertion_point(field_set:foskv.rpc.ResponseHeader.member_id)
+inline void ResponseHeader::set_error_code(uint32_t value) {
+  _internal_set_error_code(value);
+  // @@protoc_insertion_point(field_set:foskv.rpc.ResponseHeader.error_code)
 }
 
-// uint64 term = 3;
-inline void ResponseHeader::clear_term() {
-  _impl_.term_ = uint64_t{0u};
+// optional .foskv.rpc.Redirect redirect = 3;
+inline bool ResponseHeader::_internal_has_redirect() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
+  PROTOBUF_ASSUME(!value || _impl_.redirect_ != nullptr);
+  return value;
 }
-inline uint64_t ResponseHeader::_internal_term() const {
-  return _impl_.term_;
+inline bool ResponseHeader::has_redirect() const {
+  return _internal_has_redirect();
 }
-inline uint64_t ResponseHeader::term() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.term)
-  return _internal_term();
+inline void ResponseHeader::clear_redirect() {
+  if (_impl_.redirect_ != nullptr) _impl_.redirect_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000001u;
 }
-inline void ResponseHeader::_internal_set_term(uint64_t value) {
-  
-  _impl_.term_ = value;
+inline const ::foskv::rpc::Redirect& ResponseHeader::_internal_redirect() const {
+  const ::foskv::rpc::Redirect* p = _impl_.redirect_;
+  return p != nullptr ? *p : reinterpret_cast<const ::foskv::rpc::Redirect&>(
+      ::foskv::rpc::_Redirect_default_instance_);
 }
-inline void ResponseHeader::set_term(uint64_t value) {
-  _internal_set_term(value);
-  // @@protoc_insertion_point(field_set:foskv.rpc.ResponseHeader.term)
+inline const ::foskv::rpc::Redirect& ResponseHeader::redirect() const {
+  // @@protoc_insertion_point(field_get:foskv.rpc.ResponseHeader.redirect)
+  return _internal_redirect();
+}
+inline void ResponseHeader::unsafe_arena_set_allocated_redirect(
+    ::foskv::rpc::Redirect* redirect) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.redirect_);
+  }
+  _impl_.redirect_ = redirect;
+  if (redirect) {
+    _impl_._has_bits_[0] |= 0x00000001u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000001u;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.rpc.ResponseHeader.redirect)
+}
+inline ::foskv::rpc::Redirect* ResponseHeader::release_redirect() {
+  _impl_._has_bits_[0] &= ~0x00000001u;
+  ::foskv::rpc::Redirect* temp = _impl_.redirect_;
+  _impl_.redirect_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::foskv::rpc::Redirect* ResponseHeader::unsafe_arena_release_redirect() {
+  // @@protoc_insertion_point(field_release:foskv.rpc.ResponseHeader.redirect)
+  _impl_._has_bits_[0] &= ~0x00000001u;
+  ::foskv::rpc::Redirect* temp = _impl_.redirect_;
+  _impl_.redirect_ = nullptr;
+  return temp;
+}
+inline ::foskv::rpc::Redirect* ResponseHeader::_internal_mutable_redirect() {
+  _impl_._has_bits_[0] |= 0x00000001u;
+  if (_impl_.redirect_ == nullptr) {
+    auto* p = CreateMaybeMessage<::foskv::rpc::Redirect>(GetArenaForAllocation());
+    _impl_.redirect_ = p;
+  }
+  return _impl_.redirect_;
+}
+inline ::foskv::rpc::Redirect* ResponseHeader::mutable_redirect() {
+  ::foskv::rpc::Redirect* _msg = _internal_mutable_redirect();
+  // @@protoc_insertion_point(field_mutable:foskv.rpc.ResponseHeader.redirect)
+  return _msg;
+}
+inline void ResponseHeader::set_allocated_redirect(::foskv::rpc::Redirect* redirect) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.redirect_;
+  }
+  if (redirect) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(redirect);
+    if (message_arena != submessage_arena) {
+      redirect = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, redirect, submessage_arena);
+    }
+    _impl_._has_bits_[0] |= 0x00000001u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000001u;
+  }
+  _impl_.redirect_ = redirect;
+  // @@protoc_insertion_point(field_set_allocated:foskv.rpc.ResponseHeader.redirect)
 }
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 

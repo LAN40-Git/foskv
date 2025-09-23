@@ -1,5 +1,5 @@
 #pragma once
-#include "foskv/rpc.hpp"
+#include "foskv/raft/util.hpp"
 
 namespace foskv::raft::detail {
 class Peer {
@@ -31,7 +31,7 @@ public:
     [[nodiscard]]
     auto name() const noexcept -> std::string { return name_; }
     [[nodiscard]]
-    auto host() const noexcept -> std::string_view { return host_; }
+    auto host() const noexcept -> std::string { return host_; }
     [[nodiscard]]
     auto port() const noexcept -> uint16_t { return port_; }
 

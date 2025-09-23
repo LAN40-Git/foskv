@@ -31,7 +31,7 @@ public:
     auto peer_count() const noexcept -> std::size_t { return config_.peers_.size(); }
 
 public:
-    auto run() -> kosio::async::Task<kosio::Result<void>>;
+    auto run() -> kosio::async::Task<Result<void>>;
 
 public:
     auto broadcast_request_vote_request(RequestVoteRequest&& request, Peer::RpcCallback&& callback) -> kosio::async::Task<>;

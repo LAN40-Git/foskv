@@ -1,19 +1,21 @@
 #include "foskv/rpc/provider.hpp"
 
-auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<kosio::Result<void>> {
+auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
     auto has_listener = kosio::net::TcpListener::bind(addr_);
     if (!has_listener) [[unlikely]] {
-        co_return std::unexpected{has_listener.error()};
+        LOG_ERROR("{}", has_listener.error());
+        co_return std::unexpected{make_error(Error::kTcpListenerBindFailed)};
     }
     auto listener = std::move(has_listener.value());
-    LOG_INFO("Listening on {}...", addr_);
+    LOG_VERBOSE("Listening on {}...", addr_);
     while (true) {
         auto has_stream = co_await listener.accept();
         if (!has_stream) [[unlikely]] {
-            co_return std::unexpected{has_stream.error()};
+            LOG_ERROR("{}", has_stream.error());
+            co_return std::unexpected{make_error(Error::kTcpStreamAcceptFailed)};
         }
         auto& [stream, peer_addr] = has_stream.value();
-        LOG_INFO("Accept connection from {}", peer_addr);
+        LOG_VERBOSE("Accept connection from {}", peer_addr);
         auto session = session_manager_.assign(peer_addr);
         auto [owned_reader, owned_writer] = stream.into_split();
         kosio::spawn(produce_invoke_tasks(std::move(owned_reader), session));
@@ -56,6 +58,7 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
             break;
         }
 
+        // TODO: Use buffer pools
         detail::InvokeTask task;
         task.req_payload_.resize(rpc_header_size);
 
@@ -78,6 +81,7 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         auto method_name = rpc_header.method_name();
         auto req_payload_size = rpc_header.payload_size();
 
+        // TODO: Use buffer pools
         task.request_id_ = request_id;
         task.req_payload_.resize(req_payload_size);
 
@@ -115,7 +119,10 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
     while (true) {
         auto task = co_await tasks.pop();
 
-        auto has_resp_payload = co_await task.invoke_(task.req_payload_, {resp_buffer.data(), resp_buffer.max_size()});
+        auto has_resp_payload = co_await task.invoke_(task.req_payload_,
+                                                     {resp_buffer.data(), resp_buffer.max_size()},
+                                                     session->session_id,
+                                                     task.request_id_);
         if (!has_resp_payload) [[unlikely]] {
             LOG_ERROR("Failed to get resp payload from invoke : {}", has_resp_payload.error());
             continue;

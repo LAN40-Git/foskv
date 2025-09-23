@@ -74,18 +74,33 @@ const noexcept -> uint64_t {
     return entries_[index-first_index_].term();
 }
 
-void foskv::raft::detail::RaftLog::append_entries(std::vector<LogEntry>&& entries) {
-    // persist
-    auto has_persist = persister_.persist_batch(entries);
+auto foskv::raft::detail::RaftLog::append_entry(LogEntry &&entry) -> Result<void> {
+    if (auto ret = persister_.persist(entry); !ret) {
+        return std::unexpected{ret.error()};
+    }
+    entries_.emplace_back(std::move(entry));
+    return Result<void>{};
+}
+
+auto foskv::raft::detail::RaftLog::append_entries(std::vector<LogEntry>&& entries) -> Result<void> {
+    // auto start_index = entries_.size();
+    // auto entries_size = entries.size();
+
+    if (auto ret = persister_.persist_batch(entries); !ret) {
+        return std::unexpected{ret.error()};
+    }
+
     entries_.insert(
         entries_.end(),
         std::make_move_iterator(entries.begin()),
         std::make_move_iterator(entries.end())
     );
-    // TODO: Handle this
-    if (!has_persist) {
-        LOG_FATAL("Failed to persist entries.");
-    }
+    return Result<void>{};
+
+    // return std::span<const LogEntry>(
+    //     entries_.data() + start_index,
+    //     entries_size
+    // );
 }
 
 void foskv::raft::detail::RaftLog::truncate_entries(uint64_t start_index) {

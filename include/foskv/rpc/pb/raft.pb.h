@@ -77,9 +77,6 @@ extern RequestVoteResponseDefaultTypeInternal _RequestVoteResponse_default_insta
 class ResponseHeader;
 struct ResponseHeaderDefaultTypeInternal;
 extern ResponseHeaderDefaultTypeInternal _ResponseHeader_default_instance_;
-class SnapshotMetadata;
-struct SnapshotMetadataDefaultTypeInternal;
-extern SnapshotMetadataDefaultTypeInternal _SnapshotMetadata_default_instance_;
 }  // namespace raft
 }  // namespace foskv
 PROTOBUF_NAMESPACE_OPEN
@@ -93,7 +90,6 @@ template<> ::foskv::raft::PersistState* Arena::CreateMaybeMessage<::foskv::raft:
 template<> ::foskv::raft::RequestVoteRequest* Arena::CreateMaybeMessage<::foskv::raft::RequestVoteRequest>(Arena*);
 template<> ::foskv::raft::RequestVoteResponse* Arena::CreateMaybeMessage<::foskv::raft::RequestVoteResponse>(Arena*);
 template<> ::foskv::raft::ResponseHeader* Arena::CreateMaybeMessage<::foskv::raft::ResponseHeader>(Arena*);
-template<> ::foskv::raft::SnapshotMetadata* Arena::CreateMaybeMessage<::foskv::raft::SnapshotMetadata>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace foskv {
 namespace raft {
@@ -270,6 +266,170 @@ class ResponseHeader final :
 };
 // -------------------------------------------------------------------
 
+class PersistState final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.raft.PersistState) */ {
+ public:
+  inline PersistState() : PersistState(nullptr) {}
+  ~PersistState() override;
+  explicit PROTOBUF_CONSTEXPR PersistState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PersistState(const PersistState& from);
+  PersistState(PersistState&& from) noexcept
+    : PersistState() {
+    *this = ::std::move(from);
+  }
+
+  inline PersistState& operator=(const PersistState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PersistState& operator=(PersistState&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const PersistState& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PersistState* internal_default_instance() {
+    return reinterpret_cast<const PersistState*>(
+               &_PersistState_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    1;
+
+  friend void swap(PersistState& a, PersistState& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PersistState* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PersistState* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PersistState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PersistState>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const PersistState& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const PersistState& from) {
+    PersistState::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(PersistState* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "foskv.raft.PersistState";
+  }
+  protected:
+  explicit PersistState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kCurrentTermFieldNumber = 1,
+    kVotedForFieldNumber = 2,
+  };
+  // uint64 current_term = 1;
+  void clear_current_term();
+  uint64_t current_term() const;
+  void set_current_term(uint64_t value);
+  private:
+  uint64_t _internal_current_term() const;
+  void _internal_set_current_term(uint64_t value);
+  public:
+
+  // optional uint64 voted_for = 2;
+  bool has_voted_for() const;
+  private:
+  bool _internal_has_voted_for() const;
+  public:
+  void clear_voted_for();
+  uint64_t voted_for() const;
+  void set_voted_for(uint64_t value);
+  private:
+  uint64_t _internal_voted_for() const;
+  void _internal_set_voted_for(uint64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:foskv.raft.PersistState)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+    uint64_t current_term_;
+    uint64_t voted_for_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_raft_2eproto;
+};
+// -------------------------------------------------------------------
+
 class RequestVoteRequest final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.raft.RequestVoteRequest) */ {
  public:
@@ -318,7 +478,7 @@ class RequestVoteRequest final :
                &_RequestVoteRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    2;
 
   friend void swap(RequestVoteRequest& a, RequestVoteRequest& b) {
     a.Swap(&b);
@@ -499,7 +659,7 @@ class RequestVoteResponse final :
                &_RequestVoteResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    3;
 
   friend void swap(RequestVoteResponse& a, RequestVoteResponse& b) {
     a.Swap(&b);
@@ -667,7 +827,7 @@ class LogEntry final :
                &_LogEntry_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    3;
+    4;
 
   friend void swap(LogEntry& a, LogEntry& b) {
     a.Swap(&b);
@@ -842,7 +1002,7 @@ class AppendEntriesRequest final :
                &_AppendEntriesRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    4;
+    5;
 
   friend void swap(AppendEntriesRequest& a, AppendEntriesRequest& b) {
     a.Swap(&b);
@@ -1054,7 +1214,7 @@ class AppendEntriesResponse final :
                &_AppendEntriesResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    6;
 
   friend void swap(AppendEntriesResponse& a, AppendEntriesResponse& b) {
     a.Swap(&b);
@@ -1222,7 +1382,7 @@ class InstallSnapshotRequest final :
                &_InstallSnapshotRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    7;
 
   friend void swap(InstallSnapshotRequest& a, InstallSnapshotRequest& b) {
     a.Swap(&b);
@@ -1441,7 +1601,7 @@ class InstallSnapshotResponse final :
                &_InstallSnapshotResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    8;
 
   friend void swap(InstallSnapshotResponse& a, InstallSnapshotResponse& b) {
     a.Swap(&b);
@@ -1550,329 +1710,6 @@ class InstallSnapshotResponse final :
 };
 // -------------------------------------------------------------------
 
-class PersistState final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.raft.PersistState) */ {
- public:
-  inline PersistState() : PersistState(nullptr) {}
-  ~PersistState() override;
-  explicit PROTOBUF_CONSTEXPR PersistState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  PersistState(const PersistState& from);
-  PersistState(PersistState&& from) noexcept
-    : PersistState() {
-    *this = ::std::move(from);
-  }
-
-  inline PersistState& operator=(const PersistState& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline PersistState& operator=(PersistState&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const PersistState& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const PersistState* internal_default_instance() {
-    return reinterpret_cast<const PersistState*>(
-               &_PersistState_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    8;
-
-  friend void swap(PersistState& a, PersistState& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(PersistState* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(PersistState* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  PersistState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<PersistState>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const PersistState& from);
-  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const PersistState& from) {
-    PersistState::MergeImpl(*this, from);
-  }
-  private:
-  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
-  public:
-  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
-  uint8_t* _InternalSerialize(
-      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(PersistState* other);
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "foskv.raft.PersistState";
-  }
-  protected:
-  explicit PersistState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  enum : int {
-    kCurrentTermFieldNumber = 1,
-    kVotedForFieldNumber = 2,
-  };
-  // uint64 current_term = 1;
-  void clear_current_term();
-  uint64_t current_term() const;
-  void set_current_term(uint64_t value);
-  private:
-  uint64_t _internal_current_term() const;
-  void _internal_set_current_term(uint64_t value);
-  public:
-
-  // optional uint64 voted_for = 2;
-  bool has_voted_for() const;
-  private:
-  bool _internal_has_voted_for() const;
-  public:
-  void clear_voted_for();
-  uint64_t voted_for() const;
-  void set_voted_for(uint64_t value);
-  private:
-  uint64_t _internal_voted_for() const;
-  void _internal_set_voted_for(uint64_t value);
-  public:
-
-  // @@protoc_insertion_point(class_scope:foskv.raft.PersistState)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  struct Impl_ {
-    ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
-    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-    uint64_t current_term_;
-    uint64_t voted_for_;
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_raft_2eproto;
-};
-// -------------------------------------------------------------------
-
-class SnapshotMetadata final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.raft.SnapshotMetadata) */ {
- public:
-  inline SnapshotMetadata() : SnapshotMetadata(nullptr) {}
-  ~SnapshotMetadata() override;
-  explicit PROTOBUF_CONSTEXPR SnapshotMetadata(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  SnapshotMetadata(const SnapshotMetadata& from);
-  SnapshotMetadata(SnapshotMetadata&& from) noexcept
-    : SnapshotMetadata() {
-    *this = ::std::move(from);
-  }
-
-  inline SnapshotMetadata& operator=(const SnapshotMetadata& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline SnapshotMetadata& operator=(SnapshotMetadata&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const SnapshotMetadata& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const SnapshotMetadata* internal_default_instance() {
-    return reinterpret_cast<const SnapshotMetadata*>(
-               &_SnapshotMetadata_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    9;
-
-  friend void swap(SnapshotMetadata& a, SnapshotMetadata& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(SnapshotMetadata* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(SnapshotMetadata* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  SnapshotMetadata* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<SnapshotMetadata>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const SnapshotMetadata& from);
-  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const SnapshotMetadata& from) {
-    SnapshotMetadata::MergeImpl(*this, from);
-  }
-  private:
-  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
-  public:
-  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
-  uint8_t* _InternalSerialize(
-      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(SnapshotMetadata* other);
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "foskv.raft.SnapshotMetadata";
-  }
-  protected:
-  explicit SnapshotMetadata(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  enum : int {
-    kLastIncludeIndexFieldNumber = 1,
-    kLastIncludeTermFieldNumber = 2,
-  };
-  // uint64 last_include_index = 1;
-  void clear_last_include_index();
-  uint64_t last_include_index() const;
-  void set_last_include_index(uint64_t value);
-  private:
-  uint64_t _internal_last_include_index() const;
-  void _internal_set_last_include_index(uint64_t value);
-  public:
-
-  // uint64 last_include_term = 2;
-  void clear_last_include_term();
-  uint64_t last_include_term() const;
-  void set_last_include_term(uint64_t value);
-  private:
-  uint64_t _internal_last_include_term() const;
-  void _internal_set_last_include_term(uint64_t value);
-  public:
-
-  // @@protoc_insertion_point(class_scope:foskv.raft.SnapshotMetadata)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  struct Impl_ {
-    uint64_t last_include_index_;
-    uint64_t last_include_term_;
-    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_raft_2eproto;
-};
-// -------------------------------------------------------------------
-
 class InternalRaftRequest final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:foskv.raft.InternalRaftRequest) */ {
  public:
@@ -1916,11 +1753,11 @@ class InternalRaftRequest final :
   static const InternalRaftRequest& default_instance() {
     return *internal_default_instance();
   }
-  enum TypeCase {
-    kPut = 3,
-    kGet = 4,
-    kDelete = 5,
-    TYPE_NOT_SET = 0,
+  enum CmdCase {
+    kKvPut = 1,
+    kKvGet = 2,
+    kKvDelete = 3,
+    CMD_NOT_SET = 0,
   };
 
   static inline const InternalRaftRequest* internal_default_instance() {
@@ -1928,7 +1765,7 @@ class InternalRaftRequest final :
                &_InternalRaftRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    9;
 
   friend void swap(InternalRaftRequest& a, InternalRaftRequest& b) {
     a.Swap(&b);
@@ -2001,98 +1838,87 @@ class InternalRaftRequest final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kRequestIdFieldNumber = 1,
-    kPutFieldNumber = 3,
-    kGetFieldNumber = 4,
-    kDeleteFieldNumber = 5,
+    kKvPutFieldNumber = 1,
+    kKvGetFieldNumber = 2,
+    kKvDeleteFieldNumber = 3,
   };
-  // uint64 request_id = 1;
-  void clear_request_id();
-  uint64_t request_id() const;
-  void set_request_id(uint64_t value);
+  // .foskv.kv.PutRequest kv_put = 1;
+  bool has_kv_put() const;
   private:
-  uint64_t _internal_request_id() const;
-  void _internal_set_request_id(uint64_t value);
+  bool _internal_has_kv_put() const;
   public:
+  void clear_kv_put();
+  const ::foskv::kv::PutRequest& kv_put() const;
+  PROTOBUF_NODISCARD ::foskv::kv::PutRequest* release_kv_put();
+  ::foskv::kv::PutRequest* mutable_kv_put();
+  void set_allocated_kv_put(::foskv::kv::PutRequest* kv_put);
+  private:
+  const ::foskv::kv::PutRequest& _internal_kv_put() const;
+  ::foskv::kv::PutRequest* _internal_mutable_kv_put();
+  public:
+  void unsafe_arena_set_allocated_kv_put(
+      ::foskv::kv::PutRequest* kv_put);
+  ::foskv::kv::PutRequest* unsafe_arena_release_kv_put();
 
-  // .foskv.kv.PutRequest put = 3;
-  bool has_put() const;
+  // .foskv.kv.GetRequest kv_get = 2;
+  bool has_kv_get() const;
   private:
-  bool _internal_has_put() const;
+  bool _internal_has_kv_get() const;
   public:
-  void clear_put();
-  const ::foskv::kv::PutRequest& put() const;
-  PROTOBUF_NODISCARD ::foskv::kv::PutRequest* release_put();
-  ::foskv::kv::PutRequest* mutable_put();
-  void set_allocated_put(::foskv::kv::PutRequest* put);
+  void clear_kv_get();
+  const ::foskv::kv::GetRequest& kv_get() const;
+  PROTOBUF_NODISCARD ::foskv::kv::GetRequest* release_kv_get();
+  ::foskv::kv::GetRequest* mutable_kv_get();
+  void set_allocated_kv_get(::foskv::kv::GetRequest* kv_get);
   private:
-  const ::foskv::kv::PutRequest& _internal_put() const;
-  ::foskv::kv::PutRequest* _internal_mutable_put();
+  const ::foskv::kv::GetRequest& _internal_kv_get() const;
+  ::foskv::kv::GetRequest* _internal_mutable_kv_get();
   public:
-  void unsafe_arena_set_allocated_put(
-      ::foskv::kv::PutRequest* put);
-  ::foskv::kv::PutRequest* unsafe_arena_release_put();
+  void unsafe_arena_set_allocated_kv_get(
+      ::foskv::kv::GetRequest* kv_get);
+  ::foskv::kv::GetRequest* unsafe_arena_release_kv_get();
 
-  // .foskv.kv.GetRequest get = 4;
-  bool has_get() const;
+  // .foskv.kv.DeleteRequest kv_delete = 3;
+  bool has_kv_delete() const;
   private:
-  bool _internal_has_get() const;
+  bool _internal_has_kv_delete() const;
   public:
-  void clear_get();
-  const ::foskv::kv::GetRequest& get() const;
-  PROTOBUF_NODISCARD ::foskv::kv::GetRequest* release_get();
-  ::foskv::kv::GetRequest* mutable_get();
-  void set_allocated_get(::foskv::kv::GetRequest* get);
+  void clear_kv_delete();
+  const ::foskv::kv::DeleteRequest& kv_delete() const;
+  PROTOBUF_NODISCARD ::foskv::kv::DeleteRequest* release_kv_delete();
+  ::foskv::kv::DeleteRequest* mutable_kv_delete();
+  void set_allocated_kv_delete(::foskv::kv::DeleteRequest* kv_delete);
   private:
-  const ::foskv::kv::GetRequest& _internal_get() const;
-  ::foskv::kv::GetRequest* _internal_mutable_get();
+  const ::foskv::kv::DeleteRequest& _internal_kv_delete() const;
+  ::foskv::kv::DeleteRequest* _internal_mutable_kv_delete();
   public:
-  void unsafe_arena_set_allocated_get(
-      ::foskv::kv::GetRequest* get);
-  ::foskv::kv::GetRequest* unsafe_arena_release_get();
+  void unsafe_arena_set_allocated_kv_delete(
+      ::foskv::kv::DeleteRequest* kv_delete);
+  ::foskv::kv::DeleteRequest* unsafe_arena_release_kv_delete();
 
-  // .foskv.kv.DeleteRequest delete = 5;
-  bool has_delete_() const;
-  private:
-  bool _internal_has_delete_() const;
-  public:
-  void clear_delete_();
-  const ::foskv::kv::DeleteRequest& delete_() const;
-  PROTOBUF_NODISCARD ::foskv::kv::DeleteRequest* release_delete_();
-  ::foskv::kv::DeleteRequest* mutable_delete_();
-  void set_allocated_delete_(::foskv::kv::DeleteRequest* delete_);
-  private:
-  const ::foskv::kv::DeleteRequest& _internal_delete_() const;
-  ::foskv::kv::DeleteRequest* _internal_mutable_delete_();
-  public:
-  void unsafe_arena_set_allocated_delete_(
-      ::foskv::kv::DeleteRequest* delete_);
-  ::foskv::kv::DeleteRequest* unsafe_arena_release_delete_();
-
-  void clear_type();
-  TypeCase type_case() const;
+  void clear_cmd();
+  CmdCase cmd_case() const;
   // @@protoc_insertion_point(class_scope:foskv.raft.InternalRaftRequest)
  private:
   class _Internal;
-  void set_has_put();
-  void set_has_get();
-  void set_has_delete_();
+  void set_has_kv_put();
+  void set_has_kv_get();
+  void set_has_kv_delete();
 
-  inline bool has_type() const;
-  inline void clear_has_type();
+  inline bool has_cmd() const;
+  inline void clear_has_cmd();
 
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    uint64_t request_id_;
-    union TypeUnion {
-      constexpr TypeUnion() : _constinit_{} {}
+    union CmdUnion {
+      constexpr CmdUnion() : _constinit_{} {}
         ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized _constinit_;
-      ::foskv::kv::PutRequest* put_;
-      ::foskv::kv::GetRequest* get_;
-      ::foskv::kv::DeleteRequest* delete__;
-    } type_;
+      ::foskv::kv::PutRequest* kv_put_;
+      ::foskv::kv::GetRequest* kv_get_;
+      ::foskv::kv::DeleteRequest* kv_delete_;
+    } cmd_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     uint32_t _oneof_case_[1];
 
@@ -2169,6 +1995,58 @@ inline void ResponseHeader::_internal_set_term(uint64_t value) {
 inline void ResponseHeader::set_term(uint64_t value) {
   _internal_set_term(value);
   // @@protoc_insertion_point(field_set:foskv.raft.ResponseHeader.term)
+}
+
+// -------------------------------------------------------------------
+
+// PersistState
+
+// uint64 current_term = 1;
+inline void PersistState::clear_current_term() {
+  _impl_.current_term_ = uint64_t{0u};
+}
+inline uint64_t PersistState::_internal_current_term() const {
+  return _impl_.current_term_;
+}
+inline uint64_t PersistState::current_term() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.PersistState.current_term)
+  return _internal_current_term();
+}
+inline void PersistState::_internal_set_current_term(uint64_t value) {
+  
+  _impl_.current_term_ = value;
+}
+inline void PersistState::set_current_term(uint64_t value) {
+  _internal_set_current_term(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.PersistState.current_term)
+}
+
+// optional uint64 voted_for = 2;
+inline bool PersistState::_internal_has_voted_for() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
+  return value;
+}
+inline bool PersistState::has_voted_for() const {
+  return _internal_has_voted_for();
+}
+inline void PersistState::clear_voted_for() {
+  _impl_.voted_for_ = uint64_t{0u};
+  _impl_._has_bits_[0] &= ~0x00000001u;
+}
+inline uint64_t PersistState::_internal_voted_for() const {
+  return _impl_.voted_for_;
+}
+inline uint64_t PersistState::voted_for() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.PersistState.voted_for)
+  return _internal_voted_for();
+}
+inline void PersistState::_internal_set_voted_for(uint64_t value) {
+  _impl_._has_bits_[0] |= 0x00000001u;
+  _impl_.voted_for_ = value;
+}
+inline void PersistState::set_voted_for(uint64_t value) {
+  _internal_set_voted_for(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.PersistState.voted_for)
 }
 
 // -------------------------------------------------------------------
@@ -2991,336 +2869,218 @@ inline void InstallSnapshotResponse::set_allocated_header(::foskv::raft::Respons
 
 // -------------------------------------------------------------------
 
-// PersistState
-
-// uint64 current_term = 1;
-inline void PersistState::clear_current_term() {
-  _impl_.current_term_ = uint64_t{0u};
-}
-inline uint64_t PersistState::_internal_current_term() const {
-  return _impl_.current_term_;
-}
-inline uint64_t PersistState::current_term() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.PersistState.current_term)
-  return _internal_current_term();
-}
-inline void PersistState::_internal_set_current_term(uint64_t value) {
-  
-  _impl_.current_term_ = value;
-}
-inline void PersistState::set_current_term(uint64_t value) {
-  _internal_set_current_term(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.PersistState.current_term)
-}
-
-// optional uint64 voted_for = 2;
-inline bool PersistState::_internal_has_voted_for() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
-  return value;
-}
-inline bool PersistState::has_voted_for() const {
-  return _internal_has_voted_for();
-}
-inline void PersistState::clear_voted_for() {
-  _impl_.voted_for_ = uint64_t{0u};
-  _impl_._has_bits_[0] &= ~0x00000001u;
-}
-inline uint64_t PersistState::_internal_voted_for() const {
-  return _impl_.voted_for_;
-}
-inline uint64_t PersistState::voted_for() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.PersistState.voted_for)
-  return _internal_voted_for();
-}
-inline void PersistState::_internal_set_voted_for(uint64_t value) {
-  _impl_._has_bits_[0] |= 0x00000001u;
-  _impl_.voted_for_ = value;
-}
-inline void PersistState::set_voted_for(uint64_t value) {
-  _internal_set_voted_for(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.PersistState.voted_for)
-}
-
-// -------------------------------------------------------------------
-
-// SnapshotMetadata
-
-// uint64 last_include_index = 1;
-inline void SnapshotMetadata::clear_last_include_index() {
-  _impl_.last_include_index_ = uint64_t{0u};
-}
-inline uint64_t SnapshotMetadata::_internal_last_include_index() const {
-  return _impl_.last_include_index_;
-}
-inline uint64_t SnapshotMetadata::last_include_index() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.SnapshotMetadata.last_include_index)
-  return _internal_last_include_index();
-}
-inline void SnapshotMetadata::_internal_set_last_include_index(uint64_t value) {
-  
-  _impl_.last_include_index_ = value;
-}
-inline void SnapshotMetadata::set_last_include_index(uint64_t value) {
-  _internal_set_last_include_index(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.SnapshotMetadata.last_include_index)
-}
-
-// uint64 last_include_term = 2;
-inline void SnapshotMetadata::clear_last_include_term() {
-  _impl_.last_include_term_ = uint64_t{0u};
-}
-inline uint64_t SnapshotMetadata::_internal_last_include_term() const {
-  return _impl_.last_include_term_;
-}
-inline uint64_t SnapshotMetadata::last_include_term() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.SnapshotMetadata.last_include_term)
-  return _internal_last_include_term();
-}
-inline void SnapshotMetadata::_internal_set_last_include_term(uint64_t value) {
-  
-  _impl_.last_include_term_ = value;
-}
-inline void SnapshotMetadata::set_last_include_term(uint64_t value) {
-  _internal_set_last_include_term(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.SnapshotMetadata.last_include_term)
-}
-
-// -------------------------------------------------------------------
-
 // InternalRaftRequest
 
-// uint64 request_id = 1;
-inline void InternalRaftRequest::clear_request_id() {
-  _impl_.request_id_ = uint64_t{0u};
+// .foskv.kv.PutRequest kv_put = 1;
+inline bool InternalRaftRequest::_internal_has_kv_put() const {
+  return cmd_case() == kKvPut;
 }
-inline uint64_t InternalRaftRequest::_internal_request_id() const {
-  return _impl_.request_id_;
+inline bool InternalRaftRequest::has_kv_put() const {
+  return _internal_has_kv_put();
 }
-inline uint64_t InternalRaftRequest::request_id() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.request_id)
-  return _internal_request_id();
+inline void InternalRaftRequest::set_has_kv_put() {
+  _impl_._oneof_case_[0] = kKvPut;
 }
-inline void InternalRaftRequest::_internal_set_request_id(uint64_t value) {
-  
-  _impl_.request_id_ = value;
-}
-inline void InternalRaftRequest::set_request_id(uint64_t value) {
-  _internal_set_request_id(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.InternalRaftRequest.request_id)
-}
-
-// .foskv.kv.PutRequest put = 3;
-inline bool InternalRaftRequest::_internal_has_put() const {
-  return type_case() == kPut;
-}
-inline bool InternalRaftRequest::has_put() const {
-  return _internal_has_put();
-}
-inline void InternalRaftRequest::set_has_put() {
-  _impl_._oneof_case_[0] = kPut;
-}
-inline ::foskv::kv::PutRequest* InternalRaftRequest::release_put() {
-  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.put)
-  if (_internal_has_put()) {
-    clear_has_type();
-    ::foskv::kv::PutRequest* temp = _impl_.type_.put_;
+inline ::foskv::kv::PutRequest* InternalRaftRequest::release_kv_put() {
+  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.kv_put)
+  if (_internal_has_kv_put()) {
+    clear_has_cmd();
+    ::foskv::kv::PutRequest* temp = _impl_.cmd_.kv_put_;
     if (GetArenaForAllocation() != nullptr) {
       temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
     }
-    _impl_.type_.put_ = nullptr;
+    _impl_.cmd_.kv_put_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
-inline const ::foskv::kv::PutRequest& InternalRaftRequest::_internal_put() const {
-  return _internal_has_put()
-      ? *_impl_.type_.put_
+inline const ::foskv::kv::PutRequest& InternalRaftRequest::_internal_kv_put() const {
+  return _internal_has_kv_put()
+      ? *_impl_.cmd_.kv_put_
       : reinterpret_cast< ::foskv::kv::PutRequest&>(::foskv::kv::_PutRequest_default_instance_);
 }
-inline const ::foskv::kv::PutRequest& InternalRaftRequest::put() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.put)
-  return _internal_put();
+inline const ::foskv::kv::PutRequest& InternalRaftRequest::kv_put() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.kv_put)
+  return _internal_kv_put();
 }
-inline ::foskv::kv::PutRequest* InternalRaftRequest::unsafe_arena_release_put() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.raft.InternalRaftRequest.put)
-  if (_internal_has_put()) {
-    clear_has_type();
-    ::foskv::kv::PutRequest* temp = _impl_.type_.put_;
-    _impl_.type_.put_ = nullptr;
+inline ::foskv::kv::PutRequest* InternalRaftRequest::unsafe_arena_release_kv_put() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.raft.InternalRaftRequest.kv_put)
+  if (_internal_has_kv_put()) {
+    clear_has_cmd();
+    ::foskv::kv::PutRequest* temp = _impl_.cmd_.kv_put_;
+    _impl_.cmd_.kv_put_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
-inline void InternalRaftRequest::unsafe_arena_set_allocated_put(::foskv::kv::PutRequest* put) {
-  clear_type();
-  if (put) {
-    set_has_put();
-    _impl_.type_.put_ = put;
+inline void InternalRaftRequest::unsafe_arena_set_allocated_kv_put(::foskv::kv::PutRequest* kv_put) {
+  clear_cmd();
+  if (kv_put) {
+    set_has_kv_put();
+    _impl_.cmd_.kv_put_ = kv_put;
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.InternalRaftRequest.put)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.InternalRaftRequest.kv_put)
 }
-inline ::foskv::kv::PutRequest* InternalRaftRequest::_internal_mutable_put() {
-  if (!_internal_has_put()) {
-    clear_type();
-    set_has_put();
-    _impl_.type_.put_ = CreateMaybeMessage< ::foskv::kv::PutRequest >(GetArenaForAllocation());
+inline ::foskv::kv::PutRequest* InternalRaftRequest::_internal_mutable_kv_put() {
+  if (!_internal_has_kv_put()) {
+    clear_cmd();
+    set_has_kv_put();
+    _impl_.cmd_.kv_put_ = CreateMaybeMessage< ::foskv::kv::PutRequest >(GetArenaForAllocation());
   }
-  return _impl_.type_.put_;
+  return _impl_.cmd_.kv_put_;
 }
-inline ::foskv::kv::PutRequest* InternalRaftRequest::mutable_put() {
-  ::foskv::kv::PutRequest* _msg = _internal_mutable_put();
-  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.put)
+inline ::foskv::kv::PutRequest* InternalRaftRequest::mutable_kv_put() {
+  ::foskv::kv::PutRequest* _msg = _internal_mutable_kv_put();
+  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.kv_put)
   return _msg;
 }
 
-// .foskv.kv.GetRequest get = 4;
-inline bool InternalRaftRequest::_internal_has_get() const {
-  return type_case() == kGet;
+// .foskv.kv.GetRequest kv_get = 2;
+inline bool InternalRaftRequest::_internal_has_kv_get() const {
+  return cmd_case() == kKvGet;
 }
-inline bool InternalRaftRequest::has_get() const {
-  return _internal_has_get();
+inline bool InternalRaftRequest::has_kv_get() const {
+  return _internal_has_kv_get();
 }
-inline void InternalRaftRequest::set_has_get() {
-  _impl_._oneof_case_[0] = kGet;
+inline void InternalRaftRequest::set_has_kv_get() {
+  _impl_._oneof_case_[0] = kKvGet;
 }
-inline ::foskv::kv::GetRequest* InternalRaftRequest::release_get() {
-  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.get)
-  if (_internal_has_get()) {
-    clear_has_type();
-    ::foskv::kv::GetRequest* temp = _impl_.type_.get_;
+inline ::foskv::kv::GetRequest* InternalRaftRequest::release_kv_get() {
+  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.kv_get)
+  if (_internal_has_kv_get()) {
+    clear_has_cmd();
+    ::foskv::kv::GetRequest* temp = _impl_.cmd_.kv_get_;
     if (GetArenaForAllocation() != nullptr) {
       temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
     }
-    _impl_.type_.get_ = nullptr;
+    _impl_.cmd_.kv_get_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
-inline const ::foskv::kv::GetRequest& InternalRaftRequest::_internal_get() const {
-  return _internal_has_get()
-      ? *_impl_.type_.get_
+inline const ::foskv::kv::GetRequest& InternalRaftRequest::_internal_kv_get() const {
+  return _internal_has_kv_get()
+      ? *_impl_.cmd_.kv_get_
       : reinterpret_cast< ::foskv::kv::GetRequest&>(::foskv::kv::_GetRequest_default_instance_);
 }
-inline const ::foskv::kv::GetRequest& InternalRaftRequest::get() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.get)
-  return _internal_get();
+inline const ::foskv::kv::GetRequest& InternalRaftRequest::kv_get() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.kv_get)
+  return _internal_kv_get();
 }
-inline ::foskv::kv::GetRequest* InternalRaftRequest::unsafe_arena_release_get() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.raft.InternalRaftRequest.get)
-  if (_internal_has_get()) {
-    clear_has_type();
-    ::foskv::kv::GetRequest* temp = _impl_.type_.get_;
-    _impl_.type_.get_ = nullptr;
+inline ::foskv::kv::GetRequest* InternalRaftRequest::unsafe_arena_release_kv_get() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.raft.InternalRaftRequest.kv_get)
+  if (_internal_has_kv_get()) {
+    clear_has_cmd();
+    ::foskv::kv::GetRequest* temp = _impl_.cmd_.kv_get_;
+    _impl_.cmd_.kv_get_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
-inline void InternalRaftRequest::unsafe_arena_set_allocated_get(::foskv::kv::GetRequest* get) {
-  clear_type();
-  if (get) {
-    set_has_get();
-    _impl_.type_.get_ = get;
+inline void InternalRaftRequest::unsafe_arena_set_allocated_kv_get(::foskv::kv::GetRequest* kv_get) {
+  clear_cmd();
+  if (kv_get) {
+    set_has_kv_get();
+    _impl_.cmd_.kv_get_ = kv_get;
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.InternalRaftRequest.get)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.InternalRaftRequest.kv_get)
 }
-inline ::foskv::kv::GetRequest* InternalRaftRequest::_internal_mutable_get() {
-  if (!_internal_has_get()) {
-    clear_type();
-    set_has_get();
-    _impl_.type_.get_ = CreateMaybeMessage< ::foskv::kv::GetRequest >(GetArenaForAllocation());
+inline ::foskv::kv::GetRequest* InternalRaftRequest::_internal_mutable_kv_get() {
+  if (!_internal_has_kv_get()) {
+    clear_cmd();
+    set_has_kv_get();
+    _impl_.cmd_.kv_get_ = CreateMaybeMessage< ::foskv::kv::GetRequest >(GetArenaForAllocation());
   }
-  return _impl_.type_.get_;
+  return _impl_.cmd_.kv_get_;
 }
-inline ::foskv::kv::GetRequest* InternalRaftRequest::mutable_get() {
-  ::foskv::kv::GetRequest* _msg = _internal_mutable_get();
-  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.get)
+inline ::foskv::kv::GetRequest* InternalRaftRequest::mutable_kv_get() {
+  ::foskv::kv::GetRequest* _msg = _internal_mutable_kv_get();
+  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.kv_get)
   return _msg;
 }
 
-// .foskv.kv.DeleteRequest delete = 5;
-inline bool InternalRaftRequest::_internal_has_delete_() const {
-  return type_case() == kDelete;
+// .foskv.kv.DeleteRequest kv_delete = 3;
+inline bool InternalRaftRequest::_internal_has_kv_delete() const {
+  return cmd_case() == kKvDelete;
 }
-inline bool InternalRaftRequest::has_delete_() const {
-  return _internal_has_delete_();
+inline bool InternalRaftRequest::has_kv_delete() const {
+  return _internal_has_kv_delete();
 }
-inline void InternalRaftRequest::set_has_delete_() {
-  _impl_._oneof_case_[0] = kDelete;
+inline void InternalRaftRequest::set_has_kv_delete() {
+  _impl_._oneof_case_[0] = kKvDelete;
 }
-inline ::foskv::kv::DeleteRequest* InternalRaftRequest::release_delete_() {
-  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.delete)
-  if (_internal_has_delete_()) {
-    clear_has_type();
-    ::foskv::kv::DeleteRequest* temp = _impl_.type_.delete__;
+inline ::foskv::kv::DeleteRequest* InternalRaftRequest::release_kv_delete() {
+  // @@protoc_insertion_point(field_release:foskv.raft.InternalRaftRequest.kv_delete)
+  if (_internal_has_kv_delete()) {
+    clear_has_cmd();
+    ::foskv::kv::DeleteRequest* temp = _impl_.cmd_.kv_delete_;
     if (GetArenaForAllocation() != nullptr) {
       temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
     }
-    _impl_.type_.delete__ = nullptr;
+    _impl_.cmd_.kv_delete_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
-inline const ::foskv::kv::DeleteRequest& InternalRaftRequest::_internal_delete_() const {
-  return _internal_has_delete_()
-      ? *_impl_.type_.delete__
+inline const ::foskv::kv::DeleteRequest& InternalRaftRequest::_internal_kv_delete() const {
+  return _internal_has_kv_delete()
+      ? *_impl_.cmd_.kv_delete_
       : reinterpret_cast< ::foskv::kv::DeleteRequest&>(::foskv::kv::_DeleteRequest_default_instance_);
 }
-inline const ::foskv::kv::DeleteRequest& InternalRaftRequest::delete_() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.delete)
-  return _internal_delete_();
+inline const ::foskv::kv::DeleteRequest& InternalRaftRequest::kv_delete() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.InternalRaftRequest.kv_delete)
+  return _internal_kv_delete();
 }
-inline ::foskv::kv::DeleteRequest* InternalRaftRequest::unsafe_arena_release_delete_() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.raft.InternalRaftRequest.delete)
-  if (_internal_has_delete_()) {
-    clear_has_type();
-    ::foskv::kv::DeleteRequest* temp = _impl_.type_.delete__;
-    _impl_.type_.delete__ = nullptr;
+inline ::foskv::kv::DeleteRequest* InternalRaftRequest::unsafe_arena_release_kv_delete() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:foskv.raft.InternalRaftRequest.kv_delete)
+  if (_internal_has_kv_delete()) {
+    clear_has_cmd();
+    ::foskv::kv::DeleteRequest* temp = _impl_.cmd_.kv_delete_;
+    _impl_.cmd_.kv_delete_ = nullptr;
     return temp;
   } else {
     return nullptr;
   }
 }
-inline void InternalRaftRequest::unsafe_arena_set_allocated_delete_(::foskv::kv::DeleteRequest* delete_) {
-  clear_type();
-  if (delete_) {
-    set_has_delete_();
-    _impl_.type_.delete__ = delete_;
+inline void InternalRaftRequest::unsafe_arena_set_allocated_kv_delete(::foskv::kv::DeleteRequest* kv_delete) {
+  clear_cmd();
+  if (kv_delete) {
+    set_has_kv_delete();
+    _impl_.cmd_.kv_delete_ = kv_delete;
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.InternalRaftRequest.delete)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.raft.InternalRaftRequest.kv_delete)
 }
-inline ::foskv::kv::DeleteRequest* InternalRaftRequest::_internal_mutable_delete_() {
-  if (!_internal_has_delete_()) {
-    clear_type();
-    set_has_delete_();
-    _impl_.type_.delete__ = CreateMaybeMessage< ::foskv::kv::DeleteRequest >(GetArenaForAllocation());
+inline ::foskv::kv::DeleteRequest* InternalRaftRequest::_internal_mutable_kv_delete() {
+  if (!_internal_has_kv_delete()) {
+    clear_cmd();
+    set_has_kv_delete();
+    _impl_.cmd_.kv_delete_ = CreateMaybeMessage< ::foskv::kv::DeleteRequest >(GetArenaForAllocation());
   }
-  return _impl_.type_.delete__;
+  return _impl_.cmd_.kv_delete_;
 }
-inline ::foskv::kv::DeleteRequest* InternalRaftRequest::mutable_delete_() {
-  ::foskv::kv::DeleteRequest* _msg = _internal_mutable_delete_();
-  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.delete)
+inline ::foskv::kv::DeleteRequest* InternalRaftRequest::mutable_kv_delete() {
+  ::foskv::kv::DeleteRequest* _msg = _internal_mutable_kv_delete();
+  // @@protoc_insertion_point(field_mutable:foskv.raft.InternalRaftRequest.kv_delete)
   return _msg;
 }
 
-inline bool InternalRaftRequest::has_type() const {
-  return type_case() != TYPE_NOT_SET;
+inline bool InternalRaftRequest::has_cmd() const {
+  return cmd_case() != CMD_NOT_SET;
 }
-inline void InternalRaftRequest::clear_has_type() {
-  _impl_._oneof_case_[0] = TYPE_NOT_SET;
+inline void InternalRaftRequest::clear_has_cmd() {
+  _impl_._oneof_case_[0] = CMD_NOT_SET;
 }
-inline InternalRaftRequest::TypeCase InternalRaftRequest::type_case() const {
-  return InternalRaftRequest::TypeCase(_impl_._oneof_case_[0]);
+inline InternalRaftRequest::CmdCase InternalRaftRequest::cmd_case() const {
+  return InternalRaftRequest::CmdCase(_impl_._oneof_case_[0]);
 }
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-// -------------------------------------------------------------------
-
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

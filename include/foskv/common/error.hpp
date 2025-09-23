@@ -16,6 +16,8 @@ public:
         kInvalidLocalAddress,
         kInvalidDataDirectory,
         kInvalidLogIndex,
+        kTcpListenerBindFailed,
+        kTcpStreamAcceptFailed,
         kFirstLogIndexPutFailed,
         kLastLogIndexPutFailed,
         kLogIndexToUllFailed,
@@ -38,6 +40,18 @@ public:
         kInstallSnapshotRequestSerializeFailed,
         kInstallSnapshotResponseParseFailed,
         kInstallSnapshotResponseSerializeFailed,
+        kKVPutRequestParseFailed,
+        kKVPutRequestSerializeFailed,
+        kKVPutResponseParseFailed,
+        kKVPutResponseSerializeFailed,
+        kKVGetRequestParseFailed,
+        kKVGetRequestSerializeFailed,
+        kKVGetResponseParseFailed,
+        kKVGetResponseSerializeFailed,
+        kKVDeleteRequestParseFailed,
+        kKVDeleteRequestSerializeFailed,
+        kKVDeleteResponseParseFailed,
+        kKVDeleteResponseSerializeFailed,
         kConnectRpcServerFailed,
         kRaftConfigFileOpenFailed,
         kRaftConfigFileReadFailed,
@@ -49,10 +63,10 @@ public:
         kTempRaftConfigFileWriteFailed,
         kTempRaftConfigFileRenameFailed,
         kRocksDBFileOpenFailed,
+        kLogEntryPersistFailed,
         kLogEntriesPersistFailed,
         kLogEntriesTruncateFailed,
         kStatePersistFailed,
-        kKVPutFailed,
     };
 
 public:
@@ -76,6 +90,10 @@ public:
                 return "Invalid data directory.";
             case kInvalidLogIndex:
                 return "Invalid first or last log index.";
+            case kTcpListenerBindFailed:
+                return "Tcp listener bind failed.";
+            case kTcpStreamAcceptFailed:
+                return "Tcp stream accept failed.";
             case kFirstLogIndexPutFailed:
                 return "First log index put failed.";
             case kLastLogIndexPutFailed:
@@ -120,6 +138,30 @@ public:
                 return "Install snapshot response parse failed.";
             case kInstallSnapshotResponseSerializeFailed:
                 return "Install snapshot response serialize failed.";
+            case kKVPutRequestParseFailed:
+                return "KVPut request parse failed.";
+            case kKVPutRequestSerializeFailed:
+                return "KVPut request serialize failed.";
+            case kKVPutResponseParseFailed:
+                return "KVPut response parse failed.";
+            case kKVPutResponseSerializeFailed:
+                return "KVPut response serialize failed.";
+            case kKVGetRequestParseFailed:
+                return "KVGet request parse failed.";
+            case kKVGetRequestSerializeFailed:
+                return "KVGet request serialize failed.";
+            case kKVGetResponseParseFailed:
+                return "KVGet response parse failed.";
+            case kKVGetResponseSerializeFailed:
+                return "KVGet response serialize failed.";
+            case kKVDeleteRequestParseFailed:
+                return "KVDelete request parse failed.";
+            case kKVDeleteRequestSerializeFailed:
+                return "KVDelete request serialize failed.";
+            case kKVDeleteResponseParseFailed:
+                return "KVDelete response parse failed.";
+            case kKVDeleteResponseSerializeFailed:
+                return "KVDelete response serialize failed.";
             case kConnectRpcServerFailed:
                 return "Failed to connect to rpc server.";
             case kRaftConfigFileOpenFailed:
@@ -142,6 +184,8 @@ public:
                 return "Failed to rename temp raft config file.";
             case kRocksDBFileOpenFailed:
                 return "Failed to open RocksDB file.";
+            case kLogEntryPersistFailed:
+                return "Failed to persist log entry.";
             case kLogEntriesPersistFailed:
                 return "Failed to persist log entries.";
             case kLogEntriesTruncateFailed:

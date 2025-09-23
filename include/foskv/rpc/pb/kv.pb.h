@@ -376,7 +376,6 @@ class PutRequest final :
   enum : int {
     kKeyFieldNumber = 1,
     kValueFieldNumber = 2,
-    kPrevKvFieldNumber = 3,
   };
   // bytes key = 1;
   void clear_key();
@@ -406,15 +405,6 @@ class PutRequest final :
   std::string* _internal_mutable_value();
   public:
 
-  // bool prev_kv = 3;
-  void clear_prev_kv();
-  bool prev_kv() const;
-  void set_prev_kv(bool value);
-  private:
-  bool _internal_prev_kv() const;
-  void _internal_set_prev_kv(bool value);
-  public:
-
   // @@protoc_insertion_point(class_scope:foskv.kv.PutRequest)
  private:
   class _Internal;
@@ -425,7 +415,6 @@ class PutRequest final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr key_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr value_;
-    bool prev_kv_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -555,7 +544,6 @@ class PutResponse final :
 
   enum : int {
     kHeaderFieldNumber = 1,
-    kPrevKvFieldNumber = 2,
   };
   // .foskv.rpc.ResponseHeader header = 1;
   bool has_header() const;
@@ -575,24 +563,6 @@ class PutResponse final :
       ::foskv::rpc::ResponseHeader* header);
   ::foskv::rpc::ResponseHeader* unsafe_arena_release_header();
 
-  // .foskv.kv.KeyValue prev_kv = 2;
-  bool has_prev_kv() const;
-  private:
-  bool _internal_has_prev_kv() const;
-  public:
-  void clear_prev_kv();
-  const ::foskv::kv::KeyValue& prev_kv() const;
-  PROTOBUF_NODISCARD ::foskv::kv::KeyValue* release_prev_kv();
-  ::foskv::kv::KeyValue* mutable_prev_kv();
-  void set_allocated_prev_kv(::foskv::kv::KeyValue* prev_kv);
-  private:
-  const ::foskv::kv::KeyValue& _internal_prev_kv() const;
-  ::foskv::kv::KeyValue* _internal_mutable_prev_kv();
-  public:
-  void unsafe_arena_set_allocated_prev_kv(
-      ::foskv::kv::KeyValue* prev_kv);
-  ::foskv::kv::KeyValue* unsafe_arena_release_prev_kv();
-
   // @@protoc_insertion_point(class_scope:foskv.kv.PutResponse)
  private:
   class _Internal;
@@ -602,7 +572,6 @@ class PutResponse final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::foskv::rpc::ResponseHeader* header_;
-    ::foskv::kv::KeyValue* prev_kv_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -885,7 +854,7 @@ class GetResponse final :
 
   enum : int {
     kHeaderFieldNumber = 1,
-    kKvsFieldNumber = 2,
+    kKvFieldNumber = 2,
   };
   // .foskv.rpc.ResponseHeader header = 1;
   bool has_header() const;
@@ -905,23 +874,23 @@ class GetResponse final :
       ::foskv::rpc::ResponseHeader* header);
   ::foskv::rpc::ResponseHeader* unsafe_arena_release_header();
 
-  // .foskv.kv.KeyValue kvs = 2;
-  bool has_kvs() const;
+  // .foskv.kv.KeyValue kv = 2;
+  bool has_kv() const;
   private:
-  bool _internal_has_kvs() const;
+  bool _internal_has_kv() const;
   public:
-  void clear_kvs();
-  const ::foskv::kv::KeyValue& kvs() const;
-  PROTOBUF_NODISCARD ::foskv::kv::KeyValue* release_kvs();
-  ::foskv::kv::KeyValue* mutable_kvs();
-  void set_allocated_kvs(::foskv::kv::KeyValue* kvs);
+  void clear_kv();
+  const ::foskv::kv::KeyValue& kv() const;
+  PROTOBUF_NODISCARD ::foskv::kv::KeyValue* release_kv();
+  ::foskv::kv::KeyValue* mutable_kv();
+  void set_allocated_kv(::foskv::kv::KeyValue* kv);
   private:
-  const ::foskv::kv::KeyValue& _internal_kvs() const;
-  ::foskv::kv::KeyValue* _internal_mutable_kvs();
+  const ::foskv::kv::KeyValue& _internal_kv() const;
+  ::foskv::kv::KeyValue* _internal_mutable_kv();
   public:
-  void unsafe_arena_set_allocated_kvs(
-      ::foskv::kv::KeyValue* kvs);
-  ::foskv::kv::KeyValue* unsafe_arena_release_kvs();
+  void unsafe_arena_set_allocated_kv(
+      ::foskv::kv::KeyValue* kv);
+  ::foskv::kv::KeyValue* unsafe_arena_release_kv();
 
   // @@protoc_insertion_point(class_scope:foskv.kv.GetResponse)
  private:
@@ -932,7 +901,7 @@ class GetResponse final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::foskv::rpc::ResponseHeader* header_;
-    ::foskv::kv::KeyValue* kvs_;
+    ::foskv::kv::KeyValue* kv_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1463,26 +1432,6 @@ inline void PutRequest::set_allocated_value(std::string* value) {
   // @@protoc_insertion_point(field_set_allocated:foskv.kv.PutRequest.value)
 }
 
-// bool prev_kv = 3;
-inline void PutRequest::clear_prev_kv() {
-  _impl_.prev_kv_ = false;
-}
-inline bool PutRequest::_internal_prev_kv() const {
-  return _impl_.prev_kv_;
-}
-inline bool PutRequest::prev_kv() const {
-  // @@protoc_insertion_point(field_get:foskv.kv.PutRequest.prev_kv)
-  return _internal_prev_kv();
-}
-inline void PutRequest::_internal_set_prev_kv(bool value) {
-  
-  _impl_.prev_kv_ = value;
-}
-inline void PutRequest::set_prev_kv(bool value) {
-  _internal_set_prev_kv(value);
-  // @@protoc_insertion_point(field_set:foskv.kv.PutRequest.prev_kv)
-}
-
 // -------------------------------------------------------------------
 
 // PutResponse
@@ -1570,96 +1519,6 @@ inline void PutResponse::set_allocated_header(::foskv::rpc::ResponseHeader* head
   }
   _impl_.header_ = header;
   // @@protoc_insertion_point(field_set_allocated:foskv.kv.PutResponse.header)
-}
-
-// .foskv.kv.KeyValue prev_kv = 2;
-inline bool PutResponse::_internal_has_prev_kv() const {
-  return this != internal_default_instance() && _impl_.prev_kv_ != nullptr;
-}
-inline bool PutResponse::has_prev_kv() const {
-  return _internal_has_prev_kv();
-}
-inline void PutResponse::clear_prev_kv() {
-  if (GetArenaForAllocation() == nullptr && _impl_.prev_kv_ != nullptr) {
-    delete _impl_.prev_kv_;
-  }
-  _impl_.prev_kv_ = nullptr;
-}
-inline const ::foskv::kv::KeyValue& PutResponse::_internal_prev_kv() const {
-  const ::foskv::kv::KeyValue* p = _impl_.prev_kv_;
-  return p != nullptr ? *p : reinterpret_cast<const ::foskv::kv::KeyValue&>(
-      ::foskv::kv::_KeyValue_default_instance_);
-}
-inline const ::foskv::kv::KeyValue& PutResponse::prev_kv() const {
-  // @@protoc_insertion_point(field_get:foskv.kv.PutResponse.prev_kv)
-  return _internal_prev_kv();
-}
-inline void PutResponse::unsafe_arena_set_allocated_prev_kv(
-    ::foskv::kv::KeyValue* prev_kv) {
-  if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.prev_kv_);
-  }
-  _impl_.prev_kv_ = prev_kv;
-  if (prev_kv) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.kv.PutResponse.prev_kv)
-}
-inline ::foskv::kv::KeyValue* PutResponse::release_prev_kv() {
-  
-  ::foskv::kv::KeyValue* temp = _impl_.prev_kv_;
-  _impl_.prev_kv_ = nullptr;
-#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
-  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
-  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  if (GetArenaForAllocation() == nullptr) { delete old; }
-#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
-  if (GetArenaForAllocation() != nullptr) {
-    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  }
-#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
-  return temp;
-}
-inline ::foskv::kv::KeyValue* PutResponse::unsafe_arena_release_prev_kv() {
-  // @@protoc_insertion_point(field_release:foskv.kv.PutResponse.prev_kv)
-  
-  ::foskv::kv::KeyValue* temp = _impl_.prev_kv_;
-  _impl_.prev_kv_ = nullptr;
-  return temp;
-}
-inline ::foskv::kv::KeyValue* PutResponse::_internal_mutable_prev_kv() {
-  
-  if (_impl_.prev_kv_ == nullptr) {
-    auto* p = CreateMaybeMessage<::foskv::kv::KeyValue>(GetArenaForAllocation());
-    _impl_.prev_kv_ = p;
-  }
-  return _impl_.prev_kv_;
-}
-inline ::foskv::kv::KeyValue* PutResponse::mutable_prev_kv() {
-  ::foskv::kv::KeyValue* _msg = _internal_mutable_prev_kv();
-  // @@protoc_insertion_point(field_mutable:foskv.kv.PutResponse.prev_kv)
-  return _msg;
-}
-inline void PutResponse::set_allocated_prev_kv(::foskv::kv::KeyValue* prev_kv) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  if (message_arena == nullptr) {
-    delete _impl_.prev_kv_;
-  }
-  if (prev_kv) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(prev_kv);
-    if (message_arena != submessage_arena) {
-      prev_kv = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, prev_kv, submessage_arena);
-    }
-    
-  } else {
-    
-  }
-  _impl_.prev_kv_ = prev_kv;
-  // @@protoc_insertion_point(field_set_allocated:foskv.kv.PutResponse.prev_kv)
 }
 
 // -------------------------------------------------------------------
@@ -1805,45 +1664,45 @@ inline void GetResponse::set_allocated_header(::foskv::rpc::ResponseHeader* head
   // @@protoc_insertion_point(field_set_allocated:foskv.kv.GetResponse.header)
 }
 
-// .foskv.kv.KeyValue kvs = 2;
-inline bool GetResponse::_internal_has_kvs() const {
-  return this != internal_default_instance() && _impl_.kvs_ != nullptr;
+// .foskv.kv.KeyValue kv = 2;
+inline bool GetResponse::_internal_has_kv() const {
+  return this != internal_default_instance() && _impl_.kv_ != nullptr;
 }
-inline bool GetResponse::has_kvs() const {
-  return _internal_has_kvs();
+inline bool GetResponse::has_kv() const {
+  return _internal_has_kv();
 }
-inline void GetResponse::clear_kvs() {
-  if (GetArenaForAllocation() == nullptr && _impl_.kvs_ != nullptr) {
-    delete _impl_.kvs_;
+inline void GetResponse::clear_kv() {
+  if (GetArenaForAllocation() == nullptr && _impl_.kv_ != nullptr) {
+    delete _impl_.kv_;
   }
-  _impl_.kvs_ = nullptr;
+  _impl_.kv_ = nullptr;
 }
-inline const ::foskv::kv::KeyValue& GetResponse::_internal_kvs() const {
-  const ::foskv::kv::KeyValue* p = _impl_.kvs_;
+inline const ::foskv::kv::KeyValue& GetResponse::_internal_kv() const {
+  const ::foskv::kv::KeyValue* p = _impl_.kv_;
   return p != nullptr ? *p : reinterpret_cast<const ::foskv::kv::KeyValue&>(
       ::foskv::kv::_KeyValue_default_instance_);
 }
-inline const ::foskv::kv::KeyValue& GetResponse::kvs() const {
-  // @@protoc_insertion_point(field_get:foskv.kv.GetResponse.kvs)
-  return _internal_kvs();
+inline const ::foskv::kv::KeyValue& GetResponse::kv() const {
+  // @@protoc_insertion_point(field_get:foskv.kv.GetResponse.kv)
+  return _internal_kv();
 }
-inline void GetResponse::unsafe_arena_set_allocated_kvs(
-    ::foskv::kv::KeyValue* kvs) {
+inline void GetResponse::unsafe_arena_set_allocated_kv(
+    ::foskv::kv::KeyValue* kv) {
   if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.kvs_);
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.kv_);
   }
-  _impl_.kvs_ = kvs;
-  if (kvs) {
+  _impl_.kv_ = kv;
+  if (kv) {
     
   } else {
     
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.kv.GetResponse.kvs)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:foskv.kv.GetResponse.kv)
 }
-inline ::foskv::kv::KeyValue* GetResponse::release_kvs() {
+inline ::foskv::kv::KeyValue* GetResponse::release_kv() {
   
-  ::foskv::kv::KeyValue* temp = _impl_.kvs_;
-  _impl_.kvs_ = nullptr;
+  ::foskv::kv::KeyValue* temp = _impl_.kv_;
+  _impl_.kv_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
   temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
@@ -1855,44 +1714,44 @@ inline ::foskv::kv::KeyValue* GetResponse::release_kvs() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::foskv::kv::KeyValue* GetResponse::unsafe_arena_release_kvs() {
-  // @@protoc_insertion_point(field_release:foskv.kv.GetResponse.kvs)
+inline ::foskv::kv::KeyValue* GetResponse::unsafe_arena_release_kv() {
+  // @@protoc_insertion_point(field_release:foskv.kv.GetResponse.kv)
   
-  ::foskv::kv::KeyValue* temp = _impl_.kvs_;
-  _impl_.kvs_ = nullptr;
+  ::foskv::kv::KeyValue* temp = _impl_.kv_;
+  _impl_.kv_ = nullptr;
   return temp;
 }
-inline ::foskv::kv::KeyValue* GetResponse::_internal_mutable_kvs() {
+inline ::foskv::kv::KeyValue* GetResponse::_internal_mutable_kv() {
   
-  if (_impl_.kvs_ == nullptr) {
+  if (_impl_.kv_ == nullptr) {
     auto* p = CreateMaybeMessage<::foskv::kv::KeyValue>(GetArenaForAllocation());
-    _impl_.kvs_ = p;
+    _impl_.kv_ = p;
   }
-  return _impl_.kvs_;
+  return _impl_.kv_;
 }
-inline ::foskv::kv::KeyValue* GetResponse::mutable_kvs() {
-  ::foskv::kv::KeyValue* _msg = _internal_mutable_kvs();
-  // @@protoc_insertion_point(field_mutable:foskv.kv.GetResponse.kvs)
+inline ::foskv::kv::KeyValue* GetResponse::mutable_kv() {
+  ::foskv::kv::KeyValue* _msg = _internal_mutable_kv();
+  // @@protoc_insertion_point(field_mutable:foskv.kv.GetResponse.kv)
   return _msg;
 }
-inline void GetResponse::set_allocated_kvs(::foskv::kv::KeyValue* kvs) {
+inline void GetResponse::set_allocated_kv(::foskv::kv::KeyValue* kv) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete _impl_.kvs_;
+    delete _impl_.kv_;
   }
-  if (kvs) {
+  if (kv) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(kvs);
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(kv);
     if (message_arena != submessage_arena) {
-      kvs = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, kvs, submessage_arena);
+      kv = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, kv, submessage_arena);
     }
     
   } else {
     
   }
-  _impl_.kvs_ = kvs;
-  // @@protoc_insertion_point(field_set_allocated:foskv.kv.GetResponse.kvs)
+  _impl_.kv_ = kv;
+  // @@protoc_insertion_point(field_set_allocated:foskv.kv.GetResponse.kv)
 }
 
 // -------------------------------------------------------------------
