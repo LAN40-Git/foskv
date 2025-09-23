@@ -9,6 +9,13 @@ using InvokeMap = std::unordered_map<std::string_view, std::unordered_map<std::s
 class InvokeTask : util::Noncopyable {
 public:
     InvokeTask() = default;
+    explicit InvokeTask(Invoke&& invoke)
+        : invoke_(std::move(invoke)) {}
+
+    explicit InvokeTask(uint64_t request_id, Invoke&& invoke)
+    : request_id_(request_id)
+    , invoke_(std::move(invoke)) {}
+
     explicit InvokeTask(uint64_t request_id, Invoke&& invoke, std::string&& req_payload)
     : request_id_(request_id)
     , invoke_(std::move(invoke))
@@ -28,6 +35,6 @@ public:
 public:
     uint64_t request_id_{};
     Invoke invoke_;
-    std::string req_payload_;
+    std::string req_payload_{};
 };
 } // namespace foskv::rpc::detail

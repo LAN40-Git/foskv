@@ -20,6 +20,10 @@ public:
         co_return;
     }
 
+    void push_sync(T value) {
+        queue_.enqueue(std::move(value));
+    }
+
     [[REMEMBER_CO_AWAIT]]
     auto pop() -> kosio::async::Task<T> {
         T value;

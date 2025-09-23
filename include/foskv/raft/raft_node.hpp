@@ -1,6 +1,5 @@
 #pragma once
 #include "foskv/raft/raft_log.hpp"
-#include "foskv/raft/transport.hpp"
 #include "foskv/raft/state_machine.hpp"
 
 namespace foskv::raft {
@@ -54,7 +53,6 @@ private:
     auto handle_kv_delete_request(std::string_view req_payload, std::span<char> resp_payload,
         uint64_t session_id, uint64_t request_id)
     -> kosio::async::Task<Result<std::size_t>>;
-
 
 private:
     /* For raft */

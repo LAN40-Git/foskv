@@ -6,6 +6,7 @@ class RpcError {
 public:
     enum ErrorCode {
         kUnknown = 0,
+        kNoError,
         kLogEntryAppendOrPersistFailed,
         kNeedRedirect,
         kKVPutFailed,
@@ -26,6 +27,8 @@ public:
         switch (error_code_) {
             case kUnknown:
                 return "Unknown rpc error.";
+            case kNoError:
+                return "No error.";
             case kLogEntryAppendOrPersistFailed:
                 return "Log entry append or persist failed, try again.";
             case kNeedRedirect:

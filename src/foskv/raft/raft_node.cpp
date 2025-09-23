@@ -430,15 +430,16 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
     match_index_[transport_.member_id()] = log_index;
     next_index_[transport_.member_id()] = match_index_[transport_.member_id()] + 1;
 
-    // Save the request for processing
-
-
     // Synchronize log entry to other nodes
     auto append_entries_request = produce_append_entries_request();
     auto* new_entry = append_entries_request.add_entries();
     new_entry->set_term(current_term);
     new_entry->set_index(log_index);
     new_entry->set_command(internal_raft_request.SerializeAsString());
+
+    // Save the internal raft request as applytask and wait for processing
+    state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
+
     kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, log_index](std::string_view resp_payload) -> kosio::async::Task<> {
             AppendEntriesResponse response;

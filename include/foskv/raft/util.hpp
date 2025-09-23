@@ -1,7 +1,29 @@
 #pragma once
 #include "foskv/rpc.hpp"
+#include "foskv/raft/config.hpp"
 
 namespace foskv::raft::detail {
+class ApplyTask {
+public:
+    explicit ApplyTask(uint64_t session_id, uint64_t request_id, InternalRaftRequest&& request)
+        : session_id_(session_id)
+        , request_id_(request_id)
+        , request_(std::move(request)) {}
+
+    // Delete copy
+    ApplyTask(const ApplyTask&) = delete;
+    auto operator=(const ApplyTask&) -> ApplyTask& = delete;
+
+    // Allow move
+    ApplyTask(ApplyTask&&) = default;
+    auto operator=(ApplyTask&&) -> ApplyTask& = default;
+
+public:
+    uint64_t            session_id_;
+    uint64_t            request_id_;
+    InternalRaftRequest request_;
+};
+
 [[nodiscard]]
 static auto produce_log_entry(uint64_t current_term,
     uint64_t log_index, std::string&& command) -> LogEntry {
@@ -24,6 +46,14 @@ static auto produce_redirect(std::string&& host, uint16_t port) -> rpc::Redirect
 static auto produce_kv(std::string&& key, std::string&& value) -> kv::KeyValue {
     kv::KeyValue kv;
     kv.set_key(std::move(key));
+    kv.set_value(std::move(value));
+    return kv;
+}
+
+[[nodiscard]]
+static auto produce_kv(const std::string& key, std::string&& value) -> kv::KeyValue {
+    kv::KeyValue kv;
+    kv.set_key(key);
     kv.set_value(std::move(value));
     return kv;
 }

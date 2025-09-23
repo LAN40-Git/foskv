@@ -1,4 +1,5 @@
 #pragma once
+#include "foskv/rpc/pb/rpc.pb.h"
 #include "foskv/rpc/config.hpp"
 #include "foskv/rpc/error.hpp"
 #include "foskv/common/error.hpp"
