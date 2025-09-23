@@ -18,8 +18,7 @@ public:
 
 public:
     [[REMEMBER_CO_AWAIT]]
-    static auto create(
-        uint64_t member_id, std::string_view name,
+    static auto create(uint64_t member_id, std::string_view name,
         std::string_view host, uint16_t port) -> kosio::async::Task<Result<Peer>>;
 
 public:

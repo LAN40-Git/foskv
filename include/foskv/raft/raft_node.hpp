@@ -44,8 +44,8 @@ private:
     auto produce_request_vote_response(bool vote_granted, std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
     auto produce_append_entries_request() const noexcept -> AppendEntriesRequest;
     auto produce_append_entries_response(bool success, std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
-    auto produce_install_snapshot_request(uint64_t last_include_index, uint64_t last_include_term, uint64_t offset,
-        std::string&& data, bool done) const noexcept -> InstallSnapshotRequest;
+    auto produce_install_snapshot_request(uint64_t last_include_index, uint64_t last_include_term,
+        uint64_t offset, std::string&& data, bool done) const noexcept -> InstallSnapshotRequest;
     auto produce_install_snapshot_response(std::span<char> resp_payload) const noexcept -> Result<std::size_t>;
 
 private:
