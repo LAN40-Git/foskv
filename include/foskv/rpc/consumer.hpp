@@ -11,7 +11,7 @@ public:
 
 public:
     ~RpcConsumer() {
-        // assert(is_shutdown_.load(std::memory_order_acquire));
+        assert(is_shutdown_.load(std::memory_order_acquire));
     }
 
     // Delete copy
@@ -63,11 +63,11 @@ private:
     auto consume_callbacks(kosio::net::OwnedTcpStreamReader reader) -> kosio::async::Task<>;
 
 private:
-    std::atomic<int>                  fd_{-1};
     ConcurrentQueue<detail::CallTask> tasks_;
     detail::RpcCallbackMap            callbacks_;
     uint64_t                          request_id_{0};
     kosio::net::SocketAddr            server_addr_;
+    std::atomic<int>                  fd_{-1};
     kosio::sync::Latch                latch_{2};
     std::atomic<bool>                 is_shutdown_{false};
     std::atomic<bool>                 is_producing_{false};

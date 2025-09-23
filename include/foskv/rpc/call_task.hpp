@@ -4,7 +4,7 @@
 namespace foskv::rpc {
 using RpcCallback = std::function<kosio::async::Task<>(std::string_view resp_payload)>;
 namespace detail {
-    using RpcCallbackMap = std::unordered_map<uint64_t, RpcCallback>;
+using RpcCallbackMap = std::unordered_map<uint64_t, RpcCallback>;
 class CallTask : util::Noncopyable {
 public:
     CallTask() = default;

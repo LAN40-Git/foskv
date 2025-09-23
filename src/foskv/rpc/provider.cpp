@@ -14,12 +14,10 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<kosio::Result<void>> {
         }
         auto& [stream, peer_addr] = has_stream.value();
         LOG_INFO("Accept connection from {}", peer_addr);
-        // thread safe here
-        auto addr = peer_addr.to_string();
-        task_queues_.erase(addr);
+        auto session = session_manager_.assign(peer_addr);
         auto [owned_reader, owned_writer] = stream.into_split();
-        kosio::spawn(produce_invoke_tasks(std::move(owned_reader), addr));
-        kosio::spawn(consume_invoke_tasks(std::move(owned_writer), addr));
+        kosio::spawn(produce_invoke_tasks(std::move(owned_reader), session));
+        kosio::spawn(consume_invoke_tasks(std::move(owned_writer), session));
     }
 }
 
@@ -30,9 +28,18 @@ void foskv::rpc::RpcProvider::register_invoke(
     invokes_[service_name][method_name] = std::move(invoke);
 }
 
-auto foskv::rpc::RpcProvider::produce_invoke_tasks(kosio::net::OwnedTcpStreamReader reader, std::string addr)
+auto foskv::rpc::RpcProvider::session_at(uint64_t session_id) const -> std::shared_ptr<detail::Session> {
+    tbb::concurrent_hash_map<uint64_t, std::shared_ptr<detail::Session>>::const_accessor acc;
+    if (session_manager_.sessions_.find(acc, session_id)) {
+        return acc->second;
+    }
+    return nullptr;
+}
+
+auto foskv::rpc::RpcProvider::produce_invoke_tasks(
+    kosio::net::OwnedTcpStreamReader reader, std::shared_ptr<detail::Session> session)
 -> kosio::async::Task<> {
-    auto& tasks = task_queues_[addr];
+    auto& tasks = session->tasks;
     while (true) {
         // Recv rpc header size
         uint32_t rpc_header_size_net;
@@ -95,10 +102,14 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(kosio::net::OwnedTcpStreamRea
         task.invoke_ = invoke->second;
         co_await tasks.push(std::move(task));
     }
+    session_manager_.remove(session->session_id);
+    LOG_VERBOSE("Session {} from {} : reader closed", session->session_id, session->addr);
 }
 
-auto foskv::rpc::RpcProvider::consume_invoke_tasks(kosio::net::OwnedTcpStreamWriter writer, std::string addr) -> kosio::async::Task<> {
-    auto& tasks = task_queues_[addr];
+auto foskv::rpc::RpcProvider::consume_invoke_tasks(
+    kosio::net::OwnedTcpStreamWriter writer, std::shared_ptr<detail::Session> session)
+-> kosio::async::Task<> {
+    auto& tasks = session->tasks;
     std::array<char, sizeof(RpcHeader)> buffer{};
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> resp_buffer{};
     while (true) {
@@ -141,4 +152,6 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(kosio::net::OwnedTcpStreamWri
             break;
         }
     }
+    session_manager_.remove(session->session_id);
+    LOG_VERBOSE("Session {} from {} : write closed", session->session_id, session->addr);
 }

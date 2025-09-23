@@ -1,5 +1,5 @@
 #pragma once
-#include "foskv/rpc/invoke_task.hpp"
+#include "foskv/rpc/session_manager.hpp"
 
 namespace foskv::rpc {
 class RpcProvider {
@@ -25,14 +25,18 @@ public:
         std::string_view method_name,
         detail::Invoke&& invoke);
 
+    /// @return A session at `session_id`, nullptr if not exist
+    auto session_at(uint64_t session_id) const -> std::shared_ptr<detail::Session>;
+
 private:
-    auto produce_invoke_tasks(kosio::net::OwnedTcpStreamReader reader, std::string addr) -> kosio::async::Task<>;
-    auto consume_invoke_tasks(kosio::net::OwnedTcpStreamWriter writer, std::string addr) -> kosio::async::Task<>;
+    auto produce_invoke_tasks(kosio::net::OwnedTcpStreamReader reader,
+        std::shared_ptr<detail::Session> session) -> kosio::async::Task<>;
+    auto consume_invoke_tasks(kosio::net::OwnedTcpStreamWriter writer,
+        std::shared_ptr<detail::Session> session) -> kosio::async::Task<>;
 
 private:
     kosio::net::SocketAddr addr_;
-    // service_name -> method_name -> invoke
-    std::unordered_map<std::string_view, detail::Service> invokes_; // See foskv/rpc/rpc.hpp
-    std::unordered_map<std::string, ConcurrentQueue<detail::InvokeTask>> task_queues_;
+    detail::InvokeMap      invokes_;
+    detail::SessionManager session_manager_;
 };
 } // namespace foskv::rpc
