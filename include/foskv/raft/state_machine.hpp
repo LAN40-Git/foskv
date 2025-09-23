@@ -20,8 +20,11 @@ public:
 
 private:
     // kv
+    [[nodiscard]]
     auto apply_kv_put(const kv::PutRequest& request) const -> rpc::detail::InvokeTask;
+    [[nodiscard]]
     auto apply_kv_get(const kv::GetRequest& request) const -> rpc::detail::InvokeTask;
+    [[nodiscard]]
     auto apply_kv_delete(const kv::DeleteRequest& request) const -> rpc::detail::InvokeTask;
 
 private:

@@ -437,6 +437,7 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
     new_entry->set_index(log_index);
     new_entry->set_command(internal_raft_request.SerializeAsString());
 
+    // TODO: Wait for more applytask before synchronizing log entry to other nodes
     // Save the internal raft request as applytask and wait for processing
     state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
 
@@ -448,8 +449,10 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
                 co_return;
             }
 
-            auto resp_term = response.header().term();
             auto member_id = response.header().member_id();
+            auto resp_term = response.header().term();
+            auto success = response.success();
+
             if (resp_term < current_term_.load(std::memory_order_acquire) ||
                 role_.load(std::memory_order_acquire) != kLeader) {
                 co_return;
@@ -471,6 +474,15 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
                 last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
                 co_return;
             }
+
+            if (!success) {
+                // TODO: Reissue the log
+                co_return;
+            }
+
+            match_index_[member_id] = log_index;
+            next_index_[member_id] = log_index + 1;
+            // TODO: Update commit_index
     }));
 
     // Critical, return 0 tells the rpc provider does not immediate send
@@ -487,58 +499,6 @@ auto foskv::raft::RaftNode::handle_kv_delete_request(std::string_view req_payloa
     uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
 
 }
-
-// auto foskv::raft::RaftNode::append_entries_callback(RaftNode *node, uint64_t prev_log_index, std::size_t entries_size,
-//                                                     std::string_view resp_payload) -> kosio::async::Task<> {
-//     AppendEntriesResponse response;
-//     if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) [[unlikely]] {
-//         LOG_ERROR("Failed to parse request vote response");
-//         co_return;
-//     }
-//
-//     auto cluster_id = response.header().cluster_id();
-//     auto member_id = response.header().member_id();
-//     auto resp_term = response.header().term();
-//     auto success = response.success();
-//
-//     if (resp_term < node->current_term_.load(std::memory_order_acquire) ||
-//         node->role_.load(std::memory_order_acquire) != kLeader) {
-//         co_return;
-//         }
-//
-//     co_await node->mutex_.lock();
-//     std::lock_guard lock(node->mutex_, std::adopt_lock);
-//
-//     // Check again
-//     auto current_term = node->current_term_.load(std::memory_order_relaxed);
-//     if (resp_term < current_term ||
-//         node->role_.load(std::memory_order_relaxed) != kLeader) {
-//         co_return;
-//     }
-//
-//     if (resp_term > current_term) {
-//         current_term = resp_term;
-//         node->increase_term_to(resp_term);
-//         node->role_.store(kFollower, std::memory_order_acquire);
-//         node->last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
-//         co_return;
-//     }
-//
-//     if (success) {
-//         // Update next_index_ and match_index_ for follower
-//         node->match_index_[member_id] = prev_log_index + entries_size;
-//         node->next_index_[member_id] = node->match_index_[member_id] + 1;
-//
-//         // node->try_commit_entries();
-//         // node->persist();
-//         // co_await node->apply_commited_entries();
-//     } else {
-//         if (node->next_index_[member_id] > 1) {
-//             node->next_index_[member_id]--;
-//         }
-//         // TODO: Handle conflict
-//     }
-// }
 
 auto foskv::raft::RaftNode::produce_response_header()
 const noexcept -> ResponseHeader {

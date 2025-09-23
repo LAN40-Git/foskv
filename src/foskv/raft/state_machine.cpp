@@ -45,17 +45,20 @@ void foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
         switch (request.cmd_case()) {
             case InternalRaftRequest::kKvPut: {
                 invoke_task = apply_kv_put(request.kv_put());
-
                 break;
             }
             case InternalRaftRequest::kKvGet: {
                 invoke_task = apply_kv_get(request.kv_get());
+                break;
             }
             case InternalRaftRequest::kKvDelete: {
                 invoke_task = apply_kv_delete(request.kv_delete());
                 break;
             }
-
+            default: {
+                LOG_ERROR("Unknown command from session {}, request_id {}", session_id, apply_task.request_id_);
+                continue;
+            }
         }
         invoke_task.request_id_ = apply_task.request_id_;
         session->tasks.push_sync(std::move(invoke_task));
