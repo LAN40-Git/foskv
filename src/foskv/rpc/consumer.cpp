@@ -94,8 +94,8 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         // Make rpc header
         RpcHeader rpc_header;
         rpc_header.set_request_id(request_id_);
-        rpc_header.set_allocated_service_name(&task.service_name_);
-        rpc_header.set_allocated_method_name(&task.method_name_);
+        rpc_header.mutable_service_name()->swap(task.service_name_);
+        rpc_header.mutable_method_name()->swap(task.method_name_);
         rpc_header.set_payload_size(task.req_payload_.size());
 
         // Send [rpc header size -> rpc header -> request payload]

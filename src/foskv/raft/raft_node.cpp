@@ -92,7 +92,7 @@ auto foskv::raft::RaftNode::run() -> kosio::async::Task<Result<void>> {
     kosio::spawn(start_election_timeout());
     kosio::spawn(start_heartbeat_timeout());
     auto ret = co_await transport_.run();
-    co_await shutdown();
+    // co_await shutdown();
     co_return ret;
 }
 
@@ -381,8 +381,8 @@ auto foskv::raft::RaftNode::handle_install_snapshot_request(
 
 auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, std::span<char> resp_payload,
     uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
-    auto* request = new kv::PutRequest();
-    if (!request->ParseFromArray(req_payload.data(), req_payload.size())) {
+    kv::PutRequest request;
+    if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
         co_return std::unexpected{make_error(Error::kKVPutRequestParseFailed)};
     }
 
@@ -410,7 +410,7 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
 
     // InternalRaftRequest is the command
     InternalRaftRequest internal_raft_request;
-    internal_raft_request.set_allocated_kv_put(request);
+    internal_raft_request.mutable_kv_put()->Swap(&request);
 
     // Packaged as a log entry
     auto current_term = current_term_.load(std::memory_order_relaxed);
@@ -476,13 +476,23 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
             }
 
             if (!success) {
-                // TODO: Reissue the log
+                next_index_[member_id]--;
                 co_return;
             }
 
+            // Update commit_index
             match_index_[member_id] = log_index;
             next_index_[member_id] = log_index + 1;
-            // TODO: Update commit_index
+            std::vector<uint64_t> indexes;
+            indexes.reserve(match_index_.size());
+            for (auto index: match_index_ | std::views::values) {
+                indexes.push_back(index);
+            }
+            std::ranges::sort(indexes);
+            commit_index_ = indexes[indexes.size()/2];
+
+            // Apply commands
+            state_machine_.apply(transport_, last_applied_, commit_index_);
     }));
 
     // Critical, return 0 tells the rpc provider does not immediate send

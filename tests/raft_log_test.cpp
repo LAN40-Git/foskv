@@ -33,7 +33,10 @@ auto run() -> kosio::async::Task<> {
         entry.set_term(i);
         entries.emplace_back(std::move(entry));
     }
-    logs.append_entries(std::move(entries));
+    auto ret = logs.append_entries(std::move(entries));
+    if (!ret) {
+        LOG_ERROR("{}", ret.error());
+    }
 
     // Persist state
     logs.persist_state_test(12, 88);

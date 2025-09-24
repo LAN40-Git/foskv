@@ -35,11 +35,6 @@ pkg_check_modules(LIBURING REQUIRED liburing)
 
 find_package(Protobuf REQUIRED)
 if(Protobuf_FOUND)
-    set(PROTO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/src/api")
-    set(PROTOBUF_IMPORT_DIRS
-            ${PROTO_ROOT}
-            ${Protobuf_INCLUDE_DIRS}
-    )
     message(STATUS "Protobuf version: ${Protobuf_VERSION}")
 else()
     message(FATAL_ERROR "Protobuf not found")
@@ -49,6 +44,8 @@ find_package(RocksDB REQUIRED)
 if (RocksDB_FOUND)
     message(STATUS "RocksDB version: ${RocksDB_VERSION}")
 endif ()
+
+find_package(TBB REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(XXHASH REQUIRED libxxhash)
@@ -68,6 +65,7 @@ set(ROCKSDB_LIBRARIES
 
 set(DEPEND_LIBS
         pthread
+        tbb
         ${PROTOBUF_LIBRARIES}
         ${LIBURING_LIBRARIES}
         ${ROCKSDB_LIBRARIES}
