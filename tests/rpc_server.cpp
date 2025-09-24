@@ -36,6 +36,7 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVPutFailed);
             }
+            LOG_INFO("Handle a put request");
             co_return raft::detail::produce_kv_put_response(resp_payload);
     });
     provider.register_invoke(KVService::ServiceName, KVService::Get,
@@ -52,6 +53,7 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVGetFailed);
             }
+            LOG_INFO("Handle a get request");
             co_return raft::detail::produce_kv_get_response(resp_payload, true, rpc::RpcError::kNoError, std::move(kv));
     });
     provider.register_invoke(KVService::ServiceName, KVService::Delete,
@@ -66,6 +68,7 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVDeleteFailed);
             }
+            LOG_INFO("Handle a delete request");
             co_return raft::detail::produce_kv_delete_response(resp_payload);
     });
     co_await provider.run();

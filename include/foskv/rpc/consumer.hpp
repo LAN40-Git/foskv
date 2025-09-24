@@ -73,5 +73,6 @@ private:
     std::atomic<bool>                 is_shutdown_{false};
     std::atomic<bool>                 is_producing_{false};
     std::atomic<bool>                 is_consuming_{false};
+    std::chrono::high_resolution_clock::time_point start_;
 };
 } // namespace foskv::rpc

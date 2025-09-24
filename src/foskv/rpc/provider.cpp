@@ -58,7 +58,6 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
             break;
         }
 
-        // TODO: Use buffer pools
         detail::InvokeTask task;
         task.req_payload_.resize(rpc_header_size);
 
@@ -148,7 +147,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         rpc_header.set_request_id(task.request_id_);
         rpc_header.set_payload_size(resp_payload_size);
         auto rpc_header_size = rpc_header.ByteSizeLong();
-        if (!rpc_header.SerializeToArray(buffer.data(), rpc_header_size)) [[unlikely]] {
+        if (!rpc_header.SerializeToArray(buffer.data(), static_cast<int>(rpc_header_size))) [[unlikely]] {
             LOG_ERROR("Failed to serialize response.");
             continue;
         }

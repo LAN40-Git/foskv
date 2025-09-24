@@ -85,6 +85,11 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
 
     // Start produce and consume
     fd_.store(has_stream.value().fd(), std::memory_order_release);
+    // Disable Nagle
+    auto has_disable_nagle = has_stream.value().set_nodelay(true);
+    if (!has_disable_nagle) {
+        LOG_ERROR("Failed to disable nagle : {}", has_disable_nagle.error());
+    }
     auto [reader, writer] = has_stream.value().into_split();
     is_producing_.store(true, std::memory_order_relaxed);
     is_consuming_.store(true, std::memory_order_relaxed);
@@ -148,7 +153,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
     while (true) {
         // Recv rpc header size
         uint32_t rpc_header_size_net;
-        auto ret = co_await reader.read_exact(
+        auto ret = co_await reader.read(
             {reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
@@ -162,7 +167,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
         }
 
         // Recv response header
-        ret = co_await reader.read_exact(
+        ret = co_await reader.read(
             {buffer.data(), rpc_header_size});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
@@ -183,13 +188,14 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
         }
 
         // Recv response payload
-        ret = co_await reader.read_exact(
+        ret = co_await reader.read(
             {buffer.data(), payload_size});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             callbacks_.erase(request_id);
             break;
         }
+
 
         if (callbacks_.contains(request_id)) {
             co_await callbacks_[request_id](std::string_view{buffer.data(), payload_size});
