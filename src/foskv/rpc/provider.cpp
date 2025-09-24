@@ -48,7 +48,7 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         auto recv_ret = co_await reader.read_exact(
             {reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)});
         if (!recv_ret) [[unlikely]] {
-            LOG_ERROR("{}", recv_ret.error());
+            LOG_VERBOSE("{}", recv_ret.error());
             break;
         }
 
@@ -96,16 +96,19 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         auto service = invokes_.find(service_name);
         if (service == invokes_.end()) [[unlikely]] {
             LOG_ERROR("Failed to find service for {}", service_name);
+            continue;
         }
 
         auto invoke = service->second.find(method_name);
         if (invoke == service->second.end()) [[unlikely]] {
             LOG_ERROR("Failed to find invoke for {}", method_name);
+            continue;
         }
 
         task.invoke_ = invoke->second;
         co_await tasks.push(std::move(task));
     }
+    tasks.shutdown();
     session_manager_.remove(session->session_id);
     LOG_VERBOSE("Session {} from {} : reader closed", session->session_id, session->addr);
 }
@@ -117,7 +120,12 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
     std::array<char, sizeof(RpcHeader)> buffer{};
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> resp_buffer{};
     while (true) {
-        auto task = co_await tasks.pop();
+        auto has_task = co_await tasks.pop();
+        if (!has_task) [[unlikely]] {
+            LOG_VERBOSE("{}", has_task.error());
+            break;
+        }
+        auto task = std::move(has_task.value());
 
         auto has_resp_payload = co_await task.invoke_(task.req_payload_,
                                                      {resp_buffer.data(), resp_buffer.max_size()},
@@ -160,5 +168,5 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         }
     }
     session_manager_.remove(session->session_id);
-    LOG_VERBOSE("Session {} from {} : write closed", session->session_id, session->addr);
+    LOG_VERBOSE("Session {} from {} : writer closed", session->session_id, session->addr);
 }

@@ -10,29 +10,35 @@ auto foskv::raft::detail::Transport::run() -> kosio::async::Task<Result<void>> {
     co_return co_await provider_.run();
 }
 
-auto foskv::raft::detail::Transport::broadcast_request_vote_request(RequestVoteRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_request_vote_request(RequestVoteRequest request,
     Peer::RpcCallback&& callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
     for (auto& peer : config_.peers_ | std::views::values) {
-        co_await peer.request_vote(payload, std::move(callback));
+        if (peer.member_id() != config_.member_id_) {
+            co_await peer.request_vote(payload, std::move(callback));
+        }
     }
 }
 
-auto foskv::raft::detail::Transport::broadcast_append_entries_request(AppendEntriesRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_append_entries_request(AppendEntriesRequest request,
     Peer::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
     for (auto& peer : config_.peers_ | std::views::values) {
-        co_await peer.append_entries(payload, std::move(callback));
+        if (peer.member_id() != config_.member_id_) {
+            co_await peer.append_entries(payload, std::move(callback));
+        }
     }
 }
 
-auto foskv::raft::detail::Transport::broadcast_install_snapshot_request(InstallSnapshotRequest&& request,
+auto foskv::raft::detail::Transport::broadcast_install_snapshot_request(InstallSnapshotRequest request,
     Peer::RpcCallback &&callback) -> kosio::async::Task<> {
     // TODO: Optimize with buffer pools
     auto payload = request.SerializeAsString();
     for (auto& peer : config_.peers_ | std::views::values) {
-        co_await peer.install_snapshot(payload, std::move(callback));
+        if (peer.member_id() != config_.member_id_) {
+            co_await peer.install_snapshot(payload, std::move(callback));
+        }
     }
 }

@@ -71,8 +71,8 @@ static auto produce_rpc_response_header(bool success, uint32_t error_code,
 }
 
 [[nodiscard]]
-static auto produce_kv_put_response(bool success, uint32_t error_code,
-    std::optional<rpc::Redirect>&& redirect, std::span<char> resp_payload) -> Result<std::size_t> {
+static auto produce_kv_put_response(std::span<char> resp_payload, bool success = true, uint32_t error_code = rpc::RpcError::kNoError,
+    std::optional<rpc::Redirect>&& redirect = std::nullopt) -> Result<std::size_t> {
     kv::PutResponse response;
     auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
     response.mutable_header()->Swap(&header);
@@ -84,14 +84,27 @@ static auto produce_kv_put_response(bool success, uint32_t error_code,
 }
 
 [[nodiscard]]
-static auto produce_kv_get_response(bool success, uint32_t error_code,
-    std::optional<rpc::Redirect>&& redirect, std::optional<kv::KeyValue>&& kv,
-    std::span<char> resp_payload) -> Result<std::size_t> {
+static auto produce_kv_get_response(std::span<char> resp_payload, bool success = true, uint32_t error_code = rpc::RpcError::kNoError,
+        std::optional<kv::KeyValue>&& kv = std::nullopt, std::optional<rpc::Redirect>&& redirect = std::nullopt) -> Result<std::size_t> {
     kv::GetResponse response;
     auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
     response.mutable_header()->Swap(&header);
     if (kv) {
         response.mutable_kv()->Swap(&kv.value());
+    }
+    auto resp_payload_size = response.ByteSizeLong();
+    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+        return std::unexpected{make_error(Error::kKVGetResponseSerializeFailed)};
+    }
+    return resp_payload_size;
+}
+
+[[nodiscard]]
+static auto produce_kv_delete_response(std::span<char> resp_payload, bool success = true, uint32_t error_code = rpc::RpcError::kNoError,
+        std::optional<rpc::Redirect>&& redirect = std::nullopt) -> Result<std::size_t> {
+    kv::DeleteResponse response;
+    auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
+    response.mutable_header()->Swap(&header);
     auto resp_payload_size = response.ByteSizeLong();
     if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
         return std::unexpected{make_error(Error::kKVDeleteResponseSerializeFailed)};

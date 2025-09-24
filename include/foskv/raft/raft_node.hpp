@@ -27,6 +27,14 @@ private:
     void become_leader();
 
 private:
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_request_vote_response(std::string_view resp_payload) -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_append_entries_response(std::string_view resp_payload, uint64_t match_index, std::size_t apply_size) -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
+    auto handle_install_snapshot_response(std::string_view resp_payload) -> kosio::async::Task<>;
+
+private:
     // raft rpc invoke
     [[REMEMBER_CO_AWAIT]]
     auto handle_request_vote_request(

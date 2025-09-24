@@ -40,7 +40,9 @@ auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&met
     co_await tasks_.push(std::move(task));
 
     // Check if reconnection is required
-    if (fd_.load(std::memory_order_acquire) == -1) {
+    if (fd_.load(std::memory_order_acquire) < 0) {
+        co_await mutex_.lock();
+        std::lock_guard lock(mutex_, std::adopt_lock);
         co_return co_await this->connect();
     }
 
@@ -71,6 +73,10 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
 }
 
 auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
+    if (fd_.load(std::memory_order_relaxed) >= 0) {
+        co_return Result<void>{};
+    }
+
     auto has_stream = co_await kosio::net::TcpStream::connect(server_addr_);
     if (!has_stream) {
         LOG_ERROR("{}", has_stream.error());
@@ -80,8 +86,8 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
     // Start produce and consume
     fd_.store(has_stream.value().fd(), std::memory_order_release);
     auto [reader, writer] = has_stream.value().into_split();
-    is_producing_.store(true, std::memory_order_release);
-    is_consuming_.store(true, std::memory_order_release);
+    is_producing_.store(true, std::memory_order_relaxed);
+    is_consuming_.store(true, std::memory_order_relaxed);
     kosio::spawn(produce_callbacks(std::move(writer)));
     kosio::spawn(consume_callbacks(std::move(reader)));
     co_return Result<void>{};
@@ -90,7 +96,11 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
 auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter writer) -> kosio::async::Task<> {
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
     while (true) {
-        auto task = co_await tasks_.pop();
+        auto has_task = co_await tasks_.pop();
+        if (!has_task) [[unlikely]] {
+            break;
+        }
+        auto task = std::move(has_task.value());
         // Make rpc header
         RpcHeader rpc_header;
         rpc_header.set_request_id(request_id_);
@@ -188,6 +198,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
             callbacks_.erase(request_id);
         }
     }
+    tasks_.shutdown();
     if (is_shutdown_.load(std::memory_order_acquire)) {
         co_await latch_.arrive_and_wait();
     }

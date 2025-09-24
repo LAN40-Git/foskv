@@ -134,8 +134,8 @@ PROTOBUF_CONSTEXPR InstallSnapshotRequest::InstallSnapshotRequest(
     /*decltype(_impl_.data_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.term_)*/uint64_t{0u}
   , /*decltype(_impl_.leader_id_)*/uint64_t{0u}
-  , /*decltype(_impl_.last_include_index_)*/uint64_t{0u}
-  , /*decltype(_impl_.last_include_term_)*/uint64_t{0u}
+  , /*decltype(_impl_.last_included_index_)*/uint64_t{0u}
+  , /*decltype(_impl_.last_included_term_)*/uint64_t{0u}
   , /*decltype(_impl_.offset_)*/uint64_t{0u}
   , /*decltype(_impl_.done_)*/false
   , /*decltype(_impl_._cached_size_)*/{}} {}
@@ -256,8 +256,8 @@ const uint32_t TableStruct_raft_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.term_),
   PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.leader_id_),
-  PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.last_include_index_),
-  PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.last_include_term_),
+  PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.last_included_index_),
+  PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.last_included_term_),
   PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.offset_),
   PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.data_),
   PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _impl_.done_),
@@ -323,24 +323,24 @@ const char descriptor_table_protodef_raft_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "skv.raft.LogEntry\022\025\n\rleader_commit\030\006 \001(\004"
   "\"T\n\025AppendEntriesResponse\022*\n\006header\030\001 \001("
   "\0132\032.foskv.raft.ResponseHeader\022\017\n\007success"
-  "\030\002 \001(\010\"\234\001\n\026InstallSnapshotRequest\022\014\n\004ter"
-  "m\030\001 \001(\004\022\021\n\tleader_id\030\002 \001(\004\022\032\n\022last_inclu"
-  "de_index\030\003 \001(\004\022\031\n\021last_include_term\030\004 \001("
-  "\004\022\016\n\006offset\030\005 \001(\004\022\014\n\004data\030\006 \001(\014\022\014\n\004done\030"
-  "\007 \001(\010\"E\n\027InstallSnapshotResponse\022*\n\006head"
-  "er\030\001 \001(\0132\032.foskv.raft.ResponseHeader\"\232\001\n"
-  "\023InternalRaftRequest\022&\n\006kv_put\030\001 \001(\0132\024.f"
-  "oskv.kv.PutRequestH\000\022&\n\006kv_get\030\002 \001(\0132\024.f"
-  "oskv.kv.GetRequestH\000\022,\n\tkv_delete\030\003 \001(\0132"
-  "\027.foskv.kv.DeleteRequestH\000B\005\n\003cmdb\006proto"
-  "3"
+  "\030\002 \001(\010\"\236\001\n\026InstallSnapshotRequest\022\014\n\004ter"
+  "m\030\001 \001(\004\022\021\n\tleader_id\030\002 \001(\004\022\033\n\023last_inclu"
+  "ded_index\030\003 \001(\004\022\032\n\022last_included_term\030\004 "
+  "\001(\004\022\016\n\006offset\030\005 \001(\004\022\014\n\004data\030\006 \001(\014\022\014\n\004don"
+  "e\030\007 \001(\010\"E\n\027InstallSnapshotResponse\022*\n\006he"
+  "ader\030\001 \001(\0132\032.foskv.raft.ResponseHeader\"\232"
+  "\001\n\023InternalRaftRequest\022&\n\006kv_put\030\001 \001(\0132\024"
+  ".foskv.kv.PutRequestH\000\022&\n\006kv_get\030\002 \001(\0132\024"
+  ".foskv.kv.GetRequestH\000\022,\n\tkv_delete\030\003 \001("
+  "\0132\027.foskv.kv.DeleteRequestH\000B\005\n\003cmdb\006pro"
+  "to3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_raft_2eproto_deps[1] = {
   &::descriptor_table_kv_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_raft_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_raft_2eproto = {
-    false, false, 1081, descriptor_table_protodef_raft_2eproto,
+    false, false, 1083, descriptor_table_protodef_raft_2eproto,
     "raft.proto",
     &descriptor_table_raft_2eproto_once, descriptor_table_raft_2eproto_deps, 1, 10,
     schemas, file_default_instances, TableStruct_raft_2eproto::offsets,
@@ -2114,8 +2114,8 @@ InstallSnapshotRequest::InstallSnapshotRequest(const InstallSnapshotRequest& fro
       decltype(_impl_.data_){}
     , decltype(_impl_.term_){}
     , decltype(_impl_.leader_id_){}
-    , decltype(_impl_.last_include_index_){}
-    , decltype(_impl_.last_include_term_){}
+    , decltype(_impl_.last_included_index_){}
+    , decltype(_impl_.last_included_term_){}
     , decltype(_impl_.offset_){}
     , decltype(_impl_.done_){}
     , /*decltype(_impl_._cached_size_)*/{}};
@@ -2143,8 +2143,8 @@ inline void InstallSnapshotRequest::SharedCtor(
       decltype(_impl_.data_){}
     , decltype(_impl_.term_){uint64_t{0u}}
     , decltype(_impl_.leader_id_){uint64_t{0u}}
-    , decltype(_impl_.last_include_index_){uint64_t{0u}}
-    , decltype(_impl_.last_include_term_){uint64_t{0u}}
+    , decltype(_impl_.last_included_index_){uint64_t{0u}}
+    , decltype(_impl_.last_included_term_){uint64_t{0u}}
     , decltype(_impl_.offset_){uint64_t{0u}}
     , decltype(_impl_.done_){false}
     , /*decltype(_impl_._cached_size_)*/{}
@@ -2208,18 +2208,18 @@ const char* InstallSnapshotRequest::_InternalParse(const char* ptr, ::_pbi::Pars
         } else
           goto handle_unusual;
         continue;
-      // uint64 last_include_index = 3;
+      // uint64 last_included_index = 3;
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.last_include_index_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.last_included_index_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // uint64 last_include_term = 4;
+      // uint64 last_included_term = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
-          _impl_.last_include_term_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.last_included_term_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -2290,16 +2290,16 @@ uint8_t* InstallSnapshotRequest::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt64ToArray(2, this->_internal_leader_id(), target);
   }
 
-  // uint64 last_include_index = 3;
-  if (this->_internal_last_include_index() != 0) {
+  // uint64 last_included_index = 3;
+  if (this->_internal_last_included_index() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_last_include_index(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_last_included_index(), target);
   }
 
-  // uint64 last_include_term = 4;
-  if (this->_internal_last_include_term() != 0) {
+  // uint64 last_included_term = 4;
+  if (this->_internal_last_included_term() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(4, this->_internal_last_include_term(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(4, this->_internal_last_included_term(), target);
   }
 
   // uint64 offset = 5;
@@ -2353,14 +2353,14 @@ size_t InstallSnapshotRequest::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_leader_id());
   }
 
-  // uint64 last_include_index = 3;
-  if (this->_internal_last_include_index() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_last_include_index());
+  // uint64 last_included_index = 3;
+  if (this->_internal_last_included_index() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_last_included_index());
   }
 
-  // uint64 last_include_term = 4;
-  if (this->_internal_last_include_term() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_last_include_term());
+  // uint64 last_included_term = 4;
+  if (this->_internal_last_included_term() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_last_included_term());
   }
 
   // uint64 offset = 5;
@@ -2400,11 +2400,11 @@ void InstallSnapshotRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg,
   if (from._internal_leader_id() != 0) {
     _this->_internal_set_leader_id(from._internal_leader_id());
   }
-  if (from._internal_last_include_index() != 0) {
-    _this->_internal_set_last_include_index(from._internal_last_include_index());
+  if (from._internal_last_included_index() != 0) {
+    _this->_internal_set_last_included_index(from._internal_last_included_index());
   }
-  if (from._internal_last_include_term() != 0) {
-    _this->_internal_set_last_include_term(from._internal_last_include_term());
+  if (from._internal_last_included_term() != 0) {
+    _this->_internal_set_last_included_term(from._internal_last_included_term());
   }
   if (from._internal_offset() != 0) {
     _this->_internal_set_offset(from._internal_offset());

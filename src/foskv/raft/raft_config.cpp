@@ -212,6 +212,12 @@ auto foskv::raft::RaftConfig::add_peer(NodeInfo peer_node_info) -> kosio::async:
 
 auto foskv::raft::RaftConfig::remove_peer(NodeInfo peer_node_info) -> kosio::async::Task<Result<void>> {
     auto member_id = peer_node_info.hash();
+    auto peer = peers_.find(member_id);
+    if (peer == peers_.end()) {
+        LOG_ERROR("Failed to find peer {}", member_id);
+        co_return std::unexpected{make_error(Error::kPeerNotFound)};
+    }
+    co_await peer->second.shutdown();
     peers_.erase(member_id);
     auto& nodes_json = json_["nodes"];
     nodes_json.erase(std::ranges::find_if(nodes_json,
@@ -224,6 +230,12 @@ auto foskv::raft::RaftConfig::remove_peer(NodeInfo peer_node_info) -> kosio::asy
 
 auto foskv::raft::RaftConfig::remove_peer(uint64_t member_id)
 -> kosio::async::Task<Result<void>> {
+    auto peer = peers_.find(member_id);
+    if (peer == peers_.end()) {
+        LOG_ERROR("Failed to find peer {}", member_id);
+        co_return std::unexpected{make_error(Error::kPeerNotFound)};
+    }
+    co_await peer->second.shutdown();
     peers_.erase(member_id);
     auto& nodes_json = json_["nodes"];
     nodes_json.erase(std::ranges::find_if(nodes_json,

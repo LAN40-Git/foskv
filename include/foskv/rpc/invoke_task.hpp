@@ -3,7 +3,7 @@
 
 namespace foskv::rpc::detail {
 class InvokeTask;
-// session_id -> request_id -> req_payload -> resp_payload
+// req_payload -> resp_payload -> session_id -> request_id
 using Invoke = std::function<kosio::async::Task<Result<std::size_t>>(std::string_view, std::span<char>, uint64_t, uint64_t)>;
 using InvokeMap = std::unordered_map<std::string_view, std::unordered_map<std::string_view, Invoke>>;
 class InvokeTask : util::Noncopyable {

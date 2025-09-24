@@ -1458,8 +1458,8 @@ class InstallSnapshotRequest final :
     kDataFieldNumber = 6,
     kTermFieldNumber = 1,
     kLeaderIdFieldNumber = 2,
-    kLastIncludeIndexFieldNumber = 3,
-    kLastIncludeTermFieldNumber = 4,
+    kLastIncludedIndexFieldNumber = 3,
+    kLastIncludedTermFieldNumber = 4,
     kOffsetFieldNumber = 5,
     kDoneFieldNumber = 7,
   };
@@ -1495,22 +1495,22 @@ class InstallSnapshotRequest final :
   void _internal_set_leader_id(uint64_t value);
   public:
 
-  // uint64 last_include_index = 3;
-  void clear_last_include_index();
-  uint64_t last_include_index() const;
-  void set_last_include_index(uint64_t value);
+  // uint64 last_included_index = 3;
+  void clear_last_included_index();
+  uint64_t last_included_index() const;
+  void set_last_included_index(uint64_t value);
   private:
-  uint64_t _internal_last_include_index() const;
-  void _internal_set_last_include_index(uint64_t value);
+  uint64_t _internal_last_included_index() const;
+  void _internal_set_last_included_index(uint64_t value);
   public:
 
-  // uint64 last_include_term = 4;
-  void clear_last_include_term();
-  uint64_t last_include_term() const;
-  void set_last_include_term(uint64_t value);
+  // uint64 last_included_term = 4;
+  void clear_last_included_term();
+  uint64_t last_included_term() const;
+  void set_last_included_term(uint64_t value);
   private:
-  uint64_t _internal_last_include_term() const;
-  void _internal_set_last_include_term(uint64_t value);
+  uint64_t _internal_last_included_term() const;
+  void _internal_set_last_included_term(uint64_t value);
   public:
 
   // uint64 offset = 5;
@@ -1542,8 +1542,8 @@ class InstallSnapshotRequest final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr data_;
     uint64_t term_;
     uint64_t leader_id_;
-    uint64_t last_include_index_;
-    uint64_t last_include_term_;
+    uint64_t last_included_index_;
+    uint64_t last_included_term_;
     uint64_t offset_;
     bool done_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -2643,44 +2643,44 @@ inline void InstallSnapshotRequest::set_leader_id(uint64_t value) {
   // @@protoc_insertion_point(field_set:foskv.raft.InstallSnapshotRequest.leader_id)
 }
 
-// uint64 last_include_index = 3;
-inline void InstallSnapshotRequest::clear_last_include_index() {
-  _impl_.last_include_index_ = uint64_t{0u};
+// uint64 last_included_index = 3;
+inline void InstallSnapshotRequest::clear_last_included_index() {
+  _impl_.last_included_index_ = uint64_t{0u};
 }
-inline uint64_t InstallSnapshotRequest::_internal_last_include_index() const {
-  return _impl_.last_include_index_;
+inline uint64_t InstallSnapshotRequest::_internal_last_included_index() const {
+  return _impl_.last_included_index_;
 }
-inline uint64_t InstallSnapshotRequest::last_include_index() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InstallSnapshotRequest.last_include_index)
-  return _internal_last_include_index();
+inline uint64_t InstallSnapshotRequest::last_included_index() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.InstallSnapshotRequest.last_included_index)
+  return _internal_last_included_index();
 }
-inline void InstallSnapshotRequest::_internal_set_last_include_index(uint64_t value) {
+inline void InstallSnapshotRequest::_internal_set_last_included_index(uint64_t value) {
   
-  _impl_.last_include_index_ = value;
+  _impl_.last_included_index_ = value;
 }
-inline void InstallSnapshotRequest::set_last_include_index(uint64_t value) {
-  _internal_set_last_include_index(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.InstallSnapshotRequest.last_include_index)
+inline void InstallSnapshotRequest::set_last_included_index(uint64_t value) {
+  _internal_set_last_included_index(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.InstallSnapshotRequest.last_included_index)
 }
 
-// uint64 last_include_term = 4;
-inline void InstallSnapshotRequest::clear_last_include_term() {
-  _impl_.last_include_term_ = uint64_t{0u};
+// uint64 last_included_term = 4;
+inline void InstallSnapshotRequest::clear_last_included_term() {
+  _impl_.last_included_term_ = uint64_t{0u};
 }
-inline uint64_t InstallSnapshotRequest::_internal_last_include_term() const {
-  return _impl_.last_include_term_;
+inline uint64_t InstallSnapshotRequest::_internal_last_included_term() const {
+  return _impl_.last_included_term_;
 }
-inline uint64_t InstallSnapshotRequest::last_include_term() const {
-  // @@protoc_insertion_point(field_get:foskv.raft.InstallSnapshotRequest.last_include_term)
-  return _internal_last_include_term();
+inline uint64_t InstallSnapshotRequest::last_included_term() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.InstallSnapshotRequest.last_included_term)
+  return _internal_last_included_term();
 }
-inline void InstallSnapshotRequest::_internal_set_last_include_term(uint64_t value) {
+inline void InstallSnapshotRequest::_internal_set_last_included_term(uint64_t value) {
   
-  _impl_.last_include_term_ = value;
+  _impl_.last_included_term_ = value;
 }
-inline void InstallSnapshotRequest::set_last_include_term(uint64_t value) {
-  _internal_set_last_include_term(value);
-  // @@protoc_insertion_point(field_set:foskv.raft.InstallSnapshotRequest.last_include_term)
+inline void InstallSnapshotRequest::set_last_included_term(uint64_t value) {
+  _internal_set_last_included_term(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.InstallSnapshotRequest.last_included_term)
 }
 
 // uint64 offset = 5;

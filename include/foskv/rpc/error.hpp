@@ -12,10 +12,13 @@ public:
         kKVPutFailed,
         kKVGetFailed,
         kKVDeleteFailed,
+        kKVPutRequestParseFailed,
+        kKVGetRequestParseFailed,
+        kKVDeleteRequestParseFailed,
     };
 
 public:
-    explicit RpcError(ErrorCode error_code)
+    explicit RpcError(int error_code)
         : error_code_(error_code) {}
 
 public:
@@ -38,6 +41,12 @@ public:
             case kKVGetFailed:
                 return "Failed to get kv.";
             case kKVDeleteFailed:
+                return "Failed to delete kv.";
+            case kKVPutRequestParseFailed:
+                return "Failed to parse kv.";
+            case kKVGetRequestParseFailed:
+                return "Failed to parse kv.";
+            case kKVDeleteRequestParseFailed:
                 return "Failed to delete kv.";
             default:
                 return "Unknown rpc error.";

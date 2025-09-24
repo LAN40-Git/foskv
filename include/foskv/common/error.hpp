@@ -9,7 +9,9 @@ class Error {
 public:
     enum ErrorCode {
         kUnknown = 8000,
+        kEmptyConcurrentQueue,
         kRepeatedPeer,
+        kPeerNotFound,
         kLocalNodeNotFound,
         kInvalidRpcServerAddress,
         kInvalidPeerAddress,
@@ -78,6 +80,12 @@ public:
         switch (error_code_) {
             case kUnknown:
                 return "Unknown error.";
+            case kEmptyConcurrentQueue:
+                return "Empty concurrent queue.";
+            case kRepeatedPeer:
+                return "Repeated peer.";
+            case kPeerNotFound:
+                return "Peer not found.";
             case kLocalNodeNotFound:
                 return "Local node not found in raft config file.";
             case kInvalidRpcServerAddress:

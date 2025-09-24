@@ -19,7 +19,7 @@ public:
     void apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index);
 
 private:
-    // kv
+    /* apply kv */
     [[nodiscard]]
     auto apply_kv_put(const kv::PutRequest& request) const -> rpc::detail::InvokeTask;
     [[nodiscard]]
