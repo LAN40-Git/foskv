@@ -65,7 +65,7 @@ private:
     auto consume_callbacks(kosio::net::OwnedTcpStreamReader reader) -> kosio::async::Task<>;
 
 private:
-    ConcurrentQueue<detail::CallTask> tasks_;
+    util::ConcurrentQueue<detail::CallTask> tasks_;
     detail::RpcCallbackMap            callbacks_;
     uint64_t                          request_id_{0};
     kosio::net::SocketAddr            server_addr_;

@@ -6,8 +6,8 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     foskv::kv::PutRequest put_request;
     std::string key = "key";
     std::string value = "value";
-    put_request.mutable_key()->swap(key);
-    put_request.mutable_value()->swap(value);
+    put_request.set_key(key);
+    put_request.set_value(value);
     co_await consumer->call(KVService::ServiceName, KVService::Put, put_request.SerializeAsString(),
     [](std::string_view resp_payload) -> kosio::async::Task<> {
         foskv::kv::PutResponse response;
@@ -78,11 +78,11 @@ auto main_loop() -> kosio::async::Task<> {
         for (int i = 0; i < 1000; i++) {
             kosio::spawn(kv_put_1000(consumer));
         }
-        co_await kosio::time::sleep(60000);
+        co_await kosio::time::sleep(10000);
     }
 }
 
 auto main() -> int {
     SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
-    kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
+    kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
 }

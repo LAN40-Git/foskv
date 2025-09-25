@@ -102,7 +102,7 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         task.req_payload_ = std::string{buffer.data() + rpc_header_size, payload_size};
         task.invoke_ = invoke->second;
 
-        co_await tasks.push(std::move(task));
+        tasks.push(std::move(task));
     }
     tasks.shutdown();
     session_manager_.remove(session->session_id);
@@ -117,7 +117,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
     while (true) {
         auto has_task = co_await tasks.pop();
         if (!has_task) [[unlikely]] {
-            LOG_VERBOSE("{}", has_task.error());
+            LOG_ERROR("{}", has_task.error());
             break;
         }
         auto task = std::move(has_task.value());

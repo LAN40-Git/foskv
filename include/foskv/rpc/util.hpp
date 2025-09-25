@@ -4,9 +4,10 @@
 #include "foskv/rpc/error.hpp"
 #include "foskv/common/error.hpp"
 #include "foskv/common/util/noncopyable.hpp"
-#include "foskv/common/util/concurrent_queue.hpp"
+#include "foskv/common/util/concurrentqueue.hpp"
 #include <xxhash.h>
 #include <kosio/net.hpp>
+#include <kosio/core.hpp>
 #include <tbb/concurrent_hash_map.h>
 
 namespace foskv::rpc::detail {

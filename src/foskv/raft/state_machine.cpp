@@ -62,7 +62,7 @@ void foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
             }
         }
         invoke_task.request_id_ = apply_task.request_id_;
-        session->tasks.push_sync(std::move(invoke_task));
+        session->tasks.push(std::move(invoke_task));
         last_applied++;
     }
 }

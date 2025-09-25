@@ -15,11 +15,12 @@ auto foskv::rpc::RpcConsumer::call(
     std::string_view method_name,
     std::string_view req_payload,
     RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
-    co_await tasks_.push(detail::CallTask(
+    auto task = detail::CallTask(
         std::string{service_name},
         std::string{method_name},
         std::string{req_payload},
-        std::move(callback)));
+        std::move(callback));
+    tasks_.push(std::move(task));
 
     // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) < 0) {
@@ -33,11 +34,12 @@ auto foskv::rpc::RpcConsumer::call(
 
 auto foskv::rpc::RpcConsumer::call(std::string_view service_name, std::string_view method_name,
     std::string &&req_payload, RpcCallback &&callback) -> kosio::async::Task<Result<void>> {
-    co_await tasks_.push(detail::CallTask(
+    auto task = detail::CallTask(
         std::string{service_name},
         std::string{method_name},
         std::move(req_payload),
-        std::move(callback)));
+        std::move(callback));
+    tasks_.push(std::move(task));
 
     // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) < 0) {
@@ -102,20 +104,22 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
     while (true) {
         auto has_task = co_await tasks_.pop();
-        if (!has_task) [[unlikely]] {
+        if (!has_task) {
+            LOG_ERROR("{}", has_task.error());
             break;
         }
         auto task = std::move(has_task.value());
 
-        if (task.req_payload_.size() > detail::MAX_RPC_MESSAGE_SIZE) {
-            LOG_ERROR("Message too large : {}", task.req_payload_.size());
+        auto payload_size = task.req_payload_.size();
+        if (payload_size > detail::MAX_RPC_MESSAGE_SIZE) {
+            LOG_ERROR("Message too large : {}", payload_size);
             continue;
         }
 
         // Make rpc header
         RpcHeader rpc_header;
-        rpc_header.mutable_service_name()->swap(task.service_name_);
-        rpc_header.mutable_method_name()->swap(task.method_name_);
+        rpc_header.set_service_name(task.service_name_);
+        rpc_header.set_method_name(task.method_name_);
 
         // Send [fixed header -> rpc header -> request payload]
         auto rpc_header_size = rpc_header.ByteSizeLong();
@@ -130,8 +134,8 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
 
         detail::FixedRequestHeader fixed_header;
         fixed_header.request_id = htobe64(request_id_);
-        fixed_header.header_size = htobe32(static_cast<uint32_t>(rpc_header_size));
-        fixed_header.payload_size = htobe32(static_cast<uint32_t>(task.req_payload_.size()));
+        fixed_header.header_size = htobe32(rpc_header_size);
+        fixed_header.payload_size = htobe32(payload_size);
 
         // Although it is not possible, the first insertion here is to
         // avoid receiving a reply and the callback has not been inserted yet.
@@ -149,7 +153,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
             co_return;
         }
 
-        ret = co_await writer.write_all(task.req_payload_);
+        ret = co_await writer.write_all({task.req_payload_.data(), task.req_payload_.size()});
         if (!ret) {
             LOG_ERROR("{}", ret.error());
             co_return;
@@ -161,7 +165,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         // iov[1].iov_base = buffer.data();
         // iov[1].iov_len = rpc_header_size;
         // iov[2].iov_base = task.req_payload_.data();
-        // iov[2].iov_len = task.req_payload_.size();
+        // iov[2].iov_len = payload_size;
         // auto ret = co_await kosio::io::writev(writer.fd(), iov, 3, 0);
         // if (!ret) [[unlikely]] {
         //     LOG_ERROR("{}", ret.error());

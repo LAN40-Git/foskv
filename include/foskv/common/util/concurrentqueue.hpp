@@ -1,50 +1,50 @@
 #pragma once
-#include "foskv/common/error.hpp"
 #include <kosio/sync.hpp>
+#include <kosio/third_party/concurrentqueue/concurrentqueue.h>
 
-namespace foskv {
+namespace foskv::util {
 template <typename T>
 class ConcurrentQueue {
 public:
     ConcurrentQueue() = default;
     ~ConcurrentQueue() = default;
-public:
+
+    // Delete copy
     ConcurrentQueue(const ConcurrentQueue&) = delete;
     ConcurrentQueue& operator=(const ConcurrentQueue&) = delete;
+
+    // Delete move
     ConcurrentQueue(ConcurrentQueue&&) = delete;
     ConcurrentQueue& operator=(ConcurrentQueue&&) = delete;
-public:
-    void shutdown() {
-        is_shutdown_.store(true);
-        cv_.notify_all();
-    }
 
-    [[REMEMBER_CO_AWAIT]]
-    auto push(T value) -> kosio::async::Task<> {
+public:
+    void push(T&& value) {
         queue_.enqueue(std::move(value));
         cv_.notify_one();
-        co_return;
     }
 
     [[REMEMBER_CO_AWAIT]]
     auto pop() -> kosio::async::Task<Result<T>> {
-        T value;
-        if (queue_.try_dequeue(value)) {
-            co_return value;
+        T item;
+        if (queue_.try_dequeue(item)) {
+            co_return item;
         }
         co_await mutex_.lock();
-        std::unique_lock lock(mutex_, std::adopt_lock);
-        while (!queue_.try_dequeue(value)) {
-            if (is_shutdown_) {
+        std::unique_lock lock{mutex_, std::adopt_lock};
+        while (!queue_.try_dequeue(item)) {
+            co_await cv_.wait(mutex_, [this]() {
+                return queue_.size_approx() != 0 || is_shutdown_.load(std::memory_order_relaxed);
+            });
+            if (is_shutdown_.load(std::memory_order_relaxed)) {
                 co_return std::unexpected{make_error(Error::kEmptyConcurrentQueue)};
             }
-            co_await cv_.wait(mutex_, [this] { return is_shutdown_ || queue_.size_approx() != 0; });
         }
-        co_return value;
+        co_return item;
     }
 
-    void push_sync(T value) {
-        queue_.enqueue(std::move(value));
+    void shutdown() {
+        is_shutdown_.store(true, std::memory_order_relaxed);
+        cv_.notify_all();
     }
 
 private:
@@ -53,4 +53,4 @@ private:
     kosio::sync::ConditionVariable cv_;
     std::atomic<bool>              is_shutdown_{false};
 };
-} // namespace foskv
+} // namespace foskv::util
