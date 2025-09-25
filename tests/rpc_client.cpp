@@ -2,10 +2,6 @@
 #include <kosio/signal.hpp>
 using namespace foskv::rpc;
 
-std::chrono::steady_clock::time_point start;
-std::chrono::steady_clock::time_point end;
-std::atomic<int> counter{1};
-
 auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     foskv::kv::PutRequest put_request;
     std::string key = "key";
@@ -24,15 +20,6 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
             // LOG_INFO("Put succesful");
         } else {
             LOG_ERROR("{}", RpcError{static_cast<int>(response.header().error_code())}.message());
-        }
-        if (auto ret = counter.fetch_add(1, std::memory_order_relaxed); ret % 10000 == 0) {
-            end = std::chrono::steady_clock::now();
-            auto duration_us = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-            kosio::log::console.info("1w kv_put rpc request, take {} ms, counter: {}",
-                duration_us, ret);
-
-            start = std::chrono::steady_clock::now();
         }
     });
 }
@@ -87,12 +74,11 @@ auto main_loop() -> kosio::async::Task<> {
         co_return;
     }
     auto consumer = std::move(has_consumer.value());
-    start = std::chrono::steady_clock::now();
     while (true) {
         for (int i = 0; i < 1000; i++) {
             kosio::spawn(kv_put_1000(consumer));
         }
-        co_await kosio::time::sleep(100000);
+        co_await kosio::time::sleep(60000);
     }
 }
 

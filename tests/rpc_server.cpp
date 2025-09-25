@@ -4,6 +4,10 @@
 using namespace foskv;
 using namespace foskv::rpc;
 
+std::chrono::steady_clock::time_point start;
+std::chrono::steady_clock::time_point end;
+std::atomic<uint64_t> counter{0};
+
 auto main_loop() -> kosio::async::Task<> {
     rocksdb::Options options;
     options.create_if_missing = true;
@@ -37,7 +41,12 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVPutFailed);
             }
-            LOG_INFO("Handle a put request : {}", request_id);
+            if (auto ret = counter.fetch_add(1, std::memory_order_relaxed); ret % 100000 == 0) {
+                end = std::chrono::steady_clock::now();
+                kosio::log::console.info("Handle 10w kv put request, take {} ms, counter : {}",
+                    std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), ret);
+                start = std::chrono::steady_clock::now();
+            }
             co_return raft::detail::produce_kv_put_response(resp_payload);
     });
     provider.register_invoke(KVService::ServiceName, KVService::Get,
@@ -54,7 +63,6 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVGetFailed);
             }
-            LOG_INFO("Handle a get request");
             co_return raft::detail::produce_kv_get_response(resp_payload, true, rpc::RpcError::kNoError, std::move(kv));
     });
     provider.register_invoke(KVService::ServiceName, KVService::Delete,
@@ -69,7 +77,6 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVDeleteFailed);
             }
-            LOG_INFO("Handle a delete request");
             co_return raft::detail::produce_kv_delete_response(resp_payload);
     });
     co_await provider.run();

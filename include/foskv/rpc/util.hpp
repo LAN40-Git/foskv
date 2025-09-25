@@ -10,6 +10,13 @@
 #include <tbb/concurrent_hash_map.h>
 
 namespace foskv::rpc::detail {
+#pragma pack(push, 1)
+struct FixedHeader {
+    uint32_t header_length;
+    uint32_t payload_length;
+};
+#pragma pack(pop)
+
 struct SocketAddrXXHash {
     std::size_t operator()(const kosio::net::SocketAddr& addr) const noexcept {
         thread_local XXH64_state_t* state = XXH64_createState();
