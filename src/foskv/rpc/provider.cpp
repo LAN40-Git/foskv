@@ -44,17 +44,16 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
     auto& tasks = session->tasks;
     while (true) {
         // Recv rpc header size
-        uint32_t rpc_header_size_net;
+        uint32_t rpc_header_size;
         auto recv_ret = co_await reader.read_exact(
-            {reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)});
+            {reinterpret_cast<char*>(&rpc_header_size), sizeof(uint32_t)});
         if (!recv_ret) [[unlikely]] {
             LOG_VERBOSE("{}", recv_ret.error());
             break;
         }
 
-        uint32_t rpc_header_size = ntohl(rpc_header_size_net);
         if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
-            LOG_ERROR("Message too large.", rpc_header_size);
+            LOG_ERROR("Message too large {}", rpc_header_size);
             break;
         }
 
@@ -62,7 +61,7 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         task.req_payload_.resize(rpc_header_size);
 
         // Recv rpc header
-        recv_ret = co_await reader.read_exact(task.req_payload_);
+        recv_ret = co_await reader.read_exact({task.req_payload_.data(), rpc_header_size});
         if (!recv_ret) [[unlikely]] {
             LOG_ERROR("{}", recv_ret.error());
             break;
@@ -80,17 +79,6 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         auto method_name = rpc_header.method_name();
         auto req_payload_size = rpc_header.payload_size();
 
-        // TODO: Use buffer pools
-        task.request_id_ = request_id;
-        task.req_payload_.resize(req_payload_size);
-
-        // Recv request payload
-        recv_ret = co_await reader.read_exact(task.req_payload_);
-        if (!recv_ret) [[unlikely]] {
-            LOG_ERROR("{}", recv_ret.error());
-            break;
-        }
-
         // Get invoke
         auto service = invokes_.find(service_name);
         if (service == invokes_.end()) [[unlikely]] {
@@ -105,6 +93,18 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         }
 
         task.invoke_ = invoke->second;
+
+        // TODO: Use buffer pools
+        task.request_id_ = request_id;
+        task.req_payload_.resize(req_payload_size);
+
+        // Recv request payload
+        recv_ret = co_await reader.read_exact({task.req_payload_.data(), req_payload_size});
+        if (!recv_ret) [[unlikely]] {
+            LOG_ERROR("{}", recv_ret.error());
+            break;
+        }
+
         co_await tasks.push(std::move(task));
     }
     tasks.shutdown();
@@ -116,7 +116,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
     kosio::net::OwnedTcpStreamWriter writer, std::shared_ptr<detail::Session> session)
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
-    std::array<char, sizeof(RpcHeader)> buffer{};
+    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> resp_buffer{};
     while (true) {
         auto has_task = co_await tasks.pop();
@@ -138,7 +138,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         auto resp_payload_size = has_resp_payload.value();
         // It may be an empty reply because the client request needs to
         // be wrapped in a log and synchronized
-        if (resp_payload_size == 0) {
+        if (resp_payload_size == 0 || resp_payload_size > detail::MAX_RPC_MESSAGE_SIZE) {
             continue;
         }
 
@@ -153,10 +153,8 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         }
 
         // Send [rpc header size -> rpc header -> resp_payload]
-        auto rpc_header_size_net = htonl(rpc_header_size);
-
         auto ret = co_await writer.write_vectored(
-            std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
+            std::span<const char>(reinterpret_cast<char*>(&rpc_header_size), sizeof(uint32_t)),
             std::span<const char>(buffer.data(), rpc_header_size),
             std::span<const char>(resp_buffer.data(), resp_payload_size)
         );

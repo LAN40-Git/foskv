@@ -38,11 +38,7 @@ public:
             if (is_shutdown_) {
                 co_return std::unexpected{make_error(Error::kEmptyConcurrentQueue)};
             }
-            co_await cv_.wait(mutex_,
-                [this] {
-                    return is_shutdown_ ||
-                        queue_.size_approx() != 0;
-            });
+            co_await cv_.wait(mutex_, [this] { return is_shutdown_ || queue_.size_approx() != 0; });
         }
         co_return value;
     }

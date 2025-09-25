@@ -1,4 +1,5 @@
 #include "foskv/rpc.hpp"
+#include <kosio/signal.hpp>
 using namespace foskv::rpc;
 
 std::chrono::steady_clock::time_point start;
@@ -20,16 +21,17 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
         }
 
         if (response.header().success()) {
-            LOG_INFO("Put succesful");
+            // LOG_INFO("Put succesful");
         } else {
             LOG_ERROR("{}", RpcError{static_cast<int>(response.header().error_code())}.message());
         }
-        if (auto ret = counter.fetch_add(1, std::memory_order_relaxed); ret % 1000 == 0) {
+        if (auto ret = counter.fetch_add(1, std::memory_order_relaxed); ret % 10000 == 0) {
             end = std::chrono::steady_clock::now();
-            auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-            uint64_t qps = (duration_ms == 0) ? 1000 * 1000 : (1000 * 1000) / duration_ms;
-            kosio::log::console.info("1000 kv_put rpc request, take {} ms, qps : {}, counter : {}",
-                duration_ms, qps, ret);
+            auto duration_us = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+            kosio::log::console.info("1w kv_put rpc request, take {} ms, counter: {}",
+                duration_us, ret);
+
             start = std::chrono::steady_clock::now();
         }
     });
@@ -73,9 +75,8 @@ auto kv_delete(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     });
 }
 
-auto kv_put_10000(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
-    start = std::chrono::steady_clock::now();
-    for (int i = 0; i < 10000; i++) {
+auto kv_put_100000(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
+    for (int i = 0; i < 1000; i++) {
         co_await kv_put(consumer);
     }
 }
@@ -88,15 +89,15 @@ auto main_loop() -> kosio::async::Task<> {
     auto consumer = std::move(has_consumer.value());
     start = std::chrono::steady_clock::now();
     while (true) {
-        for (int i = 0; i < 10; i++) {
-            kosio::spawn(kv_put_10000(consumer));
+        for (int i = 0; i < 1000; i++) {
+            kosio::spawn(kv_put_100000(consumer));
         }
-        co_await kosio::time::sleep(1000);
-
+        co_await kosio::time::sleep(60000);
     }
+    co_await kosio::signal::ctrl_c();
 }
 
 auto main() -> int {
     SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
-    kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
+    kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
 }

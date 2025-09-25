@@ -15,12 +15,11 @@ auto foskv::rpc::RpcConsumer::call(
     std::string_view method_name,
     std::string_view req_payload,
     RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
-    detail::CallTask task{
+    co_await tasks_.push(detail::CallTask(
         std::string{service_name},
         std::string{method_name},
         std::string{req_payload},
-        std::move(callback)};
-    co_await tasks_.push(std::move(task));
+        std::move(callback)));
 
     // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) < 0) {
@@ -32,14 +31,13 @@ auto foskv::rpc::RpcConsumer::call(
     co_return Result<void>{};
 }
 
-auto foskv::rpc::RpcConsumer::call(std::string &&service_name, std::string &&method_name, std::string &&req_payload,
-    RpcCallback &&callback) -> kosio::async::Task<Result<void>> {
-    detail::CallTask task{
-        std::move(service_name),
-        std::move(method_name),
+auto foskv::rpc::RpcConsumer::call(std::string_view service_name, std::string_view method_name,
+    std::string &&req_payload, RpcCallback &&callback) -> kosio::async::Task<Result<void>> {
+    co_await tasks_.push(detail::CallTask(
+        std::string{service_name},
+        std::string{method_name},
         std::move(req_payload),
-        std::move(callback)};
-    co_await tasks_.push(std::move(task));
+        std::move(callback)));
 
     // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) < 0) {
@@ -102,6 +100,7 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
 
 auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter writer) -> kosio::async::Task<> {
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
+    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> req_buffer{};
     while (true) {
         auto has_task = co_await tasks_.pop();
         if (!has_task) [[unlikely]] {
@@ -113,29 +112,53 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         rpc_header.set_request_id(request_id_);
         rpc_header.mutable_service_name()->swap(task.service_name_);
         rpc_header.mutable_method_name()->swap(task.method_name_);
-        rpc_header.set_payload_size(task.req_payload_.size());
+        auto req_payload_size = task.req_payload_.size();
+        rpc_header.set_payload_size(req_payload_size);
 
         // Send [rpc header size -> rpc header -> request payload]
         auto rpc_header_size = rpc_header.ByteSizeLong();
-        if (rpc_header_size > buffer.max_size()) [[unlikely]] {
+        if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
+            LOG_ERROR("Message too large : {}", rpc_header_size);
+            break;
+        }
+        if (!rpc_header.SerializeToArray(buffer.data(), static_cast<int>(rpc_header_size))) {
+            LOG_ERROR("Failed to serialize rpc header");
             continue;
         }
-        rpc_header.SerializeToArray(buffer.data(), static_cast<int>(rpc_header_size));
-        uint32_t rpc_header_size_net = htonl(static_cast<uint32_t>(rpc_header_size));
 
         // Although it is not possible, the first insertion here is to
         // avoid receiving a reply and the callback has not been inserted yet.
-        callbacks_[request_id_++] = std::move(task.callback_);
+        callbacks_.emplace(request_id_++, std::move(task.callback_));
 
+        std::memcpy(req_buffer.data(), task.req_payload_.data(), req_payload_size);
         auto ret = co_await writer.write_vectored(
-            std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
+            std::span<const char>(reinterpret_cast<char*>(&rpc_header_size), sizeof(uint32_t)),
             std::span<const char>(buffer.data(), rpc_header_size),
-            std::span<const char>(task.req_payload_.data(), task.req_payload_.size())
+            std::span<const char>(req_buffer.data(), req_payload_size)
         );
 
         if (!ret) [[unlikely]] {
+            LOG_ERROR("{}", ret.error());
             break;
         }
+
+        // auto ret = co_await writer.write_all({reinterpret_cast<char*>(&rpc_header_size), sizeof(uint32_t)});
+        // if (!ret) [[unlikely]] {
+        //     LOG_ERROR("{}", ret.error());
+        //     break;
+        // }
+        //
+        // ret = co_await writer.write_all({buffer.data(), rpc_header_size});
+        // if (!ret) [[unlikely]] {
+        //     LOG_ERROR("{}", ret.error());
+        //     break;
+        // }
+        //
+        // ret = co_await writer.write_all({task.req_payload_.data(), task.req_payload_.size()});
+        // if (!ret) [[unlikely]] {
+        //     LOG_ERROR("{}", ret.error());
+        //     break;
+        // }
     }
     if (is_shutdown_.load(std::memory_order_acquire)) {
         co_await latch_.arrive_and_wait();
@@ -143,6 +166,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
     is_producing_.store(false, std::memory_order_release);
     if (!is_consuming_.load(std::memory_order_acquire)) {
         fd_.store(-1, std::memory_order_release);
+        callbacks_.clear();
     }
 }
 
@@ -150,17 +174,16 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
     while (true) {
         // Recv rpc header size
-        uint32_t rpc_header_size_net;
+        uint32_t rpc_header_size;
         auto ret = co_await reader.read_exact(
-            {reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)});
+            {reinterpret_cast<char*>(&rpc_header_size), sizeof(uint32_t)});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
             break;
         }
 
-        uint32_t rpc_header_size = ntohl(rpc_header_size_net);
-        if (rpc_header_size > buffer.max_size()) [[unlikely]] {
-            LOG_ERROR("Response header too large.");
+        if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
+            LOG_ERROR("Response header too large : {}.", rpc_header_size);
             break;
         }
 
@@ -179,7 +202,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
         }
         auto request_id = rpc_header.request_id();
         auto payload_size = rpc_header.payload_size();
-        if (payload_size > buffer.max_size()) [[unlikely]] {
+        if (payload_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
             LOG_ERROR("Response payload too large.");
             callbacks_.erase(request_id);
             break;
@@ -194,8 +217,11 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
             break;
         }
 
-        if (callbacks_.contains(request_id)) {
-            co_await callbacks_[request_id](std::string_view{buffer.data(), payload_size});
+        tbb::concurrent_hash_map<uint64_t, RpcCallback>::accessor acc;
+        if (callbacks_.find(acc, request_id)) {
+            auto callback = std::move(acc->second);
+            acc.release();
+            co_await callback(std::string_view{buffer.data(), payload_size});
             callbacks_.erase(request_id);
         }
     }
@@ -206,5 +232,6 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
     is_consuming_.store(false, std::memory_order_release);
     if (!is_producing_.load(std::memory_order_acquire)) {
         fd_.store(-1, std::memory_order_release);
+        callbacks_.clear();
     }
 }

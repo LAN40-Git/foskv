@@ -70,15 +70,14 @@ void foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
 auto foskv::raft::detail::StateMachine::apply_kv_put(const kv::PutRequest &request)
 const -> rpc::detail::InvokeTask {
     auto status = st_.Put(request.key(), request.value());
-    rpc::detail::InvokeTask task{
-    [status](std::string_view, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
+    return rpc::detail::InvokeTask(
+        [status](std::string_view, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
         if (!status.ok()) {
             LOG_ERROR("Failed to put : {}", status.ToString());
             co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
         }
         co_return produce_kv_put_response(resp_payload);
-    }};
-    return task;
+    });
 }
 
 auto foskv::raft::detail::StateMachine::apply_kv_get(const kv::GetRequest &request)
@@ -86,27 +85,25 @@ const -> rpc::detail::InvokeTask {
     std::string value;
     auto status = st_.Get(request.key(), &value);
     auto kv = produce_kv(request.key(), std::move(value));
-    rpc::detail::InvokeTask task{
-    [status, kv = std::move(kv)](std::string_view, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
+    return rpc::detail::InvokeTask(
+        [status, kv = std::move(kv)](std::string_view, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
         if (!status.ok()) {
             LOG_ERROR("Failed to get : {}", status.ToString());
             co_return produce_kv_get_response(resp_payload, false, rpc::RpcError::kKVGetFailed);
         }
         co_return produce_kv_get_response(resp_payload, true, rpc::RpcError::kNoError, kv);
-    }};
-    return task;
+    });
 }
 
 auto foskv::raft::detail::StateMachine::apply_kv_delete(const kv::DeleteRequest &request)
 const -> rpc::detail::InvokeTask {
     auto status = st_.Delete(request.key());
-    rpc::detail::InvokeTask task{
+    return rpc::detail::InvokeTask(
         [status](std::string_view, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
             if (!status.ok()) {
                 LOG_ERROR("Failed to put : {}", status.ToString());
                 co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
             }
             co_return produce_kv_delete_response(resp_payload);
-        }};
-    return task;
+        });
 }

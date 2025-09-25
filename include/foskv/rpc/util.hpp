@@ -7,6 +7,7 @@
 #include "foskv/common/util/concurrent_queue.hpp"
 #include <xxhash.h>
 #include <kosio/net.hpp>
+#include <tbb/concurrent_hash_map.h>
 
 namespace foskv::rpc::detail {
 struct SocketAddrXXHash {

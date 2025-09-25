@@ -4,7 +4,7 @@
 namespace foskv::rpc {
 using RpcCallback = std::function<kosio::async::Task<>(std::string_view resp_payload)>;
 namespace detail {
-using RpcCallbackMap = std::unordered_map<uint64_t, RpcCallback>;
+using RpcCallbackMap = tbb::concurrent_hash_map<uint64_t, RpcCallback>;
 class CallTask : util::Noncopyable {
 public:
     CallTask() = default;
@@ -13,6 +13,10 @@ public:
         , method_name_(std::move(method_name))
         , req_payload_(std::move(req_payload))
         , callback_(std::move(callback)) {}
+
+    // Delete copy
+    CallTask(const CallTask&) = delete;
+    auto operator=(const CallTask&) = delete;
 
     CallTask(CallTask&& other) noexcept
         : service_name_(std::move(other.service_name_))
@@ -29,9 +33,9 @@ public:
     }
 
 public:
-    std::string service_name_;
-    std::string method_name_;
-    std::string req_payload_;
+    std::string service_name_{};
+    std::string method_name_{};
+    std::string req_payload_{};
     RpcCallback callback_;
 };
 } // namespace detail

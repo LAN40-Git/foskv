@@ -12,6 +12,10 @@ public:
     explicit InvokeTask(Invoke&& invoke)
         : invoke_(std::move(invoke)) {}
 
+    // Delete copy
+    InvokeTask(const InvokeTask&) = delete;
+    auto operator=(const InvokeTask&) = delete;
+
     explicit InvokeTask(uint64_t request_id, Invoke&& invoke)
     : request_id_(request_id)
     , invoke_(std::move(invoke)) {}
@@ -33,7 +37,7 @@ public:
     }
 
 public:
-    uint64_t request_id_{};
+    uint64_t request_id_{0};
     Invoke invoke_;
     std::string req_payload_{};
 };

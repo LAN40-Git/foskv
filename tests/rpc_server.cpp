@@ -25,9 +25,10 @@ auto main_loop() -> kosio::async::Task<> {
 
     RpcProvider provider(has_addr.value());
     provider.register_invoke(KVService::ServiceName, KVService::Put,
-        [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
+        [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
             kv::PutRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
+                LOG_ERROR("Failed to parse request : {}", request_id);
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVPutRequestParseFailed);
             }
 
@@ -36,7 +37,7 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVPutFailed);
             }
-            LOG_INFO("Handle a put request");
+            LOG_INFO("Handle a put request : {}", request_id);
             co_return raft::detail::produce_kv_put_response(resp_payload);
     });
     provider.register_invoke(KVService::ServiceName, KVService::Get,
@@ -76,5 +77,5 @@ auto main_loop() -> kosio::async::Task<> {
 
 auto main() -> int {
     SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
-    kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
+    kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
 }

@@ -7,7 +7,9 @@ namespace foskv::rpc {
 class RpcConsumer {
 public:
     explicit RpcConsumer(const kosio::net::SocketAddr& server_addr)
-        : server_addr_(server_addr) {}
+        : server_addr_(server_addr) {
+        callbacks_.rehash(1'000'000);
+    }
 
 public:
     ~RpcConsumer() {
@@ -46,8 +48,8 @@ public:
     /// @param callback The callback where receive response
     /// @note Suitable for no buffered calls
     [[REMEMBER_CO_AWAIT]]
-    auto call(std::string&& service_name,
-              std::string&& method_name,
+    auto call(std::string_view service_name,
+              std::string_view method_name,
               std::string&& req_payload,
               RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
@@ -73,6 +75,5 @@ private:
     std::atomic<bool>                 is_shutdown_{false};
     std::atomic<bool>                 is_producing_{false};
     std::atomic<bool>                 is_consuming_{false};
-    std::chrono::high_resolution_clock::time_point start_;
 };
 } // namespace foskv::rpc

@@ -43,11 +43,11 @@ public:
             case kKVDeleteFailed:
                 return "Failed to delete kv.";
             case kKVPutRequestParseFailed:
-                return "Failed to parse kv.";
+                return "Failed to parse kv put request.";
             case kKVGetRequestParseFailed:
-                return "Failed to parse kv.";
+                return "Failed to parse kv get request.";
             case kKVDeleteRequestParseFailed:
-                return "Failed to delete kv.";
+                return "Failed to delete kv delete request.";
             default:
                 return "Unknown rpc error.";
         }
