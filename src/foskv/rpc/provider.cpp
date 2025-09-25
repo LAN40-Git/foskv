@@ -44,14 +44,15 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
     auto& tasks = session->tasks;
     while (true) {
         // Recv rpc header size
-        uint32_t rpc_header_size;
+        uint32_t net_rpc_header_size;
         auto recv_ret = co_await reader.read_exact(
-            {reinterpret_cast<char*>(&rpc_header_size), sizeof(uint32_t)});
+            {reinterpret_cast<char*>(&net_rpc_header_size), sizeof(uint32_t)});
         if (!recv_ret) [[unlikely]] {
             LOG_VERBOSE("{}", recv_ret.error());
             break;
         }
 
+        auto rpc_header_size = ntohl(net_rpc_header_size);
         if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
             LOG_ERROR("Message too large {}", rpc_header_size);
             break;
@@ -153,8 +154,9 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         }
 
         // Send [rpc header size -> rpc header -> resp_payload]
+        uint32_t net_rpc_header_size = htonl(static_cast<uint32_t>(rpc_header_size));
         auto ret = co_await writer.write_vectored(
-            std::span<const char>(reinterpret_cast<char*>(&rpc_header_size), sizeof(uint32_t)),
+            std::span<const char>(reinterpret_cast<char*>(&net_rpc_header_size), sizeof(uint32_t)),
             std::span<const char>(buffer.data(), rpc_header_size),
             std::span<const char>(resp_buffer.data(), resp_payload_size)
         );

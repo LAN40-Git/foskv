@@ -75,7 +75,7 @@ auto kv_delete(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     });
 }
 
-auto kv_put_100000(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
+auto kv_put_1000(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     for (int i = 0; i < 1000; i++) {
         co_await kv_put(consumer);
     }
@@ -90,14 +90,13 @@ auto main_loop() -> kosio::async::Task<> {
     start = std::chrono::steady_clock::now();
     while (true) {
         for (int i = 0; i < 1000; i++) {
-            kosio::spawn(kv_put_100000(consumer));
+            kosio::spawn(kv_put_1000(consumer));
         }
-        co_await kosio::time::sleep(60000);
+        co_await kosio::time::sleep(100000);
     }
-    co_await kosio::signal::ctrl_c();
 }
 
 auto main() -> int {
     SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
-    kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
+    kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
 }
