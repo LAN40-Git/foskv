@@ -42,43 +42,47 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
     kosio::net::OwnedTcpStreamReader reader, std::shared_ptr<detail::Session> session)
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
+    std::array<char, 2 * detail::MAX_RPC_MESSAGE_SIZE> buffer{};
     while (true) {
-        // Recv rpc header size
-        uint32_t net_rpc_header_size;
+        // Recv fixed request header
+        detail::FixedRequestHeader fixed_header;
         auto recv_ret = co_await reader.read_exact(
-            {reinterpret_cast<char*>(&net_rpc_header_size), sizeof(uint32_t)});
+            {reinterpret_cast<char*>(&fixed_header), sizeof(detail::FixedRequestHeader)});
         if (!recv_ret) [[unlikely]] {
             LOG_VERBOSE("{}", recv_ret.error());
             break;
         }
 
-        auto rpc_header_size = ntohl(net_rpc_header_size);
-        if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
+        auto request_id = be64toh(fixed_header.request_id);
+        auto rpc_header_size = be32toh(fixed_header.header_size);
+        auto payload_size = be32toh(fixed_header.payload_size);
+        if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE ||
+            payload_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
             LOG_ERROR("Message too large {}", rpc_header_size);
             break;
         }
 
-        detail::InvokeTask task;
-        task.req_payload_.resize(rpc_header_size);
-
-        // Recv rpc header
-        recv_ret = co_await reader.read_exact({task.req_payload_.data(), rpc_header_size});
-        if (!recv_ret) [[unlikely]] {
-            LOG_ERROR("{}", recv_ret.error());
+        // Recv rpc header and req_payload
+        struct iovec iov[2];
+        iov[0].iov_base = buffer.data();
+        iov[0].iov_len = rpc_header_size;
+        iov[1].iov_base = buffer.data() + rpc_header_size;
+        iov[1].iov_len = payload_size;
+        auto iov_ret = co_await kosio::io::readv(reader.fd(), iov, 2, 0);
+        if (!iov_ret) [[unlikely]] {
+            LOG_ERROR("{}", iov_ret.error());
             break;
         }
 
         // Parse rpc header
         RpcHeader rpc_header;
-        if (!rpc_header.ParseFromString(task.req_payload_)) {
+        if (!rpc_header.ParseFromArray(buffer.data(), static_cast<int>(rpc_header_size))) {
             LOG_ERROR("Failed to parse rpc header");
             break;
         }
 
-        auto request_id = rpc_header.request_id();
         auto service_name = rpc_header.service_name();
         auto method_name = rpc_header.method_name();
-        auto req_payload_size = rpc_header.payload_size();
 
         // Get invoke
         auto service = invokes_.find(service_name);
@@ -93,18 +97,10 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
             continue;
         }
 
-        task.invoke_ = invoke->second;
-
-        // TODO: Use buffer pools
+        detail::InvokeTask task;
         task.request_id_ = request_id;
-        task.req_payload_.resize(req_payload_size);
-
-        // Recv request payload
-        recv_ret = co_await reader.read_exact({task.req_payload_.data(), req_payload_size});
-        if (!recv_ret) [[unlikely]] {
-            LOG_ERROR("{}", recv_ret.error());
-            break;
-        }
+        task.req_payload_ = std::string{buffer.data() + rpc_header_size, payload_size};
+        task.invoke_ = invoke->second;
 
         co_await tasks.push(std::move(task));
     }
@@ -118,7 +114,6 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
     std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
-    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> resp_buffer{};
     while (true) {
         auto has_task = co_await tasks.pop();
         if (!has_task) [[unlikely]] {
@@ -128,7 +123,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         auto task = std::move(has_task.value());
 
         auto has_resp_payload = co_await task.invoke_(task.req_payload_,
-                                                     {resp_buffer.data(), resp_buffer.max_size()},
+                                                     {buffer.data(), buffer.max_size()},
                                                      session->session_id,
                                                      task.request_id_);
         if (!has_resp_payload) [[unlikely]] {
@@ -143,22 +138,14 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
             continue;
         }
 
-        // Make rpc header
-        RpcHeader rpc_header;
-        rpc_header.set_request_id(task.request_id_);
-        rpc_header.set_payload_size(resp_payload_size);
-        auto rpc_header_size = rpc_header.ByteSizeLong();
-        if (!rpc_header.SerializeToArray(buffer.data(), static_cast<int>(rpc_header_size))) [[unlikely]] {
-            LOG_ERROR("Failed to serialize response.");
-            continue;
-        }
+        detail::FixedResponseHeader fixed_header;
+        fixed_header.request_id = htobe64(task.request_id_);
+        fixed_header.payload_size = htobe32(resp_payload_size);
 
         // Send [rpc header size -> rpc header -> resp_payload]
-        uint32_t net_rpc_header_size = htonl(static_cast<uint32_t>(rpc_header_size));
         auto ret = co_await writer.write_vectored(
-            std::span<const char>(reinterpret_cast<char*>(&net_rpc_header_size), sizeof(uint32_t)),
-            std::span<const char>(buffer.data(), rpc_header_size),
-            std::span<const char>(resp_buffer.data(), resp_payload_size)
+            std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(detail::FixedResponseHeader)),
+            std::span<const char>(buffer.data(), resp_payload_size)
         );
 
         if (!ret) [[unlikely]] {

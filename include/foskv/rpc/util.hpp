@@ -11,9 +11,15 @@
 
 namespace foskv::rpc::detail {
 #pragma pack(push, 1)
-struct FixedHeader {
-    uint32_t header_length;
-    uint32_t payload_length;
+struct FixedRequestHeader {
+    uint64_t request_id{0};
+    uint32_t header_size{0};
+    uint32_t payload_size{0};
+};
+
+struct FixedResponseHeader {
+    uint64_t request_id{0};
+    uint32_t payload_size{0};
 };
 #pragma pack(pop)
 

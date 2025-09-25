@@ -352,12 +352,10 @@ class RpcHeader final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kServiceNameFieldNumber = 2,
-    kMethodNameFieldNumber = 3,
-    kRequestIdFieldNumber = 1,
-    kPayloadSizeFieldNumber = 4,
+    kServiceNameFieldNumber = 1,
+    kMethodNameFieldNumber = 2,
   };
-  // bytes service_name = 2;
+  // bytes service_name = 1;
   void clear_service_name();
   const std::string& service_name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -371,7 +369,7 @@ class RpcHeader final :
   std::string* _internal_mutable_service_name();
   public:
 
-  // bytes method_name = 3;
+  // bytes method_name = 2;
   void clear_method_name();
   const std::string& method_name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -385,24 +383,6 @@ class RpcHeader final :
   std::string* _internal_mutable_method_name();
   public:
 
-  // uint64 request_id = 1;
-  void clear_request_id();
-  uint64_t request_id() const;
-  void set_request_id(uint64_t value);
-  private:
-  uint64_t _internal_request_id() const;
-  void _internal_set_request_id(uint64_t value);
-  public:
-
-  // uint32 payload_size = 4;
-  void clear_payload_size();
-  uint32_t payload_size() const;
-  void set_payload_size(uint32_t value);
-  private:
-  uint32_t _internal_payload_size() const;
-  void _internal_set_payload_size(uint32_t value);
-  public:
-
   // @@protoc_insertion_point(class_scope:foskv.rpc.RpcHeader)
  private:
   class _Internal;
@@ -413,8 +393,6 @@ class RpcHeader final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr service_name_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr method_name_;
-    uint64_t request_id_;
-    uint32_t payload_size_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -685,27 +663,7 @@ inline void Redirect::set_port(uint32_t value) {
 
 // RpcHeader
 
-// uint64 request_id = 1;
-inline void RpcHeader::clear_request_id() {
-  _impl_.request_id_ = uint64_t{0u};
-}
-inline uint64_t RpcHeader::_internal_request_id() const {
-  return _impl_.request_id_;
-}
-inline uint64_t RpcHeader::request_id() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.request_id)
-  return _internal_request_id();
-}
-inline void RpcHeader::_internal_set_request_id(uint64_t value) {
-  
-  _impl_.request_id_ = value;
-}
-inline void RpcHeader::set_request_id(uint64_t value) {
-  _internal_set_request_id(value);
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.request_id)
-}
-
-// bytes service_name = 2;
+// bytes service_name = 1;
 inline void RpcHeader::clear_service_name() {
   _impl_.service_name_.ClearToEmpty();
 }
@@ -755,7 +713,7 @@ inline void RpcHeader::set_allocated_service_name(std::string* service_name) {
   // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcHeader.service_name)
 }
 
-// bytes method_name = 3;
+// bytes method_name = 2;
 inline void RpcHeader::clear_method_name() {
   _impl_.method_name_.ClearToEmpty();
 }
@@ -803,26 +761,6 @@ inline void RpcHeader::set_allocated_method_name(std::string* method_name) {
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:foskv.rpc.RpcHeader.method_name)
-}
-
-// uint32 payload_size = 4;
-inline void RpcHeader::clear_payload_size() {
-  _impl_.payload_size_ = 0u;
-}
-inline uint32_t RpcHeader::_internal_payload_size() const {
-  return _impl_.payload_size_;
-}
-inline uint32_t RpcHeader::payload_size() const {
-  // @@protoc_insertion_point(field_get:foskv.rpc.RpcHeader.payload_size)
-  return _internal_payload_size();
-}
-inline void RpcHeader::_internal_set_payload_size(uint32_t value) {
-  
-  _impl_.payload_size_ = value;
-}
-inline void RpcHeader::set_payload_size(uint32_t value) {
-  _internal_set_payload_size(value);
-  // @@protoc_insertion_point(field_set:foskv.rpc.RpcHeader.payload_size)
 }
 
 // -------------------------------------------------------------------

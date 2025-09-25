@@ -7,10 +7,8 @@ message Redirect {
 }
 
 message RpcHeader {
-  uint64 request_id = 1;
-  bytes service_name = 2;
-  bytes method_name = 3;
-  uint32 payload_size = 4;
+  bytes service_name = 1;
+  bytes method_name = 2;
 }
 
 message ResponseHeader {
