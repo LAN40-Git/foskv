@@ -24,8 +24,13 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
         } else {
             LOG_ERROR("{}", RpcError{static_cast<int>(response.header().error_code())}.message());
         }
-        if (counter.fetch_add(1, std::memory_order_relaxed) % 1000 == 0) {
+        if (auto ret = counter.fetch_add(1, std::memory_order_relaxed); ret % 1000 == 0) {
             end = std::chrono::steady_clock::now();
+            auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            uint64_t qps = (duration_ms == 0) ? 1000 * 1000 : (1000 * 1000) / duration_ms;
+            kosio::log::console.info("1000 kv_put rpc request, take {} ms, qps : {}, counter : {}",
+                duration_ms, qps, ret);
+            start = std::chrono::steady_clock::now();
         }
     });
 }
@@ -68,23 +73,30 @@ auto kv_delete(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     });
 }
 
+auto kv_put_10000(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
+    start = std::chrono::steady_clock::now();
+    for (int i = 0; i < 10000; i++) {
+        co_await kv_put(consumer);
+    }
+}
+
 auto main_loop() -> kosio::async::Task<> {
     auto has_consumer = co_await RpcConsumer::create("127.0.0.1", 8080);
     if (!has_consumer) {
         co_return;
     }
     auto consumer = std::move(has_consumer.value());
+    start = std::chrono::steady_clock::now();
     while (true) {
-        start = std::chrono::steady_clock::now();
-        for (int i = 0; i < 1000; i++) {
-            co_await kv_put(consumer);
+        for (int i = 0; i < 10; i++) {
+            kosio::spawn(kv_put_10000(consumer));
         }
-        co_await kosio::time::sleep(5000);
-        kosio::log::console.info("Take {} us", std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
+        co_await kosio::time::sleep(1000);
+
     }
 }
 
 auto main() -> int {
     SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
-    kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
+    kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
 }

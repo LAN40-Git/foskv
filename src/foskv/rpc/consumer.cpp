@@ -23,7 +23,9 @@ auto foskv::rpc::RpcConsumer::call(
     co_await tasks_.push(std::move(task));
 
     // Check if reconnection is required
-    if (fd_.load(std::memory_order_acquire) == -1) {
+    if (fd_.load(std::memory_order_acquire) < 0) {
+        co_await mutex_.lock();
+        std::lock_guard lock(mutex_, std::adopt_lock);
         co_return co_await this->connect();
     }
 
@@ -123,7 +125,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
 
         // Although it is not possible, the first insertion here is to
         // avoid receiving a reply and the callback has not been inserted yet.
-        callbacks_[request_id_] = std::move(task.callback_);
+        callbacks_[request_id_++] = std::move(task.callback_);
 
         auto ret = co_await writer.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)),
@@ -132,12 +134,8 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         );
 
         if (!ret) [[unlikely]] {
-            callbacks_.erase(request_id_);
             break;
         }
-
-        // It only increments when the request is successfully sent.
-        request_id_ += 1;
     }
     if (is_shutdown_.load(std::memory_order_acquire)) {
         co_await latch_.arrive_and_wait();
@@ -153,7 +151,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
     while (true) {
         // Recv rpc header size
         uint32_t rpc_header_size_net;
-        auto ret = co_await reader.read(
+        auto ret = co_await reader.read_exact(
             {reinterpret_cast<char*>(&rpc_header_size_net), sizeof(uint32_t)});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
@@ -167,7 +165,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
         }
 
         // Recv response header
-        ret = co_await reader.read(
+        ret = co_await reader.read_exact(
             {buffer.data(), rpc_header_size});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
@@ -188,7 +186,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
         }
 
         // Recv response payload
-        ret = co_await reader.read(
+        ret = co_await reader.read_exact(
             {buffer.data(), payload_size});
         if (!ret) [[unlikely]] {
             LOG_ERROR("{}", ret.error());
@@ -196,11 +194,8 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
             break;
         }
 
-
         if (callbacks_.contains(request_id)) {
             co_await callbacks_[request_id](std::string_view{buffer.data(), payload_size});
-            // Since request_id is monotonically
-            // incrementing, it is thread safe here.
             callbacks_.erase(request_id);
         }
     }

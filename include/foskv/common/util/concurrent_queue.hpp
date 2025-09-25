@@ -1,4 +1,5 @@
 #pragma once
+#include "foskv/common/error.hpp"
 #include <kosio/sync.hpp>
 
 namespace foskv {
