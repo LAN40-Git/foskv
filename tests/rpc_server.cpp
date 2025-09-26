@@ -21,7 +21,7 @@ auto main_loop() -> kosio::async::Task<> {
 
     auto st = std::move(has_st.value());
 
-    auto has_addr = kosio::net::SocketAddr::parse("127.0.0.1", 8080);
+    auto has_addr = kosio::net::SocketAddr::parse("0.0.0.0", 8080);
     if (!has_addr) {
         LOG_ERROR("{}", has_addr.error());
         co_return;

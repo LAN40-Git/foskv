@@ -64,26 +64,15 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         }
 
         // Recv rpc header and req_payload
-        // ret = co_await reader.read_exact({buffer.data(), rpc_header_size});
-        // if (!ret) [[unlikely]] {
-        //     LOG_VERBOSE("{}", ret.error());
-        //     break;
-        // }
-        //
-        // ret = co_await reader.read_exact({buffer2.data(), payload_size});
-        // if (!ret) [[unlikely]] {
-        //     LOG_VERBOSE("{}", ret.error());
-        //     break;
-        // }
+        ret = co_await reader.read_exact({buffer.data(), rpc_header_size});
+        if (!ret) [[unlikely]] {
+            LOG_VERBOSE("{}", ret.error());
+            break;
+        }
 
-        struct iovec iov[2];
-        iov[0].iov_base = buffer.data();
-        iov[0].iov_len = rpc_header_size;
-        iov[1].iov_base = buffer.data() + rpc_header_size;
-        iov[1].iov_len = payload_size;
-        auto iov_ret = co_await kosio::io::readv(reader.fd(), iov, 2, 0);
-        if (!iov_ret) [[unlikely]] {
-            LOG_ERROR("{}", iov_ret.error());
+        ret = co_await reader.read_exact({buffer2.data(), payload_size});
+        if (!ret) [[unlikely]] {
+            LOG_VERBOSE("{}", ret.error());
             break;
         }
 
@@ -112,7 +101,7 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
 
         detail::InvokeTask task;
         task.request_id_ = request_id;
-        task.req_payload_ = std::string{buffer.data() + rpc_header_size, payload_size};
+        task.req_payload_ = std::string{buffer2.data(), payload_size};
         task.invoke_ = invoke->second;
 
         tasks.push(std::move(task));
