@@ -77,7 +77,7 @@ static auto produce_kv_put_response(std::span<char> resp_payload, bool success =
     auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
     response.mutable_header()->Swap(&header);
     auto resp_payload_size = response.ByteSizeLong();
-    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+    if (!response.SerializeToArray(resp_payload.data(), static_cast<int>(resp_payload_size))) {
         return std::unexpected{make_error(Error::kKVPutResponseSerializeFailed)};
     }
     return resp_payload_size;
@@ -93,7 +93,7 @@ static auto produce_kv_get_response(std::span<char> resp_payload, bool success =
         response.mutable_kv()->Swap(&kv.value());
     }
     auto resp_payload_size = response.ByteSizeLong();
-    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+    if (!response.SerializeToArray(resp_payload.data(), static_cast<int>(resp_payload_size))) {
         return std::unexpected{make_error(Error::kKVGetResponseSerializeFailed)};
     }
     return resp_payload_size;
@@ -106,7 +106,7 @@ static auto produce_kv_delete_response(std::span<char> resp_payload, bool succes
     auto header = produce_rpc_response_header(success, error_code, std::move(redirect));
     response.mutable_header()->Swap(&header);
     auto resp_payload_size = response.ByteSizeLong();
-    if (!response.SerializeToArray(resp_payload.data(), resp_payload_size)) {
+    if (!response.SerializeToArray(resp_payload.data(), static_cast<int>(resp_payload_size))) {
         return std::unexpected{make_error(Error::kKVDeleteResponseSerializeFailed)};
     }
     return resp_payload_size;

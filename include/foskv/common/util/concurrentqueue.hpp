@@ -42,6 +42,11 @@ public:
         co_return item;
     }
 
+    [[nodiscard]]
+    auto size_approx() -> std::size_t {
+        return queue_.size_approx();
+    }
+
     void shutdown() {
         is_shutdown_.store(true, std::memory_order_relaxed);
         cv_.notify_all();

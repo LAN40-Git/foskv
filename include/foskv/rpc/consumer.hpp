@@ -5,6 +5,7 @@ namespace foskv::rpc {
 // A running RpcConsumer takes up about 8MB of memory,
 // remember to co_await shutdown(), otherwise the program may crash
 class RpcConsumer {
+    static constexpr std::size_t MAX_QUEUE_SIZE = 1024;
 public:
     explicit RpcConsumer(const kosio::net::SocketAddr& server_addr)
         : server_addr_(server_addr) {

@@ -101,7 +101,7 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
 }
 
 auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter writer) -> kosio::async::Task<> {
-    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
+    std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         auto has_task = co_await tasks_.pop();
         if (!has_task) {
@@ -111,7 +111,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         auto task = std::move(has_task.value());
 
         auto payload_size = task.req_payload_.size();
-        if (payload_size > detail::MAX_RPC_MESSAGE_SIZE) {
+        if (payload_size > buffer.capacity()) {
             LOG_ERROR("Message too large : {}", payload_size);
             continue;
         }
@@ -123,13 +123,9 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
 
         // Send [fixed header -> rpc header -> request payload]
         auto rpc_header_size = rpc_header.ByteSizeLong();
-        if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
+        if (rpc_header_size > buffer.capacity()) [[unlikely]] {
             LOG_ERROR("Message too large : {}", rpc_header_size);
             break;
-        }
-        if (!rpc_header.SerializeToArray(buffer.data(), static_cast<int>(rpc_header_size))) {
-            LOG_ERROR("Failed to serialize rpc header");
-            continue;
         }
 
         detail::FixedRequestHeader fixed_header;
@@ -141,44 +137,29 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         // avoid receiving a reply and the callback has not been inserted yet.
         callbacks_.emplace(request_id_++, std::move(task.callback_));
 
-        auto ret = co_await writer.write_all({reinterpret_cast<char*>(&fixed_header), sizeof(detail::FixedRequestHeader)});
+        char* ptr = buffer.data();
+        memcpy(ptr, &fixed_header, sizeof(fixed_header)); ptr += sizeof(fixed_header);
+        rpc_header.SerializeToArray(ptr, static_cast<int>(rpc_header_size)); ptr += rpc_header_size;
+        memcpy(ptr, task.req_payload_.data(), payload_size);
+        auto ret = co_await writer.write_all({buffer.data(), sizeof(fixed_header) + rpc_header_size + payload_size});
+
         if (!ret) {
             LOG_ERROR("{}", ret.error());
-            co_return;
+            break;
         }
 
-        ret = co_await writer.write_all({buffer.data(), rpc_header_size});
-        if (!ret) {
-            LOG_ERROR("{}", ret.error());
-            co_return;
-        }
-
-        ret = co_await writer.write_all({task.req_payload_.data(), task.req_payload_.size()});
-        if (!ret) {
-            LOG_ERROR("{}", ret.error());
-            co_return;
-        }
-
-        // struct iovec iov[3];
-        // iov[0].iov_base = &fixed_header;
-        // iov[0].iov_len = sizeof(detail::FixedRequestHeader);
-        // iov[1].iov_base = buffer.data();
-        // iov[1].iov_len = rpc_header_size;
-        // iov[2].iov_base = task.req_payload_.data();
-        // iov[2].iov_len = payload_size;
-        // auto ret = co_await kosio::io::writev(writer.fd(), iov, 3, 0);
-        // if (!ret) [[unlikely]] {
-        //     LOG_ERROR("{}", ret.error());
+        /* Unsafe, do not use */
+        // if (!rpc_header.SerializeToArray(buffer.data(), static_cast<int>(rpc_header_size))) {
+        //     LOG_ERROR("Failed to serialize message header");
         //     break;
         // }
-
         // auto ret = co_await writer.write_vectored(
-        //     std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(detail::FixedRequestHeader)),
+        //     std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)),
         //     std::span<const char>(buffer.data(), rpc_header_size),
         //     std::span<const char>(task.req_payload_.data(), task.req_payload_.size())
         // );
         //
-        // if (!ret) [[unlikely]] {
+        // if (!ret) {
         //     LOG_ERROR("{}", ret.error());
         //     break;
         // }
@@ -194,7 +175,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
 }
 
 auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader reader) -> kosio::async::Task<> {
-    std::array<char, 2 * detail::MAX_RPC_MESSAGE_SIZE> buffer{};
+    std::vector<char> buffer(2 * detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         // Recv fixed response header
         detail::FixedResponseHeader fixed_header;

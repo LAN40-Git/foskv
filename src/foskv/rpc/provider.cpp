@@ -42,14 +42,15 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
     kosio::net::OwnedTcpStreamReader reader, std::shared_ptr<detail::Session> session)
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
-    std::array<char, 2 * detail::MAX_RPC_MESSAGE_SIZE> buffer{};
+    std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
+    std::vector<char> buffer2(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         // Recv fixed request header
         detail::FixedRequestHeader fixed_header;
-        auto recv_ret = co_await reader.read_exact(
+        auto ret = co_await reader.read_exact(
             {reinterpret_cast<char*>(&fixed_header), sizeof(detail::FixedRequestHeader)});
-        if (!recv_ret) [[unlikely]] {
-            LOG_VERBOSE("{}", recv_ret.error());
+        if (!ret) [[unlikely]] {
+            LOG_VERBOSE("{}", ret.error());
             break;
         }
 
@@ -63,6 +64,18 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         }
 
         // Recv rpc header and req_payload
+        // ret = co_await reader.read_exact({buffer.data(), rpc_header_size});
+        // if (!ret) [[unlikely]] {
+        //     LOG_VERBOSE("{}", ret.error());
+        //     break;
+        // }
+        //
+        // ret = co_await reader.read_exact({buffer2.data(), payload_size});
+        // if (!ret) [[unlikely]] {
+        //     LOG_VERBOSE("{}", ret.error());
+        //     break;
+        // }
+
         struct iovec iov[2];
         iov[0].iov_base = buffer.data();
         iov[0].iov_len = rpc_header_size;
@@ -113,7 +126,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
     kosio::net::OwnedTcpStreamWriter writer, std::shared_ptr<detail::Session> session)
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
-    std::array<char, detail::MAX_RPC_MESSAGE_SIZE> buffer{};
+    std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         auto has_task = co_await tasks.pop();
         if (!has_task) [[unlikely]] {
@@ -123,7 +136,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         auto task = std::move(has_task.value());
 
         auto has_resp_payload = co_await task.invoke_(task.req_payload_,
-                                                     {buffer.data(), buffer.max_size()},
+                                                     {buffer.data(), buffer.capacity()},
                                                      session->session_id,
                                                      task.request_id_);
         if (!has_resp_payload) [[unlikely]] {

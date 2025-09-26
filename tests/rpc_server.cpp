@@ -85,5 +85,5 @@ auto main_loop() -> kosio::async::Task<> {
 
 auto main() -> int {
     SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
-    kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
+    kosio::runtime::MultiThreadBuilder::options().set_num_workers(16).build().block_on(main_loop());
 }
