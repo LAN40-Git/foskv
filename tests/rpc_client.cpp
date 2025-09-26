@@ -17,7 +17,7 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
         }
 
         if (response.header().success()) {
-            LOG_INFO("Put succesful");
+            // LOG_INFO("Put succesful");
         } else {
             LOG_ERROR("{}", RpcError{static_cast<int>(response.header().error_code())}.message());
         }
@@ -74,15 +74,15 @@ auto kv_put_1000(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<>
 
 auto process(std::unique_ptr<RpcConsumer> consumer) -> kosio::async::Task<> {
     while (true) {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1000; i++) {
             kosio::spawn(kv_put_1000(consumer));
         }
-        co_await kosio::time::sleep(30000);
+        co_await kosio::time::sleep(60000);
     }
 }
 
 auto main_loop() -> kosio::async::Task<> {
-    constexpr std::size_t CONSUMER_SIZE = 16;
+    constexpr std::size_t CONSUMER_SIZE = 1;
     for (int i = 0; i < CONSUMER_SIZE; i++) {
         auto has_consumer = co_await RpcConsumer::create("127.0.0.1", 8080);
         if (!has_consumer) {

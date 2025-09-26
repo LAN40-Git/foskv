@@ -29,7 +29,7 @@ auto main_loop() -> kosio::async::Task<> {
 
     RpcProvider provider(has_addr.value());
     provider.register_invoke(ServiceType::kKv, MethodType::kKvPut,
-        [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
+        [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
             kv::PutRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
                 LOG_ERROR("Failed to parse request : {}", request_id);
@@ -41,7 +41,7 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVPutFailed);
             }
-            LOG_INFO("Handle put request {}", request_id);
+            // LOG_INFO("Handle put request {}-{}", session_id, request_id);
             if (auto ret = counter.fetch_add(1, std::memory_order_relaxed); ret % 100000 == 0) {
                 end = std::chrono::steady_clock::now();
                 kosio::log::console.info("Handle 10w kv put request, take {} ms, counter : {}",

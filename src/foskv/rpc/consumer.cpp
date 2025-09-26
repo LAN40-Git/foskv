@@ -77,6 +77,7 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
         co_return std::unexpected{make_error(Error::kConnectRpcServerFailed)};
     }
 
+    // LOG_VERBOSE("Connect to {}, stream addr {}.", has_stream.value().peer_addr().value(), has_stream.value().local_addr().value());
     // Start produce and consume
     fd_.store(has_stream.value().fd(), std::memory_order_release);
     // Disable Nagle
@@ -130,7 +131,6 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         //     break;
         // }
 
-        /* Unsafe, do not use */
         auto ret = co_await writer.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)),
             std::span<const char>(task.req_payload_.data(), task.req_payload_.size())
