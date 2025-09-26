@@ -29,7 +29,7 @@ void foskv::raft::detail::StateMachine::produce_apply_task(ApplyTask &&task) {
     tasks_.emplace(std::move(task));
 }
 
-void foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index) {
+auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index) -> kosio::async::Task<> {
     while (last_applied < commit_index && !tasks_.empty()) {
         auto apply_task = std::move(tasks_.front());
         tasks_.pop();
@@ -62,7 +62,7 @@ void foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
             }
         }
         invoke_task.request_id_ = apply_task.request_id_;
-        session->tasks.push(std::move(invoke_task));
+        co_await session->tasks.push(std::move(invoke_task));
         last_applied++;
     }
 }

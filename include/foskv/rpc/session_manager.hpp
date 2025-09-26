@@ -11,9 +11,9 @@ struct Session {
     explicit Session(uint64_t session_id, const kosio::net::SocketAddr& addr)
         : session_id(session_id), addr(addr) {}
 
-    uint64_t                          session_id;
-    kosio::net::SocketAddr            addr;
-    util::ConcurrentQueue<InvokeTask> tasks;
+    uint64_t                    session_id;
+    kosio::net::SocketAddr      addr;
+    util::SPSCQueue<InvokeTask> tasks;
 };
 
 class SessionManager {

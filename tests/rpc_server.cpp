@@ -28,7 +28,7 @@ auto main_loop() -> kosio::async::Task<> {
     }
 
     RpcProvider provider(has_addr.value());
-    provider.register_invoke(KVService::ServiceName, KVService::Put,
+    provider.register_invoke(ServiceType::kKv, MethodType::kKvPut,
         [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
             kv::PutRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
@@ -50,7 +50,7 @@ auto main_loop() -> kosio::async::Task<> {
             }
             co_return raft::detail::produce_kv_put_response(resp_payload);
     });
-    provider.register_invoke(KVService::ServiceName, KVService::Get,
+    provider.register_invoke(ServiceType::kKv, MethodType::kKvGet,
         [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
             kv::GetRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
@@ -66,7 +66,7 @@ auto main_loop() -> kosio::async::Task<> {
             }
             co_return raft::detail::produce_kv_get_response(resp_payload, true, rpc::RpcError::kNoError, std::move(kv));
     });
-    provider.register_invoke(KVService::ServiceName, KVService::Delete,
+    provider.register_invoke(ServiceType::kKv, MethodType::kKvDelete,
         [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
             kv::DeleteRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {

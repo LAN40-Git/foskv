@@ -28,54 +28,66 @@ auto foskv::raft::detail::Peer::shutdown() const -> kosio::async::Task<> {
 
 auto foskv::raft::detail::Peer::request_vote(std::string_view req_payload, RpcCallback &&callback)
 const -> kosio::async::Task<> {
+    using rpc::ServiceType;
+    using rpc::MethodType;
     auto ret = co_await consumer_->call(
-        rpc::RaftService::ServiceName, rpc::RaftService::RequestVote, req_payload, std::move(callback));
+        ServiceType::kRaft, MethodType::kRaftRequestVote, req_payload, std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", rpc::RaftService::ServiceName, rpc::RaftService::RequestVote, ret.error());
+        LOG_ERROR("Failed to call rpc `RequestVote`");
     }
 }
 
 auto foskv::raft::detail::Peer::append_entries(std::string_view req_payload, RpcCallback &&callback)
 const -> kosio::async::Task<> {
+    using rpc::ServiceType;
+    using rpc::MethodType;
     auto ret = co_await consumer_->call(
-        rpc::RaftService::ServiceName, rpc::RaftService::AppendEntries, req_payload, std::move(callback));
+        ServiceType::kRaft, MethodType::kRaftAppendEntries, req_payload, std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", rpc::RaftService::ServiceName, rpc::RaftService::AppendEntries, ret.error());
+        LOG_ERROR("Failed to call rpc `AppendEntries`");
     }
 }
 
 auto foskv::raft::detail::Peer::install_snapshot(std::string_view req_payload, RpcCallback &&callback)
 const -> kosio::async::Task<> {
+    using rpc::ServiceType;
+    using rpc::MethodType;
     auto ret = co_await consumer_->call(
-        rpc::RaftService::ServiceName, rpc::RaftService::InstallSnapshot, req_payload, std::move(callback));
+        ServiceType::kRaft, MethodType::kRaftInstallSnapshot, req_payload, std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", rpc::RaftService::ServiceName, rpc::RaftService::InstallSnapshot, ret.error());
+        LOG_ERROR("Failed to call rpc `InstallSnapshot`");
     }
 }
 
 auto foskv::raft::detail::Peer::request_vote(std::string &&req_payload, RpcCallback &&callback)
 const -> kosio::async::Task<> {
+    using rpc::ServiceType;
+    using rpc::MethodType;
     auto ret = co_await consumer_->call(
-        rpc::RaftService::ServiceName, rpc::RaftService::RequestVote, std::move(req_payload), std::move(callback));
+        ServiceType::kRaft, MethodType::kRaftRequestVote, std::move(req_payload), std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", rpc::RaftService::ServiceName, rpc::RaftService::RequestVote, ret.error());
+        LOG_ERROR("Failed to call rpc `RequestVote`");
     }
 }
 
 auto foskv::raft::detail::Peer::append_entries(std::string &&req_payload, RpcCallback &&callback)
 const -> kosio::async::Task<> {
+    using rpc::ServiceType;
+    using rpc::MethodType;
     auto ret = co_await consumer_->call(
-        rpc::RaftService::ServiceName, rpc::RaftService::AppendEntries, std::move(req_payload), std::move(callback));
+        ServiceType::kRaft, MethodType::kRaftAppendEntries, std::move(req_payload), std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", rpc::RaftService::ServiceName, rpc::RaftService::AppendEntries, ret.error());
+        LOG_ERROR("Failed to call rpc `AppendEntries`");
     }
 }
 
 auto foskv::raft::detail::Peer::install_snapshot(std::string &&req_payload, RpcCallback &&callback)
 const -> kosio::async::Task<> {
+    using rpc::ServiceType;
+    using rpc::MethodType;
     auto ret = co_await consumer_->call(
-        rpc::RaftService::ServiceName, rpc::RaftService::InstallSnapshot, std::move(req_payload), std::move(callback));
+        ServiceType::kRaft, MethodType::kRaftInstallSnapshot, std::move(req_payload), std::move(callback));
     if (!ret) [[unlikely]] {
-        LOG_ERROR("Failed to call rpc {}-{} : {}", rpc::RaftService::ServiceName, rpc::RaftService::InstallSnapshot, ret.error());
+        LOG_ERROR("Failed to call rpc `InstallSnapshot`");
     }
 }

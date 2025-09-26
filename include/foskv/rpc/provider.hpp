@@ -21,8 +21,8 @@ public:
 
 public:
     void register_invoke(
-        std::string_view service_name,
-        std::string_view method_name,
+        ServiceType service_type,
+        MethodType method_type,
         detail::Invoke&& invoke);
 
     /// @return A session at `session_id`, nullptr if not exist

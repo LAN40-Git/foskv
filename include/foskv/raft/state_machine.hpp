@@ -16,7 +16,7 @@ public:
 
 public:
     void produce_apply_task(ApplyTask&& task);
-    void apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index);
+    auto apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index) -> kosio::async::Task<>;
 
 private:
     /* apply kv */

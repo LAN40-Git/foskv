@@ -5,7 +5,6 @@ namespace foskv::rpc {
 // A running RpcConsumer takes up about 8MB of memory,
 // remember to co_await shutdown(), otherwise the program may crash
 class RpcConsumer {
-    static constexpr std::size_t MAX_QUEUE_SIZE = 1024;
 public:
     explicit RpcConsumer(const kosio::net::SocketAddr& server_addr)
         : server_addr_(server_addr) {
@@ -31,26 +30,26 @@ public:
 
 public:
     /// @brief Call a rpc invoke
-    /// @param service_name The invoke service name
-    /// @param method_name The invoke method name
+    /// @param service_type The invoke service type
+    /// @param method_type The invoke method type
     /// @param req_payload The request payload
     /// @param callback The callback where receive response
     /// @note Suitable for buffered calls
     [[REMEMBER_CO_AWAIT]]
-    auto call(std::string_view service_name,
-              std::string_view method_name,
+    auto call(ServiceType service_type,
+              MethodType method_type,
               std::string_view req_payload,
               RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
     /// @brief Call a rpc invoke
-    /// @param service_name The invoke service name
-    /// @param method_name The invoke method name
+    /// @param service_type The invoke service type
+    /// @param method_type The invoke method type
     /// @param req_payload The request payload
     /// @param callback The callback where receive response
     /// @note Suitable for no buffered calls
     [[REMEMBER_CO_AWAIT]]
-    auto call(std::string_view service_name,
-              std::string_view method_name,
+    auto call(ServiceType service_type,
+              MethodType method_type,
               std::string&& req_payload,
               RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
@@ -66,7 +65,7 @@ private:
     auto consume_callbacks(kosio::net::OwnedTcpStreamReader reader) -> kosio::async::Task<>;
 
 private:
-    util::ConcurrentQueue<detail::CallTask> tasks_;
+    util::SPSCQueue<detail::CallTask> tasks_;
     detail::RpcCallbackMap            callbacks_;
     uint64_t                          request_id_{0};
     kosio::net::SocketAddr            server_addr_;

@@ -24,10 +24,10 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
 }
 
 void foskv::rpc::RpcProvider::register_invoke(
-    std::string_view service_name,
-    std::string_view method_name,
+    ServiceType service_type,
+    MethodType method_type,
     detail::Invoke&& invoke) {
-    invokes_[service_name][method_name] = std::move(invoke);
+    invokes_[service_type][method_type] = std::move(invoke);
 }
 
 auto foskv::rpc::RpcProvider::session_at(uint64_t session_id) const -> std::shared_ptr<detail::Session> {
@@ -43,70 +43,53 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
     std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
-    std::vector<char> buffer2(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         // Recv fixed request header
         detail::FixedRequestHeader fixed_header;
         auto ret = co_await reader.read_exact(
-            {reinterpret_cast<char*>(&fixed_header), sizeof(detail::FixedRequestHeader)});
+            {reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)});
         if (!ret) [[unlikely]] {
             LOG_VERBOSE("{}", ret.error());
             break;
         }
 
         auto request_id = be64toh(fixed_header.request_id);
-        auto rpc_header_size = be32toh(fixed_header.header_size);
+        auto service_type = fixed_header.service_type;
+        auto method_type = fixed_header.method_type;
         auto payload_size = be32toh(fixed_header.payload_size);
-        if (rpc_header_size > detail::MAX_RPC_MESSAGE_SIZE ||
-            payload_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
-            LOG_ERROR("Message too large {}", rpc_header_size);
+        if (payload_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
+            LOG_ERROR("Message too large {}", payload_size);
             break;
         }
 
-        // Recv rpc header and req_payload
-        ret = co_await reader.read_exact({buffer.data(), rpc_header_size});
+        // Recv req_payload
+        ret = co_await reader.read_exact({buffer.data(), payload_size});
         if (!ret) [[unlikely]] {
             LOG_VERBOSE("{}", ret.error());
             break;
         }
-
-        ret = co_await reader.read_exact({buffer2.data(), payload_size});
-        if (!ret) [[unlikely]] {
-            LOG_VERBOSE("{}", ret.error());
-            break;
-        }
-
-        // Parse rpc header
-        RpcHeader rpc_header;
-        if (!rpc_header.ParseFromArray(buffer.data(), static_cast<int>(rpc_header_size))) {
-            LOG_ERROR("Failed to parse rpc header");
-            break;
-        }
-
-        auto service_name = rpc_header.service_name();
-        auto method_name = rpc_header.method_name();
 
         // Get invoke
-        auto service = invokes_.find(service_name);
+        auto service = invokes_.find(service_type);
         if (service == invokes_.end()) [[unlikely]] {
-            LOG_ERROR("Failed to find service for {}", service_name);
+            LOG_ERROR("Failed to find service for {}", RpcType::to_string(service_type));
             continue;
         }
 
-        auto invoke = service->second.find(method_name);
+        auto invoke = service->second.find(method_type);
         if (invoke == service->second.end()) [[unlikely]] {
-            LOG_ERROR("Failed to find invoke for {}", method_name);
+            LOG_ERROR("Failed to find invoke for {}", RpcType::to_string(method_type));
             continue;
         }
 
         detail::InvokeTask task;
         task.request_id_ = request_id;
-        task.req_payload_ = std::string{buffer2.data(), payload_size};
+        task.req_payload_ = std::string{buffer.data(), payload_size};
         task.invoke_ = invoke->second;
 
-        tasks.push(std::move(task));
+        co_await tasks.push(std::move(task));
     }
-    tasks.shutdown();
+    co_await tasks.shutdown();
     session_manager_.remove(session->session_id);
     LOG_VERBOSE("Session {} from {} : reader closed", session->session_id, session->addr);
 }

@@ -14,35 +14,35 @@ foskv::raft::RaftNode::RaftNode(
         voted_for_ = state.voted_for();
     }
     // Register invokes
-    using rpc::RaftService;
-    using rpc::KVService;
+    using rpc::ServiceType;
+    using rpc::MethodType;
     // RequestVote
-    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::RequestVote,
+    transport_.provider_.register_invoke(ServiceType::kRaft, MethodType::kRaftRequestVote,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>>  {
         co_return co_await this->handle_request_vote_request(req_payload, resp_payload);
     });
     // AppendEntries
-    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::AppendEntries,
+    transport_.provider_.register_invoke(ServiceType::kRaft, MethodType::kRaftAppendEntries,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_append_entries_request(req_payload, resp_payload);
     });
     // InstallSnapshot
-    transport_.provider_.register_invoke(RaftService::ServiceName, RaftService::InstallSnapshot,
+    transport_.provider_.register_invoke(ServiceType::kRaft, MethodType::kRaftInstallSnapshot,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_install_snapshot_request(req_payload, resp_payload);
     });
     // KVPut
-    transport_.provider_.register_invoke(KVService::ServiceName, KVService::Put,
+    transport_.provider_.register_invoke(ServiceType::kKv, MethodType::kKvPut,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_kv_put_request(req_payload, resp_payload, session_id, request_id);
     });
     // KVGet
-    transport_.provider_.register_invoke(KVService::ServiceName, KVService::Get,
+    transport_.provider_.register_invoke(ServiceType::kKv, MethodType::kKvGet,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_kv_get_request(req_payload, resp_payload, session_id, request_id);
     });
     // KVDelete
-    transport_.provider_.register_invoke(KVService::ServiceName, KVService::Delete,
+    transport_.provider_.register_invoke(ServiceType::kKv, MethodType::kKvDelete,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_kv_delete_request(req_payload, resp_payload, session_id, request_id);
     });
@@ -284,7 +284,7 @@ auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp
     commit_index_ = idxs[idxs.size()/2];
 
     // Apply commands
-    state_machine_.apply(transport_, last_applied_, commit_index_);
+    co_await state_machine_.apply(transport_, last_applied_, commit_index_);
 }
 
 auto foskv::raft::RaftNode::handle_install_snapshot_response(std::string_view resp_payload) -> kosio::async::Task<> {

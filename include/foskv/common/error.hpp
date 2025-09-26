@@ -9,7 +9,7 @@ class Error {
 public:
     enum ErrorCode {
         kUnknown = 8000,
-        kEmptyConcurrentQueue,
+        kEmptySPSCQueue,
         kRepeatedPeer,
         kPeerNotFound,
         kLocalNodeNotFound,
@@ -80,8 +80,8 @@ public:
         switch (error_code_) {
             case kUnknown:
                 return "Unknown error.";
-            case kEmptyConcurrentQueue:
-                return "Empty concurrent queue.";
+            case kEmptySPSCQueue:
+                return "Empty spsc queue.";
             case kRepeatedPeer:
                 return "Repeated peer.";
             case kPeerNotFound:

@@ -8,9 +8,15 @@ using RpcCallbackMap = tbb::concurrent_hash_map<uint64_t, RpcCallback>;
 class CallTask : util::Noncopyable {
 public:
     CallTask() = default;
-    explicit CallTask(std::string&& service_name, std::string&& method_name, std::string&& req_payload, RpcCallback&& callback)
-        : service_name_(std::move(service_name))
-        , method_name_(std::move(method_name))
+    explicit CallTask(ServiceType service_type, MethodType method_type, std::string_view req_payload, RpcCallback&& callback)
+        : service_type_(service_type)
+        , method_type_(method_type)
+        , req_payload_(std::string{req_payload})
+        , callback_(std::move(callback)) {}
+
+    explicit CallTask(ServiceType service_type, MethodType method_type, std::string&& req_payload, RpcCallback&& callback)
+        : service_type_(service_type)
+        , method_type_(method_type)
         , req_payload_(std::move(req_payload))
         , callback_(std::move(callback)) {}
 
@@ -19,22 +25,22 @@ public:
     auto operator=(const CallTask&) = delete;
 
     CallTask(CallTask&& other) noexcept
-        : service_name_(std::move(other.service_name_))
-        , method_name_(std::move(other.method_name_))
+        : service_type_(other.service_type_)
+        , method_type_(other.method_type_)
         , req_payload_(std::move(other.req_payload_))
         , callback_(std::move(other.callback_)) {}
 
     auto operator=(CallTask&& other) noexcept -> CallTask& {
-        service_name_ = std::move(other.service_name_);
-        method_name_ = std::move(other.method_name_);
+        service_type_ = other.service_type_;
+        method_type_ = other.method_type_;
         req_payload_ = std::move(other.req_payload_);
         callback_ = std::move(other.callback_);
         return *this;
     }
 
 public:
-    std::string service_name_{};
-    std::string method_name_{};
+    ServiceType service_type_{};
+    MethodType  method_type_{};
     std::string req_payload_{};
     RpcCallback callback_;
 };

@@ -6,7 +6,9 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     foskv::kv::PutRequest put_request;
     put_request.set_key("key");
     put_request.set_value("value");
-    co_await consumer->call(KVService::ServiceName, KVService::Put, put_request.SerializeAsString(),
+    using foskv::rpc::ServiceType;
+    using foskv::rpc::MethodType;
+    co_await consumer->call(ServiceType::kKv, MethodType::kKvPut, put_request.SerializeAsString(),
     [](std::string_view resp_payload) -> kosio::async::Task<> {
         foskv::kv::PutResponse response;
         if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) {
@@ -15,7 +17,7 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
         }
 
         if (response.header().success()) {
-            // LOG_INFO("Put succesful");
+            LOG_INFO("Put succesful");
         } else {
             LOG_ERROR("{}", RpcError{static_cast<int>(response.header().error_code())}.message());
         }
@@ -25,7 +27,9 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
 auto kv_get(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     foskv::kv::GetRequest get_request;
     get_request.set_key("key");
-    co_await consumer->call(KVService::ServiceName, KVService::Get, get_request.SerializeAsString(),
+    using foskv::rpc::ServiceType;
+    using foskv::rpc::MethodType;
+    co_await consumer->call(ServiceType::kKv, MethodType::kKvGet, get_request.SerializeAsString(),
     [](std::string_view resp_payload) -> kosio::async::Task<> {
         foskv::kv::GetResponse response;
         if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) {
@@ -44,7 +48,9 @@ auto kv_get(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
 auto kv_delete(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     foskv::kv::DeleteRequest delete_request;
     delete_request.set_key("key");
-    co_await consumer->call(KVService::ServiceName, KVService::Delete, delete_request.SerializeAsString(),
+    using foskv::rpc::ServiceType;
+    using foskv::rpc::MethodType;
+    co_await consumer->call(ServiceType::kKv, MethodType::kKvDelete, delete_request.SerializeAsString(),
     [](std::string_view resp_payload) -> kosio::async::Task<> {
         foskv::kv::DeleteResponse response;
         if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) {
