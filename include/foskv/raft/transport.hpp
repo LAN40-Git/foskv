@@ -34,9 +34,13 @@ public:
     auto run() -> kosio::async::Task<Result<void>>;
 
 public:
-    auto broadcast_request_vote_request(RequestVoteRequest request, const Peer::RpcCallback& callback) -> kosio::async::Task<>;
-    auto broadcast_append_entries_request(AppendEntriesRequest request, const Peer::RpcCallback& callback) -> kosio::async::Task<>;
-    auto broadcast_install_snapshot_request(InstallSnapshotRequest request, const Peer::RpcCallback& callback) -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
+    auto single_append_entries_request(uint64_t to_member_id, AppendEntriesRequest request, Peer::RpcCallback callback) -> kosio::async::Task<>;
+
+public:
+    auto broadcast_request_vote_request(RequestVoteRequest request, Peer::RpcCallback callback) -> kosio::async::Task<>;
+    auto broadcast_append_entries_request(AppendEntriesRequest request, Peer::RpcCallback callback) -> kosio::async::Task<>;
+    auto broadcast_install_snapshot_request(InstallSnapshotRequest request, Peer::RpcCallback callback) -> kosio::async::Task<>;
 
 private:
     RaftConfig       config_;

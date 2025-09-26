@@ -14,7 +14,15 @@ public:
 
 public:
     [[REMEMBER_CO_AWAIT]]
-    static auto connect(std::string_view host, uint16_t port) -> kosio::async::Task<Result<KVClient>>;
+    static auto Connect(std::string_view host, uint16_t port) -> kosio::async::Task<Result<KVClient>>;
+
+public:
+    [[REMEMBER_CO_AWAIT]]
+    auto Put(std::string key, std::string value) const -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
+    auto Get(std::string key) const -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
+    auto Delete(std::string key) const -> kosio::async::Task<>;
 
 private:
     std::unique_ptr<rpc::RpcConsumer> consumer_;

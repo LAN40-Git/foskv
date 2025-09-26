@@ -75,6 +75,3 @@ add_subdirectory(src/foskv)
 
 # ====== TEST ======
 add_subdirectory(tests)
-add_subdirectory(tests/node1)
-add_subdirectory(tests/node2)
-add_subdirectory(tests/node3)

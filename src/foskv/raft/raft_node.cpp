@@ -116,10 +116,10 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
         current_term_.fetch_add(1, std::memory_order_relaxed);
 
         // Broadcast request vote request
-        co_await transport_.broadcast_request_vote_request(produce_request_vote_request(),
+        kosio::spawn(transport_.broadcast_request_vote_request(produce_request_vote_request(),
         [this](std::string_view resp_payload) -> kosio::async::Task<> {
                 co_await this->handle_request_vote_response(resp_payload);
-        });
+        }));
     }
 }
 
@@ -141,10 +141,10 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
         }
 
         // Broadcast append_entries_request (heartbeat)
-        co_await transport_.broadcast_append_entries_request(produce_append_entries_request(),
+        kosio::spawn(transport_.broadcast_append_entries_request(produce_append_entries_request(),
             [this](std::string_view resp_payload) -> kosio::async::Task<> {
                 co_await this->handle_heartbeat_response(resp_payload);
-        });
+        }));
     }
 }
 
@@ -188,6 +188,10 @@ auto foskv::raft::RaftNode::handle_request_vote_response(std::string_view resp_p
         increase_term_to(resp_term);
         role_.store(kFollower, std::memory_order_release);
         last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
+        auto ret = logs_.persister_.persist(current_term, voted_for_);
+        if (!ret) [[unlikely]] {
+            LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
+        }
         co_return;
     }
 
@@ -196,8 +200,7 @@ auto foskv::raft::RaftNode::handle_request_vote_response(std::string_view resp_p
     }
 
     if (vote_granted) {
-        votes_ += 1;
-        if (votes_ > transport_.peer_count() / 2) {
+        if (++votes_ > transport_.peer_count() / 2) {
             become_leader();
         }
     }
@@ -210,7 +213,6 @@ auto foskv::raft::RaftNode::handle_heartbeat_response(std::string_view resp_payl
         co_return;
     }
 
-    auto member_id = response.header().member_id();
     auto resp_term = response.header().term();
     if (resp_term < current_term_.load(std::memory_order_acquire) ||
         role_.load(std::memory_order_acquire) != kLeader) {
@@ -237,12 +239,6 @@ auto foskv::raft::RaftNode::handle_heartbeat_response(std::string_view resp_payl
             LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
         }
     }
-
-    auto it = transport_.config_.peers_.find(member_id);
-    if (it == transport_.config_.peers_.end()) {
-        co_return;
-    }
-    LOG_VERBOSE("[{}]: Heartbeat from {}, current_term : {}", transport_.name(), it->second.name(), current_term);
 }
 
 auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp_payload, uint64_t match_index,
@@ -525,10 +521,10 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
     // Save the internal raft request as applytask and wait for processing
     state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
 
-    co_await transport_.broadcast_append_entries_request(std::move(append_entries_request),
+    kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
             co_await this->handle_append_entries_response(resp_payload, match_index, append_size);
-    });
+    }));
 
     // Critical, return 0 tells the rpc provider does not immediate send
     // response which should be sent after it was applied.
@@ -598,10 +594,10 @@ auto foskv::raft::RaftNode::handle_kv_get_request(std::string_view req_payload, 
     // Save the internal raft request as applytask and wait for processing
     state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
 
-    co_await transport_.broadcast_append_entries_request(std::move(append_entries_request),
+    kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
             co_await this->handle_append_entries_response(resp_payload, match_index, append_size);
-    });
+    }));
 
     // Critical, return 0 tells the rpc provider does not immediate send
     // response which should be sent after it was applied.
@@ -672,10 +668,10 @@ auto foskv::raft::RaftNode::handle_kv_delete_request(std::string_view req_payloa
     // Save the internal raft request as applytask and wait for processing
     state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
 
-    co_await transport_.broadcast_append_entries_request(std::move(append_entries_request),
+    kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
             co_await this->handle_append_entries_response(resp_payload, match_index, append_size);
-    });
+    }));
 
     // Critical, return 0 tells the rpc provider does not immediate send
     // response which should be sent after it was applied.

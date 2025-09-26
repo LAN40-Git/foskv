@@ -6,7 +6,7 @@ using namespace foskv::rpc;
 
 std::chrono::steady_clock::time_point start;
 std::chrono::steady_clock::time_point end;
-std::atomic<uint64_t> counter{0};
+std::atomic<uint64_t> counter{1};
 
 auto main_loop() -> kosio::async::Task<> {
     rocksdb::Options options;
@@ -32,7 +32,7 @@ auto main_loop() -> kosio::async::Task<> {
         [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
             kv::PutRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
-                LOG_ERROR("Failed to parse request : {}", request_id);
+                kosio::log::console.error("Failed to parse request : {}", request_id);
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVPutRequestParseFailed);
             }
 

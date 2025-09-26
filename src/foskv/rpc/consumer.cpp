@@ -85,6 +85,15 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
     co_await latch_.wait();
 }
 
+auto foskv::rpc::RpcConsumer::redirect(std::string_view host, uint16_t port) -> Result<void> {
+    auto has_addr = kosio::net::SocketAddr::parse(host, port);
+    if (!has_addr) {
+        return std::unexpected{make_error(Error::kInvalidRpcServerAddress)};
+    }
+    server_addr_ = has_addr.value();
+    return Result<void>{};
+}
+
 auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
     if (fd_.load(std::memory_order_relaxed) >= 0) {
         co_return Result<void>{};
@@ -191,12 +200,8 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
         if (callbacks_.find(acc, request_id)) {
             auto callback = std::move(acc->second);
             acc.release();
-            if (callback) {
-                co_await callback(std::string_view{buffer.data(), payload_size});
-                callbacks_.erase(request_id);
-            } else {
-                LOG_ERROR("Invalid callback");
-            }
+            co_await callback(std::string_view{buffer.data(), payload_size});
+            callbacks_.erase(request_id);
         }
     }
     co_await tasks_.shutdown();

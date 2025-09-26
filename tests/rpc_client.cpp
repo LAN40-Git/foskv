@@ -2,7 +2,10 @@
 #include <kosio/signal.hpp>
 using namespace foskv::rpc;
 
+std::atomic<uint64_t> counter{1};
+
 auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
+    // kosio::log::console.info("{}", counter.fetch_add(1, std::memory_order_relaxed));
     foskv::kv::PutRequest put_request;
     put_request.set_key("key");
     put_request.set_value("value");
@@ -77,12 +80,12 @@ auto process(std::unique_ptr<RpcConsumer> consumer) -> kosio::async::Task<> {
         for (int i = 0; i < 1000; i++) {
             kosio::spawn(kv_put_1000(consumer));
         }
-        co_await kosio::time::sleep(60000);
+        co_await kosio::time::sleep(30000);
     }
 }
 
 auto main_loop() -> kosio::async::Task<> {
-    constexpr std::size_t CONSUMER_SIZE = 1;
+    constexpr std::size_t CONSUMER_SIZE = 4;
     for (int i = 0; i < CONSUMER_SIZE; i++) {
         auto has_consumer = co_await RpcConsumer::create("127.0.0.1", 8080);
         if (!has_consumer) {
@@ -96,4 +99,5 @@ auto main_loop() -> kosio::async::Task<> {
 auto main() -> int {
     SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
     kosio::runtime::MultiThreadBuilder::options().set_num_workers(16).build().block_on(main_loop());
+    // kosio::runtime::CurrentThreadBuilder::default_create().block_on(main_loop());
 }

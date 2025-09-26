@@ -14,6 +14,7 @@ public:
         kPeerNotFound,
         kLocalNodeNotFound,
         kInvalidRpcServerAddress,
+        kInvalidRedirectAddress,
         kInvalidPeerAddress,
         kInvalidLocalAddress,
         kInvalidDataDirectory,
@@ -90,6 +91,8 @@ public:
                 return "Local node not found in raft config file.";
             case kInvalidRpcServerAddress:
                 return "Invalid rpc server address.";
+            case kInvalidRedirectAddress:
+                return "Invalid redirect address.";
             case kInvalidPeerAddress:
                 return "Invalid peer address.";
             case kInvalidLocalAddress:
