@@ -30,6 +30,8 @@ private:
     [[REMEMBER_CO_AWAIT]]
     auto handle_request_vote_response(std::string_view resp_payload) -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
+    auto handle_heartbeat_response(std::string_view resp_payload) -> kosio::async::Task<>;
+    [[REMEMBER_CO_AWAIT]]
     auto handle_append_entries_response(std::string_view resp_payload, uint64_t match_index, std::size_t apply_size) -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
     auto handle_install_snapshot_response(std::string_view resp_payload) -> kosio::async::Task<>;
@@ -88,6 +90,7 @@ private:
     std::atomic<uint64_t>   last_reset_time_{0};
     detail::Transport       transport_;
     std::atomic<Role>       role_{kFollower};
+    std::size_t             votes_{0};
     std::optional<uint64_t> leader_id_{std::nullopt};
     detail::StateMachine    state_machine_;
 

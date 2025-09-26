@@ -23,7 +23,7 @@ public:
     void register_invoke(
         ServiceType service_type,
         MethodType method_type,
-        detail::Invoke&& invoke);
+        const detail::Invoke& invoke);
 
     /// @return A session at `session_id`, nullptr if not exist
     auto session_at(uint64_t session_id) const -> std::shared_ptr<detail::Session>;

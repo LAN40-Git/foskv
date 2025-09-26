@@ -9,6 +9,7 @@ foskv::raft::RaftNode::RaftNode(
     : transport_(std::move(config))
     , state_machine_(std::move(state_machine))
     , logs_(std::move(logs)) {
+    LOG_VERBOSE("[{}] : Successfully recover state : current_term : {}, voted_for : {}", transport_.name(), state.current_term(), state.voted_for());
     current_term_ = state.current_term();
     if (state.has_voted_for()) {
         voted_for_ = state.voted_for();
@@ -115,10 +116,10 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
         current_term_.fetch_add(1, std::memory_order_relaxed);
 
         // Broadcast request vote request
-        kosio::spawn(transport_.broadcast_request_vote_request(produce_request_vote_request(),
+        co_await transport_.broadcast_request_vote_request(produce_request_vote_request(),
         [this](std::string_view resp_payload) -> kosio::async::Task<> {
                 co_await this->handle_request_vote_response(resp_payload);
-        }));
+        });
     }
 }
 
@@ -140,40 +141,10 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
         }
 
         // Broadcast append_entries_request (heartbeat)
-        kosio::spawn(transport_.broadcast_append_entries_request(produce_append_entries_request(),
+        co_await transport_.broadcast_append_entries_request(produce_append_entries_request(),
             [this](std::string_view resp_payload) -> kosio::async::Task<> {
-                AppendEntriesResponse response;
-                if (!response.ParseFromArray(resp_payload.data(), static_cast<int>(resp_payload.size()))) [[unlikely]] {
-                    LOG_ERROR("Failed to parse request vote response");
-                    co_return;
-                }
-
-                auto member_id = response.header().member_id();
-                auto resp_term = response.header().term();
-                if (resp_term < current_term_.load(std::memory_order_acquire) ||
-                    role_.load(std::memory_order_acquire) != kLeader) {
-                    co_return;
-                }
-
-                co_await mutex_.lock();
-                std::lock_guard lock(mutex_, std::adopt_lock);
-
-                LOG_VERBOSE("Heartbeat from {}", member_id);
-
-                // Check again
-                auto current_term = current_term_.load(std::memory_order_relaxed);
-                if (resp_term < current_term ||
-                    role_.load(std::memory_order_relaxed) != kLeader) {
-                    co_return;
-                }
-
-                if (resp_term > current_term) {
-                    increase_term_to(resp_term);
-                    role_.store(kFollower, std::memory_order_release);
-                    last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
-                    co_return;
-                }
-        }));
+                co_await this->handle_heartbeat_response(resp_payload);
+        });
     }
 }
 
@@ -186,6 +157,7 @@ void foskv::raft::RaftNode::increase_term_to(uint64_t term) {
 void foskv::raft::RaftNode::become_leader() {
     // Holding mutex_ here, so use relaxed memory
     role_.store(kLeader, std::memory_order_release);
+    LOG_VERBOSE("[{}]: Become leader, current_term : {}.", transport_.name(), current_term_.load(std::memory_order_relaxed));
 }
 
 auto foskv::raft::RaftNode::handle_request_vote_response(std::string_view resp_payload) -> kosio::async::Task<> {
@@ -197,8 +169,6 @@ auto foskv::raft::RaftNode::handle_request_vote_response(std::string_view resp_p
 
     auto resp_term = response.header().term();
     auto vote_granted = response.vote_granted();
-    // Votes for local raftnode at current term
-    static std::size_t votes{0};
 
     if (resp_term < current_term_.load(std::memory_order_acquire)) {
         co_return;
@@ -214,7 +184,7 @@ auto foskv::raft::RaftNode::handle_request_vote_response(std::string_view resp_p
     }
 
     if (resp_term > current_term) {
-        votes = 0;
+        votes_ = 0;
         increase_term_to(resp_term);
         role_.store(kFollower, std::memory_order_release);
         last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
@@ -226,15 +196,57 @@ auto foskv::raft::RaftNode::handle_request_vote_response(std::string_view resp_p
     }
 
     if (vote_granted) {
-        votes += 1;
-        if (votes > transport_.peer_count() / 2) {
+        votes_ += 1;
+        if (votes_ > transport_.peer_count() / 2) {
             become_leader();
         }
     }
 }
 
+auto foskv::raft::RaftNode::handle_heartbeat_response(std::string_view resp_payload) -> kosio::async::Task<> {
+    AppendEntriesResponse response;
+    if (!response.ParseFromArray(resp_payload.data(), static_cast<int>(resp_payload.size()))) [[unlikely]] {
+        LOG_ERROR("Failed to parse request vote response");
+        co_return;
+    }
+
+    auto member_id = response.header().member_id();
+    auto resp_term = response.header().term();
+    if (resp_term < current_term_.load(std::memory_order_acquire) ||
+        role_.load(std::memory_order_acquire) != kLeader) {
+        co_return;
+        }
+
+    co_await mutex_.lock();
+    std::lock_guard lock(mutex_, std::adopt_lock);
+
+    // Check again
+    auto current_term = current_term_.load(std::memory_order_relaxed);
+    if (resp_term < current_term ||
+        role_.load(std::memory_order_relaxed) != kLeader) {
+        co_return;
+    }
+
+    if (resp_term > current_term) {
+        current_term = resp_term;
+        increase_term_to(resp_term);
+        role_.store(kFollower, std::memory_order_release);
+        last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
+        auto ret = logs_.persister_.persist(current_term, voted_for_);
+        if (!ret) [[unlikely]] {
+            LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
+        }
+    }
+
+    auto it = transport_.config_.peers_.find(member_id);
+    if (it == transport_.config_.peers_.end()) {
+        co_return;
+    }
+    LOG_VERBOSE("[{}]: Heartbeat from {}, current_term : {}", transport_.name(), it->second.name(), current_term);
+}
+
 auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp_payload, uint64_t match_index,
-    std::size_t apply_size) -> kosio::async::Task<> {
+                                                           std::size_t apply_size) -> kosio::async::Task<> {
     AppendEntriesResponse response;
     if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) [[unlikely]] {
         LOG_ERROR("Failed to parse request vote response");
@@ -261,9 +273,14 @@ auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp
     }
 
     if (resp_term > current_term) {
+        current_term = resp_term;
         increase_term_to(resp_term);
         role_.store(kFollower, std::memory_order_release);
         last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
+        auto ret = logs_.persister_.persist(current_term, voted_for_);
+        if (!ret) [[unlikely]] {
+            LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
+        }
         co_return;
     }
 
@@ -317,6 +334,10 @@ auto foskv::raft::RaftNode::handle_request_vote_request(
         increase_term_to(current_term);
         role_.store(kFollower, std::memory_order_relaxed);
         last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
+        auto ret = logs_.persister_.persist(current_term, voted_for_);
+        if (!ret) [[unlikely]] {
+            LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
+        }
     }
 
     // Can vote for the candidate
@@ -361,6 +382,10 @@ auto foskv::raft::RaftNode::handle_append_entries_request(
         increase_term_to(current_term);
         role_.store(kFollower, std::memory_order_relaxed);
         last_reset_time_.store(kosio::util::current_ms(), std::memory_order_relaxed);
+        auto ret = logs_.persister_.persist(current_term, voted_for_);
+        if (!ret) [[unlikely]] {
+            LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
+        }
     }
 
     leader_id_ = leader_id;
@@ -500,10 +525,10 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
     // Save the internal raft request as applytask and wait for processing
     state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
 
-    kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
+    co_await transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
             co_await this->handle_append_entries_response(resp_payload, match_index, append_size);
-    }));
+    });
 
     // Critical, return 0 tells the rpc provider does not immediate send
     // response which should be sent after it was applied.
@@ -573,10 +598,10 @@ auto foskv::raft::RaftNode::handle_kv_get_request(std::string_view req_payload, 
     // Save the internal raft request as applytask and wait for processing
     state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
 
-    kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
+    co_await transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
             co_await this->handle_append_entries_response(resp_payload, match_index, append_size);
-    }));
+    });
 
     // Critical, return 0 tells the rpc provider does not immediate send
     // response which should be sent after it was applied.
@@ -647,10 +672,10 @@ auto foskv::raft::RaftNode::handle_kv_delete_request(std::string_view req_payloa
     // Save the internal raft request as applytask and wait for processing
     state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
 
-    kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
+    co_await transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
             co_await this->handle_append_entries_response(resp_payload, match_index, append_size);
-    }));
+    });
 
     // Critical, return 0 tells the rpc provider does not immediate send
     // response which should be sent after it was applied.

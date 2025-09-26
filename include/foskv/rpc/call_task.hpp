@@ -8,6 +8,12 @@ using RpcCallbackMap = tbb::concurrent_hash_map<uint64_t, RpcCallback>;
 class CallTask : util::Noncopyable {
 public:
     CallTask() = default;
+    explicit CallTask(ServiceType service_type, MethodType method_type, std::string_view req_payload, const RpcCallback& callback)
+        : service_type_(service_type)
+        , method_type_(method_type)
+        , req_payload_(std::string{req_payload})
+        , callback_(callback) {}
+
     explicit CallTask(ServiceType service_type, MethodType method_type, std::string_view req_payload, RpcCallback&& callback)
         : service_type_(service_type)
         , method_type_(method_type)

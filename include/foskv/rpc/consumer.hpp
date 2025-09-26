@@ -8,7 +8,7 @@ class RpcConsumer {
 public:
     explicit RpcConsumer(const kosio::net::SocketAddr& server_addr)
         : server_addr_(server_addr) {
-        callbacks_.rehash(1'000'000);
+        callbacks_.rehash(detail::DEFAULT_CALLBACKS_HASH_SIZE);
     }
 
 public:
@@ -34,7 +34,21 @@ public:
     /// @param method_type The invoke method type
     /// @param req_payload The request payload
     /// @param callback The callback where receive response
-    /// @note Suitable for buffered calls
+    /// @note This version does not move the `req_payload`
+    /// and`callback`, suitable for muilt-shot call
+    [[REMEMBER_CO_AWAIT]]
+    auto call(ServiceType service_type,
+              MethodType method_type,
+              std::string_view req_payload,
+              const RpcCallback& callback) -> kosio::async::Task<Result<void>>;
+
+    /// @brief Call a rpc invoke
+    /// @param service_type The invoke service type
+    /// @param method_type The invoke method type
+    /// @param req_payload The request payload
+    /// @param callback The callback where receive response
+    /// @note This version does not move the `req_payload`,
+    /// suitable for buffered one-shot call
     [[REMEMBER_CO_AWAIT]]
     auto call(ServiceType service_type,
               MethodType method_type,
@@ -46,7 +60,8 @@ public:
     /// @param method_type The invoke method type
     /// @param req_payload The request payload
     /// @param callback The callback where receive response
-    /// @note Suitable for no buffered calls
+    /// @note This version move both `req_payload` and `callback`,
+    /// suitable for no-buffered one-shot call
     [[REMEMBER_CO_AWAIT]]
     auto call(ServiceType service_type,
               MethodType method_type,

@@ -15,8 +15,8 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
             co_return std::unexpected{make_error(Error::kTcpStreamAcceptFailed)};
         }
         auto& [stream, peer_addr] = has_stream.value();
-        LOG_VERBOSE("Accept connection from {}", peer_addr);
         auto session = session_manager_.assign(peer_addr);
+        // LOG_INFO("Accept connection from {}, session {}", peer_addr, session->session_id);
         auto [owned_reader, owned_writer] = stream.into_split();
         kosio::spawn(produce_invoke_tasks(std::move(owned_reader), session));
         kosio::spawn(consume_invoke_tasks(std::move(owned_writer), session));
@@ -26,8 +26,8 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
 void foskv::rpc::RpcProvider::register_invoke(
     ServiceType service_type,
     MethodType method_type,
-    detail::Invoke&& invoke) {
-    invokes_[service_type][method_type] = std::move(invoke);
+    const detail::Invoke& invoke) {
+    invokes_[service_type][method_type] = invoke;
 }
 
 auto foskv::rpc::RpcProvider::session_at(uint64_t session_id) const -> std::shared_ptr<detail::Session> {

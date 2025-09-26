@@ -10,14 +10,25 @@ auto foskv::rpc::RpcConsumer::create(std::string_view host, uint16_t port)
     co_return std::move(consumer);
 }
 
+auto foskv::rpc::RpcConsumer::call(ServiceType service_type, MethodType method_type, std::string_view req_payload,
+    const RpcCallback &callback) -> kosio::async::Task<Result<void>> {
+    // Check if reconnection is required
+    if (fd_.load(std::memory_order_acquire) < 0) {
+        co_await mutex_.lock();
+        std::lock_guard lock(mutex_, std::adopt_lock);
+        co_return co_await this->connect();
+    }
+
+    auto task = detail::CallTask{service_type, method_type, req_payload, callback};
+    co_await tasks_.push(std::move(task));
+    co_return Result<void>{};
+}
+
 auto foskv::rpc::RpcConsumer::call(
     ServiceType service_type,
     MethodType method_type,
     std::string_view req_payload,
     RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
-    auto task = detail::CallTask{service_type, method_type, req_payload, std::move(callback)};
-    co_await tasks_.push(std::move(task));
-
     // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) < 0) {
         co_await mutex_.lock();
@@ -25,20 +36,22 @@ auto foskv::rpc::RpcConsumer::call(
         co_return co_await this->connect();
     }
 
+    auto task = detail::CallTask{service_type, method_type, req_payload, std::move(callback)};
+    co_await tasks_.push(std::move(task));
     co_return Result<void>{};
 }
 
 auto foskv::rpc::RpcConsumer::call(ServiceType service_type, MethodType method_type,
     std::string&& req_payload, RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
-    auto task = detail::CallTask{service_type, method_type, std::move(req_payload), std::move(callback)};
-    co_await tasks_.push(std::move(task));
-
     // Check if reconnection is required
     if (fd_.load(std::memory_order_acquire) < 0) {
         co_await mutex_.lock();
         std::lock_guard lock(mutex_, std::adopt_lock);
         co_return co_await this->connect();
     }
+
+    auto task = detail::CallTask{service_type, method_type, std::move(req_payload), std::move(callback)};
+    co_await tasks_.push(std::move(task));
 
     co_return Result<void>{};
 }
@@ -49,9 +62,15 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
         auto ret = co_await kosio::io::close(fd_);
         if (!ret) {
             LOG_ERROR("Failed to close consumer async : {}", ret.error());
-            ::close(fd_);
+            for (int i = 0; i < 3; i++) {
+                if (::close(fd_) == 0) {
+                    break;
+                }
+            }
+            fd_.store(-1, std::memory_order_release);
         }
     }
+
     // If `is_producing_` or `is_consuming_` is still `true`, they will never
     // be `false` until they both exit.
     // If `is_producing_` or `is_consuming_` is `false`, it must be set before here
@@ -73,11 +92,11 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
 
     auto has_stream = co_await kosio::net::TcpStream::connect(server_addr_);
     if (!has_stream) {
-        LOG_ERROR("{}", has_stream.error());
+        LOG_VERBOSE("{}", has_stream.error());
         co_return std::unexpected{make_error(Error::kConnectRpcServerFailed)};
     }
 
-    // LOG_VERBOSE("Connect to {}, stream addr {}.", has_stream.value().peer_addr().value(), has_stream.value().local_addr().value());
+    // LOG_DEBUG("Connect to {}, stream addr {}.", has_stream.value().peer_addr().value(), has_stream.value().local_addr().value());
     // Start produce and consume
     fd_.store(has_stream.value().fd(), std::memory_order_release);
     // Disable Nagle
@@ -120,17 +139,6 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
         // avoid receiving a reply and the callback has not been inserted yet.
         callbacks_.emplace(request_id_++, std::move(task.callback_));
 
-        // Send [fixed header -> request payload]
-        // char* ptr = buffer.data();
-        // memcpy(ptr, &fixed_header, sizeof(fixed_header)); ptr += sizeof(fixed_header);
-        // memcpy(ptr, task.req_payload_.data(), payload_size);
-        // auto ret = co_await writer.write_all({buffer.data(), sizeof(fixed_header) + payload_size});
-        //
-        // if (!ret) {
-        //     LOG_ERROR("{}", ret.error());
-        //     break;
-        // }
-
         auto ret = co_await writer.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)),
             std::span<const char>(task.req_payload_.data(), task.req_payload_.size())
@@ -152,7 +160,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks(kosio::net::OwnedTcpStreamWriter
 }
 
 auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader reader) -> kosio::async::Task<> {
-    std::vector<char> buffer(2 * detail::MAX_RPC_MESSAGE_SIZE);
+    std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         // Recv fixed response header
         detail::FixedResponseHeader fixed_header;
@@ -183,8 +191,12 @@ auto foskv::rpc::RpcConsumer::consume_callbacks(kosio::net::OwnedTcpStreamReader
         if (callbacks_.find(acc, request_id)) {
             auto callback = std::move(acc->second);
             acc.release();
-            co_await callback(std::string_view{buffer.data(), payload_size});
-            callbacks_.erase(request_id);
+            if (callback) {
+                co_await callback(std::string_view{buffer.data(), payload_size});
+                callbacks_.erase(request_id);
+            } else {
+                LOG_ERROR("Invalid callback");
+            }
         }
     }
     co_await tasks_.shutdown();

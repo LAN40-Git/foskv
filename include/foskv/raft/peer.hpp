@@ -38,17 +38,17 @@ public:
 public:
     // raft rpc
     [[REMEMBER_CO_AWAIT]]
-    auto request_vote(std::string_view req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    auto request_vote(std::string_view req_payload, const RpcCallback& callback) const -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
-    auto append_entries(std::string_view req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    auto append_entries(std::string_view req_payload, const RpcCallback& callback) const -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
-    auto install_snapshot(std::string_view req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    auto install_snapshot(std::string_view req_payload, const RpcCallback& callback) const -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
-    auto request_vote(std::string&& req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    auto request_vote(std::string&& req_payload, const RpcCallback& callback) const -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
-    auto append_entries(std::string&& req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    auto append_entries(std::string&& req_payload, const RpcCallback& callback) const -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
-    auto install_snapshot(std::string&& req_payload, RpcCallback&& callback) const -> kosio::async::Task<>;
+    auto install_snapshot(std::string&& req_payload, const RpcCallback&callback) const -> kosio::async::Task<>;
 
 private:
     uint64_t                          member_id_;
