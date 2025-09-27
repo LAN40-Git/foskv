@@ -39,7 +39,6 @@ auto foskv::client::KVClient::Put(std::string key, std::string value) -> kosio::
                 auto redirect = response.header().redirect();
                 auto host = redirect.host();
                 auto port = redirect.port();
-                co_await consumer_->shutdown();
                 if (auto ret = co_await redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }
@@ -120,12 +119,13 @@ auto foskv::client::KVClient::Delete(std::string key) -> kosio::async::Task<> {
 }
 
 auto foskv::client::KVClient::redirect_to(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>> {
+    co_await mutex_.lock();
+    std::lock_guard lock(mutex_, std::adopt_lock);
+    co_await consumer_->shutdown();
     auto has_consumer = co_await rpc::RpcConsumer::create(host, port);
     if (!has_consumer) {
         co_return std::unexpected{has_consumer.error()};
     }
-    co_await mutex_.lock();
-    std::lock_guard lock(mutex_, std::adopt_lock);
     // Take tasks
     auto tasks = co_await consumer_->take_tasks();
     consumer_ = std::move(has_consumer.value());

@@ -28,6 +28,8 @@ private:
     auto apply_kv_delete(const kv::DeleteRequest& request) const -> rpc::detail::InvokeTask;
 
 private:
+    std::chrono::system_clock::time_point start_;
+    std::chrono::system_clock::time_point end_;
     storage::Storage      st_;
     std::queue<ApplyTask> tasks_; // Only use by leader
 };
