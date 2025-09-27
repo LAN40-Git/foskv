@@ -125,8 +125,7 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
             continue;
         }
 
-        current_term_.fetch_add(1, std::memory_order_relaxed);
-        voted_for_ = transport_.member_id();
+        start_election();
 
         // Broadcast request vote request
         kosio::spawn(transport_.broadcast_request_vote_request(produce_request_vote_request(),
@@ -161,6 +160,13 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
         }));
     }
     latch_.count_down();
+}
+
+void foskv::raft::RaftNode::start_election() {
+    votes_ = 1;
+    voted_for_ = transport_.member_id();
+    role_.store(kCandidate, std::memory_order_relaxed);
+    current_term_.fetch_add(1, std::memory_order_relaxed);
 }
 
 void foskv::raft::RaftNode::increase_term_to(uint64_t term) {
@@ -225,7 +231,7 @@ auto foskv::raft::RaftNode::handle_request_vote_response(std::string_view resp_p
     }
 
     if (vote_granted) {
-        if (++votes_ > transport_.peer_count() / 2) {
+        if (++votes_ > transport_.peer_count() / 2 && role_.load(std::memory_order_relaxed) == kCandidate) {
             become_leader();
         }
     }

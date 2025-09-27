@@ -23,6 +23,7 @@ private:
     auto start_heartbeat_timeout() -> kosio::async::Task<>;
 
 private:
+    void start_election();
     void increase_term_to(uint64_t term);
     void become_leader();
 

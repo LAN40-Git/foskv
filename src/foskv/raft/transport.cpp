@@ -22,8 +22,8 @@ auto foskv::raft::detail::Transport::shutdown() const -> kosio::async::Task<> {
     co_await provider_->shutdown();
 }
 
-auto foskv::raft::detail::Transport::single_append_entries_request(uint64_t to_member_id, AppendEntriesRequest request,
-                                                                   Peer::RpcCallback callback) -> kosio::async::Task<> {
+auto foskv::raft::detail::Transport::single_append_entries_request(
+    uint64_t to_member_id, AppendEntriesRequest request, Peer::RpcCallback callback) -> kosio::async::Task<> {
     if (to_member_id == this->member_id()) [[unlikely]] {
         co_return;
     }
@@ -34,8 +34,8 @@ auto foskv::raft::detail::Transport::single_append_entries_request(uint64_t to_m
     }
 }
 
-auto foskv::raft::detail::Transport::broadcast_request_vote_request(RequestVoteRequest request,
-                                                                    Peer::RpcCallback callback) -> kosio::async::Task<> {
+auto foskv::raft::detail::Transport::broadcast_request_vote_request(
+    RequestVoteRequest request, Peer::RpcCallback callback) -> kosio::async::Task<> {
     auto payload = request.SerializeAsString();
     for (auto& peer : config_.peers_ | std::views::values) {
         if (peer.member_id() != this->member_id()) {

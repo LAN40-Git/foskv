@@ -21,3 +21,8 @@ FosKV 是一个基于 kosio （本人参考tokio和zedio开发）异步运行时
 
 ## Storage
 
+## Todo lists
+1. 批量同步日志
+2. 日志补发
+3. 快照
+
