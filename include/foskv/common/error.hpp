@@ -9,6 +9,8 @@ class Error {
 public:
     enum ErrorCode {
         kUnknown = 8000,
+        kConfigPathIsNotDirectory,
+        kConfigDirectoryCreateFailed,
         kProviderShutdown,
         kConsumerShutdown,
         kEmptySPSCQueue,
@@ -86,6 +88,10 @@ public:
         switch (error_code_) {
             case kUnknown:
                 return "Unknown error.";
+            case kConfigPathIsNotDirectory:
+                return "Config path is not a directory.";
+            case kConfigDirectoryCreateFailed:
+                return "Config directory create failed.";
             case kProviderShutdown:
                 return "Provider has been shutdown.";
             case kConsumerShutdown:
