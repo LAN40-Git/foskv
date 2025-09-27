@@ -17,10 +17,10 @@ auto foskv::client::KVClient::Connect(std::string_view host, uint16_t port)
     co_return KVClient{std::move(has_consumer.value())};
 }
 
-auto foskv::client::KVClient::Put(std::string key, std::string value) const -> kosio::async::Task<> {
+auto foskv::client::KVClient::Put(std::string key, std::string value) -> kosio::async::Task<> {
     kv::PutRequest request;
-    request.mutable_key()->swap(key);
-    request.mutable_value()->swap(value);
+    request.set_key(key);
+    request.set_value(value);
     using rpc::ServiceType;
     using rpc::MethodType;
     co_await consumer_->call(ServiceType::kKv, MethodType::kKvPut, request.SerializeAsString(),
@@ -32,14 +32,15 @@ auto foskv::client::KVClient::Put(std::string key, std::string value) const -> k
         }
 
         if (response.header().success()) {
-            LOG_INFO("Put succesful");
+            LOG_INFO("Put successful, key : {}, value : {}.", key, value);
         } else {
             // Handle redirect
             if (response.header().has_redirect()) {
                 auto redirect = response.header().redirect();
                 auto host = redirect.host();
                 auto port = redirect.port();
-                if (auto ret = co_await consumer_->redirect_to(host, port); !ret) {
+                co_await consumer_->shutdown();
+                if (auto ret = co_await redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }
                 co_await this->Put(key, value);
@@ -50,9 +51,9 @@ auto foskv::client::KVClient::Put(std::string key, std::string value) const -> k
     });
 }
 
-auto foskv::client::KVClient::Get(std::string key) const -> kosio::async::Task<> {
+auto foskv::client::KVClient::Get(std::string key) -> kosio::async::Task<> {
     kv::GetRequest request;
-    request.mutable_key()->swap(key);
+    request.set_key(key);
     using rpc::ServiceType;
     using rpc::MethodType;
     co_await consumer_->call(ServiceType::kKv, MethodType::kKvGet, request.SerializeAsString(),
@@ -64,7 +65,7 @@ auto foskv::client::KVClient::Get(std::string key) const -> kosio::async::Task<>
         }
 
         if (response.header().success()) {
-            LOG_INFO("Get succesful : {}-{}", response.kv().key(), response.kv().value());
+            LOG_INFO("Get succesful, key : {} value : {}", response.kv().key(), response.kv().value());
         } else {
             // Handle redirect
             if (response.header().has_redirect()) {
@@ -72,7 +73,7 @@ auto foskv::client::KVClient::Get(std::string key) const -> kosio::async::Task<>
                 auto host = redirect.host();
                 auto port = redirect.port();
                 LOG_INFO("Redirecting to {}:{}", host, port);
-                if (auto ret = co_await consumer_->redirect_to(host, port); !ret) {
+                if (auto ret = co_await redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }
                 co_await this->Get(key);
@@ -84,9 +85,9 @@ auto foskv::client::KVClient::Get(std::string key) const -> kosio::async::Task<>
     });
 }
 
-auto foskv::client::KVClient::Delete(std::string key) const -> kosio::async::Task<> {
+auto foskv::client::KVClient::Delete(std::string key) -> kosio::async::Task<> {
     kv::DeleteRequest request;
-    request.mutable_key()->swap(key);
+    request.set_key(key);
     using rpc::ServiceType;
     using rpc::MethodType;
     co_await consumer_->call(ServiceType::kKv, MethodType::kKvDelete, request.SerializeAsString(),
@@ -98,7 +99,7 @@ auto foskv::client::KVClient::Delete(std::string key) const -> kosio::async::Tas
         }
 
         if (response.header().success()) {
-            LOG_INFO("Delete succesful");
+            LOG_INFO("Delete succesful, key : {}", key);
         } else {
             // Handle redirect
             if (response.header().has_redirect()) {
@@ -106,7 +107,7 @@ auto foskv::client::KVClient::Delete(std::string key) const -> kosio::async::Tas
                 auto host = redirect.host();
                 auto port = redirect.port();
                 LOG_INFO("Redirecting to {}:{}", host, port);
-                if (auto ret = co_await consumer_->redirect_to(host, port); !ret) {
+                if (auto ret = co_await redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }
                 co_await this->Delete(key);
@@ -116,4 +117,19 @@ auto foskv::client::KVClient::Delete(std::string key) const -> kosio::async::Tas
             LOG_ERROR("{}", rpc::RpcError{static_cast<int>(response.header().error_code())}.message());
         }
     });
+}
+
+auto foskv::client::KVClient::redirect_to(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>> {
+    auto has_consumer = co_await rpc::RpcConsumer::create(host, port);
+    if (!has_consumer) {
+        co_return std::unexpected{has_consumer.error()};
+    }
+    co_await mutex_.lock();
+    std::lock_guard lock(mutex_, std::adopt_lock);
+    // Take tasks
+    auto tasks = co_await consumer_->take_tasks();
+    consumer_ = std::move(has_consumer.value());
+    // Put tasks
+    co_await consumer_->put_tasks(std::move(tasks));
+    co_return Result<void>{};
 }

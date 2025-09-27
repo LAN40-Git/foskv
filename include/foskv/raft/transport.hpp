@@ -32,6 +32,14 @@ public:
     auto name() const noexcept -> std::string { return config_.name_; }
     [[nodiscard]]
     auto peer_count() const noexcept -> std::size_t { return config_.peers_.size(); }
+    [[nodiscard]]
+    auto peer_name(uint64_t member_id) -> std::string {
+        auto it = config_.peers_.find(member_id);
+        if (it == config_.peers_.end()) {
+            return "";
+        }
+        return it->second.name();
+    }
 
 public:
     [[REMEMBER_CO_AWAIT]]

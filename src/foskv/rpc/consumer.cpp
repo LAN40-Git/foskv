@@ -73,44 +73,16 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
     if (auto ret = co_await stream_.close(); !ret) {
         LOG_ERROR("Failed to close stream : {}.", ret.error());
     }
-
-    while (is_producing_.load(std::memory_order_relaxed) ||
-           is_consuming_.load(std::memory_order_relaxed)) {
-        co_await kosio::time::sleep(50); // sleep 50ms
-    }
     // Now consumer will never be used again
     is_shutdown_.store(true, std::memory_order_relaxed);
 }
 
-auto foskv::rpc::RpcConsumer::redirect_to(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>> {
-    auto has_addr = kosio::net::SocketAddr::parse(host, port);
-    if (!has_addr) {
-        co_return std::unexpected{make_error(Error::kInvalidRpcServerAddress)};
-    }
-    co_await mutex_.lock();
-    std::lock_guard lock(mutex_, std::adopt_lock);
+auto foskv::rpc::RpcConsumer::take_tasks() -> kosio::async::Task<std::vector<detail::CallTask>> {
+    co_return co_await tasks_.pop_all();
+}
 
-    if (is_shutdown_.load(std::memory_order_relaxed)) {
-        co_return std::unexpected{make_error(Error::kConsumerShutdown)};
-    }
-
-    server_addr_ = has_addr.value();
-    auto has_stream = co_await kosio::net::TcpStream::connect(server_addr_);
-    if (!has_stream) {
-        LOG_VERBOSE("{}", has_stream.error());
-        co_return std::unexpected{make_error(Error::kConnectRpcServerFailed)};
-    }
-
-    // Disable Nagle
-    auto has_disable_nagle = has_stream.value().set_nodelay(true);
-    if (!has_disable_nagle) {
-        LOG_ERROR("Failed to disable nagle : {}", has_disable_nagle.error());
-    }
-
-    stream_ = std::move(has_stream.value());
-
-    co_await this->run();
-    co_return Result<void>{};
+auto foskv::rpc::RpcConsumer::put_tasks(std::vector<detail::CallTask> tasks) -> kosio::async::Task<> {
+    co_await tasks_.push_batch(std::move(tasks));
 }
 
 auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
@@ -132,6 +104,7 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
     if (stream_.is_valid()) {
         co_return Result<void>{};
     }
+    request_id_ = 0;
 
     auto has_stream = co_await kosio::net::TcpStream::connect(server_addr_);
     if (!has_stream) {
@@ -209,7 +182,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks() -> kosio::async::Task<> {
         auto request_id = be64toh(fixed_header.request_id);
         auto payload_size = be32toh(fixed_header.payload_size);
         if (payload_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
-            LOG_ERROR("Response header too large, request_id : {}, payload_size : {}.", request_id, payload_size);
+            LOG_ERROR("Response payload too large, request_id : {}, payload_size : {}.", request_id, payload_size);
             callbacks_.erase(request_id);
             break;
         }

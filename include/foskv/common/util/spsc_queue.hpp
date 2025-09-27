@@ -31,6 +31,31 @@ public:
         co_return item;
     }
 
+    [[REMEMBER_CO_AWAIT]]
+    auto push_batch(std::vector<T> items) -> kosio::async::Task<> {
+        co_await mutex_.lock();
+        std::unique_lock lock{mutex_, std::adopt_lock};
+        for (auto& item : items) {
+            queue_.push(std::move(item));
+        }
+    }
+
+    [[REMEMBER_CO_AWAIT]]
+    auto pop_all() -> kosio::async::Task<std::vector<T>> {
+        co_await mutex_.lock();
+        std::unique_lock lock{mutex_, std::adopt_lock};
+
+        std::vector<T> items;
+        items.reserve(queue_.size());
+
+        while (!queue_.empty()) {
+            items.push_back(std::move(queue_.front()));
+            queue_.pop();
+        }
+
+        co_return std::move(items);
+    }
+
     [[nodiscard]]
     auto size() -> std::size_t {
         return queue_.size();

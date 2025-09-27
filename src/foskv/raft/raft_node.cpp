@@ -126,6 +126,7 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
         }
 
         current_term_.fetch_add(1, std::memory_order_relaxed);
+        voted_for_ = transport_.member_id();
 
         // Broadcast request vote request
         kosio::spawn(transport_.broadcast_request_vote_request(produce_request_vote_request(),
@@ -298,6 +299,7 @@ auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp
 
     if (!success) {
         next_index_[member_id]--;
+        LOG_VERBOSE("[{}]: Failed to append entries to {}", transport_.name(), transport_.peer_name(member_id));
         co_return;
     }
 
@@ -311,6 +313,7 @@ auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp
     }
     std::ranges::sort(idxs);
     commit_index_ = idxs[idxs.size()/2];
+    LOG_VERBOSE("[{}]: commit_index_ : {}", transport_.name(), commit_index_);
 
     // Apply commands
     co_await state_machine_.apply(transport_, last_applied_, commit_index_);
@@ -353,7 +356,7 @@ auto foskv::raft::RaftNode::handle_request_vote_request(
     }
 
     // Can vote for the candidate
-    bool can_vote = (!voted_for_ || voted_for_.value() == candidate_id);
+    bool can_vote = (!voted_for_.has_value() || voted_for_.value() == candidate_id);
     // Whether the logs of candidate are up to date
     bool up_to_date_log = false;
 
@@ -535,7 +538,7 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
 
     // TODO: Wait for more applytask before synchronizing log entry to other nodes
     // Save the internal raft request as applytask and wait for processing
-    state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
+    state_machine_.produce_apply_task(detail::ApplyTask{last_applied_, session_id, request_id, std::move(internal_raft_request)});
 
     kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
@@ -608,7 +611,7 @@ auto foskv::raft::RaftNode::handle_kv_get_request(std::string_view req_payload, 
 
     // TODO: Wait for more applytask before synchronizing log entry to other nodes
     // Save the internal raft request as applytask and wait for processing
-    state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
+    state_machine_.produce_apply_task(detail::ApplyTask{last_applied_, session_id, request_id, std::move(internal_raft_request)});
 
     kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
@@ -682,7 +685,7 @@ auto foskv::raft::RaftNode::handle_kv_delete_request(std::string_view req_payloa
 
     // TODO: Wait for more applytask before synchronizing log entry to other nodes
     // Save the internal raft request as applytask and wait for processing
-    state_machine_.produce_apply_task(detail::ApplyTask{session_id, request_id, std::move(internal_raft_request)});
+    state_machine_.produce_apply_task(detail::ApplyTask{last_applied_, session_id, request_id, std::move(internal_raft_request)});
 
     kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {

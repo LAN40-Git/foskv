@@ -18,13 +18,17 @@ public:
 
 public:
     [[REMEMBER_CO_AWAIT]]
-    auto Put(std::string key, std::string value) const -> kosio::async::Task<>;
+    auto Put(std::string key, std::string value) -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
-    auto Get(std::string key) const -> kosio::async::Task<>;
+    auto Get(std::string key) -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
-    auto Delete(std::string key) const -> kosio::async::Task<>;
+    auto Delete(std::string key) -> kosio::async::Task<>;
+
+public:
+    auto redirect_to(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>>;
 
 private:
+    kosio::sync::Mutex                mutex_;
     std::unique_ptr<rpc::RpcConsumer> consumer_;
 };
 } // namespace foskv::client

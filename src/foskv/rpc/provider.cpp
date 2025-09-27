@@ -2,12 +2,16 @@
 
 auto foskv::rpc::RpcProvider::create(const kosio::net::SocketAddr& addr)
 -> kosio::async::Task<Result<std::unique_ptr<RpcProvider>>> {
-    auto has_listener = kosio::net::TcpListener::bind(addr);
+    auto has_addr = kosio::net::SocketAddr::parse("0.0.0.0", addr.port());
+    if (!has_addr) {
+        co_return std::unexpected{make_error(Error::kInvalidLocalAddress)};
+    }
+    auto has_listener = kosio::net::TcpListener::bind(has_addr.value());
     if (!has_listener) [[unlikely]] {
         LOG_ERROR("{}", has_listener.error());
         co_return std::unexpected{make_error(Error::kTcpListenerBindFailed)};
     }
-    co_return std::make_unique<RpcProvider>(addr, std::move(has_listener.value()));
+    co_return std::make_unique<RpcProvider>(has_addr.value(), std::move(has_listener.value()));
 }
 
 auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
@@ -27,7 +31,7 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
         }
         auto& [stream, peer_addr] = has_stream.value();
         auto session = session_manager_.assign(std::move(stream), peer_addr);
-        // LOG_VERBOSE("Accept connection from {}, session {}", peer_addr, session->session_id);
+        LOG_VERBOSE("Accept connection from {}, session {}", peer_addr, session->session_id);
         kosio::spawn(produce_invoke_tasks(session));
         kosio::spawn(consume_invoke_tasks(session));
     }
@@ -125,7 +129,6 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(std::shared_ptr<detail::Sessi
     while (true) {
         auto has_task = co_await tasks.pop();
         if (!has_task) [[unlikely]] {
-            LOG_VERBOSE("{}", has_task.error());
             break;
         }
         auto task = std::move(has_task.value());

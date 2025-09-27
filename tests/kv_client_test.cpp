@@ -11,10 +11,16 @@ auto process() -> kosio::async::Task<> {
 
     auto client = std::move(has_kv_client.value());
     while (true) {
-        LOG_VERBOSE("Sleeping for 3s...");
-        co_await kosio::time::sleep(3000);
+        co_await kosio::time::sleep(1000);
         co_await client.Put("shit", "ass");
+        co_await kosio::time::sleep(1000);
         co_await client.Get("shit");
+        co_await kosio::time::sleep(1000);
+        co_await client.Delete("shit");
+        co_await kosio::time::sleep(1000);
+        co_await client.Get("shit");
+        co_await kosio::time::sleep(1000);
+        co_await client.Delete("shit");
     }
 }
 

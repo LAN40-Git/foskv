@@ -15,7 +15,7 @@ public:
     static auto create(std::string_view data_dir) -> Result<StateMachine>;
 
 public:
-    void produce_apply_task(ApplyTask&& task);
+    void produce_apply_task(ApplyTask task);
     auto apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index) -> kosio::async::Task<>;
 
 private:
