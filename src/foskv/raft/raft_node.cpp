@@ -176,6 +176,9 @@ void foskv::raft::RaftNode::become_leader() {
     // Holding mutex_ here, so use relaxed memory
     role_.store(kLeader, std::memory_order_release);
     auto current_term = current_term_.load(std::memory_order_relaxed);
+    for (auto &next_index: next_index_ | std::views::values) {
+        next_index = logs_.last_log_index() + 1;
+    }
     auto ret = logs_.persister_.persist(current_term, voted_for_);
     if (!ret) [[unlikely]] {
         LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
@@ -303,7 +306,10 @@ auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp
     }
 
     if (!success) {
-        next_index_[member_id]--;
+        auto& next_index = next_index_[member_id];
+        if (next_index > 0) {
+            next_index--;
+        }
         LOG_VERBOSE("[{}]: Failed to append entries to {}", transport_.name(), transport_.peer_name(member_id));
         co_return;
     }
@@ -444,6 +450,7 @@ auto foskv::raft::RaftNode::handle_append_entries_request(
 
     if (leader_commit > commit_index_) {
         commit_index_ = std::min(logs_.last_log_index(), leader_commit);
+
     }
 
     co_return produce_append_entries_response(true, resp_payload);

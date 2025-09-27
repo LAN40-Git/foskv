@@ -4,7 +4,7 @@
 
 namespace foskv::client {
 class KVClient {
-private:
+public:
     explicit KVClient(std::unique_ptr<rpc::RpcConsumer> consumer)
         : consumer_(std::move(consumer)) {}
 
@@ -14,7 +14,7 @@ public:
 
 public:
     [[REMEMBER_CO_AWAIT]]
-    static auto Connect(std::string_view host, uint16_t port) -> kosio::async::Task<Result<KVClient>>;
+    static auto Connect(std::string_view host, uint16_t port) -> kosio::async::Task<Result<std::unique_ptr<KVClient>>>;
 
 public:
     [[REMEMBER_CO_AWAIT]]
@@ -25,7 +25,11 @@ public:
     auto Delete(std::string key) -> kosio::async::Task<>;
 
 public:
-    auto redirect_to(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto Close() const -> kosio::async::Task<>;
+
+private:
+    auto RedirectTo(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>>;
 
 private:
     kosio::sync::Mutex                mutex_;

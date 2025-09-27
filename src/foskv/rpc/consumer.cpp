@@ -15,14 +15,36 @@ auto foskv::rpc::RpcConsumer::call(
     MethodType method_type,
     std::string_view req_payload,
     const RpcCallback &callback) -> kosio::async::Task<Result<void>> {
+    co_await mutex_.lock();
+    std::lock_guard lock(mutex_, std::adopt_lock);
+
     if (!stream_.is_valid()) {
         if (auto ret = co_await this->connect(); !ret) {
             co_return std::unexpected{ret.error()};
         }
     }
 
-    auto task = detail::CallTask{service_type, method_type, req_payload, callback};
-    co_await tasks_.push(std::move(task));
+    // Make fixed header
+    detail::FixedRequestHeader fixed_header;
+    fixed_header.request_id = htobe64(request_id_);
+    fixed_header.service_type = service_type;
+    fixed_header.method_type = method_type;
+    fixed_header.payload_size = htobe32(req_payload.size());
+
+    // Although it is not possible, the first insertion here is to
+    // avoid receiving a reply and the callback has not been inserted yet.
+    callbacks_.emplace(request_id_++, callback);
+
+    auto ret = co_await stream_.write_vectored(
+        std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)),
+        std::span<const char>(req_payload.data(), req_payload.size())
+    );
+
+    if (!ret) {
+        LOG_ERROR("{}", ret.error());
+        co_return std::unexpected{make_error(Error::kCallRpcFailed)};
+    }
+
     co_return Result<void>{};
 }
 
@@ -31,30 +53,36 @@ auto foskv::rpc::RpcConsumer::call(
     MethodType method_type,
     std::string_view req_payload,
     RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
+    co_await mutex_.lock();
+    std::lock_guard lock(mutex_, std::adopt_lock);
+
     if (!stream_.is_valid()) {
         if (auto ret = co_await this->connect(); !ret) {
             co_return std::unexpected{ret.error()};
         }
     }
 
-    auto task = detail::CallTask{service_type, method_type, req_payload, std::move(callback)};
-    co_await tasks_.push(std::move(task));
-    co_return Result<void>{};
-}
+    // Make fixed header
+    detail::FixedRequestHeader fixed_header;
+    fixed_header.request_id = htobe64(request_id_);
+    fixed_header.service_type = service_type;
+    fixed_header.method_type = method_type;
+    fixed_header.payload_size = htobe32(req_payload.size());
 
-auto foskv::rpc::RpcConsumer::call(
-    ServiceType service_type,
-    MethodType method_type,
-    std::string&& req_payload,
-    RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
-    if (!stream_.is_valid()) {
-        if (auto ret = co_await this->connect(); !ret) {
-            co_return std::unexpected{ret.error()};
-        }
+    // Although it is not possible, the first insertion here is to
+    // avoid receiving a reply and the callback has not been inserted yet.
+    callbacks_.emplace(request_id_++, std::move(callback));
+
+    auto ret = co_await stream_.write_vectored(
+        std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)),
+        std::span<const char>(req_payload.data(), req_payload.size())
+    );
+
+    if (!ret) {
+        LOG_ERROR("{}", ret.error());
+        co_return std::unexpected{make_error(Error::kCallRpcFailed)};
     }
 
-    auto task = detail::CallTask{service_type, method_type, std::move(req_payload), std::move(callback)};
-    co_await tasks_.push(std::move(task));
     co_return Result<void>{};
 }
 
@@ -62,46 +90,31 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
     co_await mutex_.lock();
     std::lock_guard lock(mutex_, std::adopt_lock);
 
-    if (!stream_.is_valid()) {
+    if (is_shutdown_.load(std::memory_order_relaxed)) {
         co_return;
     }
-
-    if (auto ret = co_await stream_.shutdown(SHUT_RDWR); !ret) {
-        LOG_ERROR("Failed to shutdown stream : {}.", ret.error());
-    }
-
-    if (auto ret = co_await stream_.close(); !ret) {
-        LOG_ERROR("Failed to close stream : {}.", ret.error());
-    }
-    // Now consumer will never be used again
     is_shutdown_.store(true, std::memory_order_relaxed);
+
+    if (stream_.is_valid()) {
+        if (auto ret = co_await stream_.close(); !ret) {
+            LOG_ERROR("{}", ret.error());
+        }
+    }
+
+    // while (is_running_.load(std::memory_order_relaxed)) {
+    //     LOG_VERBOSE("Still running, wating for 50ms...");
+    //     co_await kosio::time::sleep(50);
+    // }
 }
 
-auto foskv::rpc::RpcConsumer::take_tasks() -> kosio::async::Task<std::vector<detail::CallTask>> {
-    co_return co_await tasks_.pop_all();
-}
-
-auto foskv::rpc::RpcConsumer::put_tasks(std::vector<detail::CallTask> tasks) -> kosio::async::Task<> {
-    co_await tasks_.push_batch(std::move(tasks));
-}
-
-auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
-    co_await tasks_.run();
-    is_producing_.store(true, std::memory_order_relaxed);
-    is_consuming_.store(true, std::memory_order_relaxed);
-    kosio::spawn(produce_callbacks());
+void foskv::rpc::RpcConsumer::run() {
+    is_running_.store(true, std::memory_order_relaxed);
     kosio::spawn(consume_callbacks());
 }
 
 auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
-    co_await mutex_.lock();
-    std::lock_guard lock(mutex_, std::adopt_lock);
-
-    if (is_shutdown_.load(std::memory_order_relaxed)) {
-        co_return std::unexpected{make_error(Error::kConsumerShutdown)};
-    }
-
-    if (stream_.is_valid()) {
+    /* Hold mutex_ */
+    if (stream_.is_valid() || is_running_.load(std::memory_order_relaxed)) {
         co_return Result<void>{};
     }
     request_id_ = 0;
@@ -121,50 +134,8 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
     }
 
     stream_ = std::move(has_stream.value());
-
-    co_await this->run();
-
+    this->run();
     co_return Result<void>{};
-}
-
-auto foskv::rpc::RpcConsumer::produce_callbacks() -> kosio::async::Task<> {
-    std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
-    while (true) {
-        auto has_task = co_await tasks_.pop();
-        if (!has_task) {
-            LOG_VERBOSE("{}", has_task.error());
-            break;
-        }
-        auto task = std::move(has_task.value());
-
-        auto payload_size = task.req_payload_.size();
-        if (payload_size > buffer.capacity()) {
-            LOG_ERROR("Message too large : {}", payload_size);
-            continue;
-        }
-
-        // Make fixed header
-        detail::FixedRequestHeader fixed_header;
-        fixed_header.request_id = htobe64(request_id_);
-        fixed_header.service_type = task.service_type_;
-        fixed_header.method_type = task.method_type_;
-        fixed_header.payload_size = htobe32(payload_size);
-
-        // Although it is not possible, the first insertion here is to
-        // avoid receiving a reply and the callback has not been inserted yet.
-        callbacks_.emplace(request_id_++, std::move(task.callback_));
-
-        auto ret = co_await stream_.write_vectored(
-            std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)),
-            std::span<const char>(task.req_payload_.data(), task.req_payload_.size())
-        );
-
-        if (!ret) {
-            LOG_ERROR("{}", ret.error());
-            break;
-        }
-    }
-    is_producing_.store(false, std::memory_order_release);
 }
 
 auto foskv::rpc::RpcConsumer::consume_callbacks() -> kosio::async::Task<> {
@@ -203,7 +174,5 @@ auto foskv::rpc::RpcConsumer::consume_callbacks() -> kosio::async::Task<> {
             callbacks_.erase(request_id);
         }
     }
-    // Tell the producer coro to stop
-    co_await tasks_.shutdown();
-    is_consuming_.store(false, std::memory_order_release);
+    is_running_.store(false, std::memory_order_relaxed);
 }

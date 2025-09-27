@@ -21,6 +21,7 @@ public:
         kInvalidLocalAddress,
         kInvalidDataDirectory,
         kInvalidLogIndex,
+        kCallRpcFailed,
         kTcpListenerBindFailed,
         kTcpListenerAcceptFailed,
         kTcpStreamCloseFailed,
@@ -109,6 +110,8 @@ public:
                 return "Invalid data directory.";
             case kInvalidLogIndex:
                 return "Invalid first or last log index.";
+            case kCallRpcFailed:
+                return "Call rpc failed.";
             case kTcpListenerBindFailed:
                 return "Tcp listener bind failed.";
             case kTcpListenerAcceptFailed:

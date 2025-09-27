@@ -2,7 +2,7 @@
 #include "foskv/rpc/call_task.hpp"
 
 namespace foskv::rpc {
-// A running RpcConsumer takes up about 8MB of memory,
+// A running RpcConsumer takes up about 4MB of memory,
 // remember to co_await shutdown(), otherwise the program may crash
 class RpcConsumer {
 public:
@@ -50,46 +50,24 @@ public:
               std::string_view req_payload,
               RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
 
-    /// @brief Call a rpc invoke
-    /// @param service_type The invoke service type
-    /// @param method_type The invoke method type
-    /// @param req_payload The request payload
-    /// @param callback The callback where receive response
-    /// @note This version move both `req_payload` and `callback`,
-    /// suitable for no-buffered one-shot call
-    [[REMEMBER_CO_AWAIT]]
-    auto call(ServiceType service_type,
-              MethodType method_type,
-              std::string&& req_payload,
-              RpcCallback&& callback) -> kosio::async::Task<Result<void>>;
-
     /// @brief Shutdown the consumer and never use it again
     /// @note Never forget to call this method
     [[REMEMBER_CO_AWAIT]]
     auto shutdown() -> kosio::async::Task<>;
 
-    [[REMEMBER_CO_AWAIT]]
-    auto take_tasks() -> kosio::async::Task<std::vector<detail::CallTask>>;
-
-    [[REMEMBER_CO_AWAIT]]
-    auto put_tasks(std::vector<detail::CallTask> tasks) -> kosio::async::Task<>;
-
 private:
-    auto run() -> kosio::async::Task<>;
+    void run();
     [[REMEMBER_CO_AWAIT]]
     auto connect() -> kosio::async::Task<Result<void>>;
-    auto produce_callbacks() -> kosio::async::Task<>;
     auto consume_callbacks() -> kosio::async::Task<>;
 
 private:
-    util::SPSCQueue<detail::CallTask> tasks_;
-    detail::RpcCallbackMap            callbacks_;
-    uint64_t                          request_id_{0};
-    kosio::net::SocketAddr            server_addr_;
-    kosio::sync::Mutex                mutex_;
-    std::atomic<bool>                 is_shutdown_{false};
-    std::atomic<bool>                 is_producing_{false};
-    std::atomic<bool>                 is_consuming_{false};
-    kosio::net::TcpStream             stream_;
+    detail::RpcCallbackMap callbacks_;
+    uint64_t               request_id_{0};
+    kosio::net::SocketAddr server_addr_;
+    kosio::sync::Mutex     mutex_;
+    std::atomic<bool>      is_shutdown_{false};
+    std::atomic<bool>      is_running_{false};
+    kosio::net::TcpStream  stream_;
 };
 } // namespace foskv::rpc

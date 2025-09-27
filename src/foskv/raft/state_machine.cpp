@@ -70,9 +70,9 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
             co_await session->tasks.push(std::move(invoke_task));
         }
 
-        if (last_last_applied % 100000 == 0) {
+        if (last_last_applied % 1000 == 0) {
             end_ = std::chrono::system_clock::now();
-            kosio::log::console.info("10w requests, take {} ms.", std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_));
+            kosio::log::console.info("1000 requests, take {} ms.", std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_));
             start_ = std::chrono::system_clock::now();
         }
     }
