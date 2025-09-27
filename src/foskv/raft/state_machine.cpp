@@ -35,33 +35,26 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
         auto apply_task = std::move(tasks_.front());
         tasks_.pop();
         if (apply_task.last_applied_ != last_last_applied) {
-
+            LOG_ERROR("[{}]: Invalid last_applied.", transport.name());
             continue;
         }
         auto session_id = apply_task.session_id_;
         auto request = std::move(apply_task.request_);
         auto session = transport.provider_->session_at(session_id);
-        if (!session) {
-            LOG_ERROR("Failed to apply : Session at {} not exist", session_id);
-            continue;
-        }
 
         rpc::detail::InvokeTask invoke_task;
 
         switch (request.cmd_case()) {
             case InternalRaftRequest::kKvPut: {
                 invoke_task = apply_kv_put(request.kv_put());
-                LOG_VERBOSE("KV Put command from session {}, request_id {}", session_id, apply_task.request_id_);
                 break;
             }
             case InternalRaftRequest::kKvGet: {
                 invoke_task = apply_kv_get(request.kv_get());
-                LOG_VERBOSE("KV Get command from session {}, request_id {}", session_id, apply_task.request_id_);
                 break;
             }
             case InternalRaftRequest::kKvDelete: {
                 invoke_task = apply_kv_delete(request.kv_delete());
-                LOG_VERBOSE("KV Delete command from session {}, request_id {}", session_id, apply_task.request_id_);
                 break;
             }
             default: {
@@ -70,9 +63,12 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
             }
         }
 
-        invoke_task.request_id_ = apply_task.request_id_;
-        LOG_VERBOSE("Push a invoke task with request_id {} to session {}", invoke_task.request_id_, session_id);
-        co_await session->tasks.push(std::move(invoke_task));
+        // Whatever with the session, the command must be applied before
+        // even if we can't send response to the session
+        if (session) {
+            invoke_task.request_id_ = apply_task.request_id_;
+            co_await session->tasks.push(std::move(invoke_task));
+        }
     }
 }
 
@@ -81,7 +77,7 @@ const -> rpc::detail::InvokeTask {
     auto status = st_.Put(request.key(), request.value());
     return rpc::detail::InvokeTask(
         [status](std::string_view, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
-            LOG_VERBOSE("Response to {}-{}", session_id, request_id);
+            LOG_VERBOSE("Handle request {} from session {}.", session_id, request_id);
             if (!status.ok()) {
                 LOG_ERROR("Failed to put : {}", status.ToString());
                 co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
@@ -97,7 +93,7 @@ const -> rpc::detail::InvokeTask {
     auto kv = produce_kv(request.key(), std::move(value));
     return rpc::detail::InvokeTask(
         [status, kv = std::move(kv)](std::string_view, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
-            LOG_VERBOSE("Response to {}-{}", session_id, request_id);
+            LOG_VERBOSE("Handle request {} from session {}.", session_id, request_id);
             if (!status.ok()) {
                 LOG_ERROR("Failed to get : {}", status.ToString());
                 co_return produce_kv_get_response(resp_payload, false, rpc::RpcError::kKVGetFailed);
@@ -112,11 +108,12 @@ auto foskv::raft::detail::StateMachine::apply_kv_delete(const kv::DeleteRequest 
 const -> rpc::detail::InvokeTask {
     auto status = st_.Delete(request.key());
     return rpc::detail::InvokeTask(
-        [status](std::string_view, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
-                if (!status.ok()) {
-                    LOG_ERROR("Failed to put : {}", status.ToString());
-                    co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
-                }
-                co_return produce_kv_delete_response(resp_payload);
+        [status](std::string_view, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
+            LOG_VERBOSE("Handle request {} from session {}.", session_id, request_id);
+            if (!status.ok()) {
+                LOG_ERROR("Failed to put : {}", status.ToString());
+                co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
+            }
+            co_return produce_kv_delete_response(resp_payload);
         });
 }

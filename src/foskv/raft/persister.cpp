@@ -111,7 +111,7 @@ auto foskv::raft::detail::Persister::recover_entries() const -> Result<std::vect
     auto last_index_status = st_.Get(LAST_INDEX_KEY, &last_index_value);
 
     if (first_index_status.ok() && last_index_status.ok()) {
-        // LOG_INFO("first_index : {}, last_index : {}", first_index_value, last_index_value);
+        LOG_VERBOSE("first_index : {}, last_index : {}", first_index_value, last_index_value);
     } else if (first_index_status.IsNotFound() && last_index_status.IsNotFound()) {
         LOG_INFO("first_index and last_index not found");
         // Empty entries

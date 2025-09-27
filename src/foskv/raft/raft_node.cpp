@@ -175,6 +175,11 @@ void foskv::raft::RaftNode::become_leader() {
     voted_for_ = std::nullopt;
     // Holding mutex_ here, so use relaxed memory
     role_.store(kLeader, std::memory_order_release);
+    auto current_term = current_term_.load(std::memory_order_relaxed);
+    auto ret = logs_.persister_.persist(current_term, voted_for_);
+    if (!ret) [[unlikely]] {
+        LOG_FATAL("[{}]: Failed to persist state, current_term : {}, voted_for : {}", transport_.name(), current_term, voted_for_.value_or(0));
+    }
     LOG_VERBOSE("[{}]: Become leader, current_term : {}.", transport_.name(), current_term_.load(std::memory_order_relaxed));
 }
 
@@ -307,13 +312,13 @@ auto foskv::raft::RaftNode::handle_append_entries_response(std::string_view resp
     match_index_[member_id] = match_index + apply_size;
     next_index_[member_id] = match_index_[member_id] + 1;
     std::vector<uint64_t> idxs;
-    idxs.reserve(match_index_.size());
+    idxs.reserve(transport_.peer_count());
     for (auto idx: match_index_ | std::views::values) {
         idxs.push_back(idx);
     }
     std::ranges::sort(idxs);
     commit_index_ = idxs[idxs.size()/2];
-    LOG_VERBOSE("[{}]: commit_index_ : {}", transport_.name(), commit_index_);
+    // LOG_VERBOSE("[{}]: commit_index_ : {}", transport_.name(), commit_index_);
 
     // Apply commands
     co_await state_machine_.apply(transport_, last_applied_, commit_index_);
@@ -538,7 +543,7 @@ auto foskv::raft::RaftNode::handle_kv_put_request(std::string_view req_payload, 
 
     // TODO: Wait for more applytask before synchronizing log entry to other nodes
     // Save the internal raft request as applytask and wait for processing
-    state_machine_.produce_apply_task(detail::ApplyTask{last_applied_, session_id, request_id, std::move(internal_raft_request)});
+    state_machine_.produce_apply_task(detail::ApplyTask{match_index, session_id, request_id, std::move(internal_raft_request)});
 
     kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
@@ -611,7 +616,7 @@ auto foskv::raft::RaftNode::handle_kv_get_request(std::string_view req_payload, 
 
     // TODO: Wait for more applytask before synchronizing log entry to other nodes
     // Save the internal raft request as applytask and wait for processing
-    state_machine_.produce_apply_task(detail::ApplyTask{last_applied_, session_id, request_id, std::move(internal_raft_request)});
+    state_machine_.produce_apply_task(detail::ApplyTask{match_index, session_id, request_id, std::move(internal_raft_request)});
 
     kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {
@@ -685,7 +690,7 @@ auto foskv::raft::RaftNode::handle_kv_delete_request(std::string_view req_payloa
 
     // TODO: Wait for more applytask before synchronizing log entry to other nodes
     // Save the internal raft request as applytask and wait for processing
-    state_machine_.produce_apply_task(detail::ApplyTask{last_applied_, session_id, request_id, std::move(internal_raft_request)});
+    state_machine_.produce_apply_task(detail::ApplyTask{match_index, session_id, request_id, std::move(internal_raft_request)});
 
     kosio::spawn(transport_.broadcast_append_entries_request(std::move(append_entries_request),
         [this, match_index, append_size](std::string_view resp_payload) -> kosio::async::Task<> {

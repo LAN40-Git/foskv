@@ -3,7 +3,7 @@
 #include <nlohmann/detail/input/parser.hpp>
 
 auto process() -> kosio::async::Task<> {
-    auto has_kv_client = co_await foskv::client::KVClient::Connect("127.0.0.1", 8080);
+    auto has_kv_client = co_await foskv::client::KVClient::Connect("127.0.0.1", 8081);
     if (!has_kv_client) {
         LOG_ERROR("{}", has_kv_client.error());
         co_return;
@@ -11,16 +11,9 @@ auto process() -> kosio::async::Task<> {
 
     auto client = std::move(has_kv_client.value());
     while (true) {
-        co_await kosio::time::sleep(1000);
+        co_await kosio::time::sleep(1);
         co_await client.Put("shit", "ass");
-        co_await kosio::time::sleep(1000);
         co_await client.Get("shit");
-        co_await kosio::time::sleep(1000);
-        co_await client.Delete("shit");
-        co_await kosio::time::sleep(1000);
-        co_await client.Get("shit");
-        co_await kosio::time::sleep(1000);
-        co_await client.Delete("shit");
     }
 }
 
