@@ -87,7 +87,7 @@ auto process(std::unique_ptr<RpcConsumer> consumer) -> kosio::async::Task<> {
 }
 
 auto main_loop() -> kosio::async::Task<> {
-    constexpr std::size_t CONSUMER_SIZE = 4;
+    constexpr std::size_t CONSUMER_SIZE = 16;
     for (int i = 0; i < CONSUMER_SIZE; i++) {
         auto has_consumer = co_await RpcConsumer::create("127.0.0.1", 8080);
         if (!has_consumer) {

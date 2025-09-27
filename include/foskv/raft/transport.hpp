@@ -34,7 +34,10 @@ public:
     auto peer_count() const noexcept -> std::size_t { return config_.peers_.size(); }
 
 public:
+    [[REMEMBER_CO_AWAIT]]
     auto run() const -> kosio::async::Task<Result<void>>;
+    [[REMEMBER_CO_AWAIT]]
+    auto shutdown() const -> kosio::async::Task<>;
 
 public:
     [[REMEMBER_CO_AWAIT]]

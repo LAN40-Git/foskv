@@ -7,13 +7,7 @@ auto foskv::rpc::RpcConsumer::create(std::string_view host, uint16_t port)
         LOG_ERROR("{}", has_addr.error());
         co_return std::unexpected{make_error(Error::kInvalidRpcServerAddress)};
     }
-    auto has_stream = co_await kosio::net::TcpStream::connect(has_addr.value());
-    if (!has_stream) {
-        LOG_ERROR("{}", has_stream.error());
-        co_return std::unexpected{make_error(Error::kConnectRpcServerFailed)};
-    }
-    LOG_VERBOSE("Connect to {}", has_addr.value());
-    co_return std::make_unique<RpcConsumer>(has_addr.value(), std::move(has_stream.value()));
+    co_return std::make_unique<RpcConsumer>(has_addr.value(),kosio::net::TcpStream{kosio::net::detail::Socket{-1}});
 }
 
 auto foskv::rpc::RpcConsumer::call(
@@ -23,7 +17,7 @@ auto foskv::rpc::RpcConsumer::call(
     const RpcCallback &callback) -> kosio::async::Task<Result<void>> {
     if (!stream_.is_valid()) {
         if (auto ret = co_await this->connect(); !ret) {
-            co_return ret;
+            co_return std::unexpected{ret.error()};
         }
     }
 
@@ -39,7 +33,7 @@ auto foskv::rpc::RpcConsumer::call(
     RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
     if (!stream_.is_valid()) {
         if (auto ret = co_await this->connect(); !ret) {
-            co_return ret;
+            co_return std::unexpected{ret.error()};
         }
     }
 
@@ -55,7 +49,7 @@ auto foskv::rpc::RpcConsumer::call(
     RpcCallback&& callback) -> kosio::async::Task<Result<void>> {
     if (!stream_.is_valid()) {
         if (auto ret = co_await this->connect(); !ret) {
-            co_return ret;
+            co_return std::unexpected{ret.error()};
         }
     }
 
@@ -70,6 +64,10 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
 
     if (!stream_.is_valid()) {
         co_return;
+    }
+
+    if (auto ret = co_await stream_.shutdown(SHUT_RDWR); !ret) {
+        LOG_ERROR("Failed to shutdown stream : {}.", ret.error());
     }
 
     if (auto ret = co_await stream_.close(); !ret) {
@@ -97,8 +95,10 @@ auto foskv::rpc::RpcConsumer::redirect_to(std::string_view host, uint16_t port) 
     }
 
     if (stream_.is_valid()) {
-        auto ret = co_await stream_.close();
-        if (!ret) {
+        if (auto ret = co_await stream_.shutdown(SHUT_RDWR); !ret) {
+            LOG_ERROR("Failed to shutdown stream : {}.", ret.error());
+        }
+        if (auto ret = co_await stream_.close(); !ret) {
             LOG_ERROR("Failed to close stream : {}.", ret.error());
             co_return std::unexpected{make_error(Error::kTcpStreamCloseFailed)};
         }
@@ -117,21 +117,19 @@ auto foskv::rpc::RpcConsumer::redirect_to(std::string_view host, uint16_t port) 
         LOG_ERROR("Failed to disable nagle : {}", has_disable_nagle.error());
     }
 
-    co_await tasks_.run();
-
     while (is_producing_.load(std::memory_order_relaxed) ||
            is_consuming_.load(std::memory_order_relaxed)) {
+        LOG_VERBOSE("Redirecting to {}-{}", host, port);
         co_await kosio::time::sleep(50); // sleep 50ms
     }
 
     stream_ = std::move(has_stream.value());
-
-    this->run();
-
+    co_await this->run();
     co_return Result<void>{};
 }
 
-void foskv::rpc::RpcConsumer::run() {
+auto foskv::rpc::RpcConsumer::run() -> kosio::async::Task<> {
+    co_await tasks_.run();
     is_producing_.store(true, std::memory_order_relaxed);
     is_consuming_.store(true, std::memory_order_relaxed);
     kosio::spawn(produce_callbacks());
@@ -147,7 +145,7 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
     }
 
     if (stream_.is_valid()) {
-        co_return std::unexpected{make_error(Error::kConnectionEffective)};
+        co_return Result<void>{};
     }
 
     auto has_stream = co_await kosio::net::TcpStream::connect(server_addr_);
@@ -155,6 +153,8 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
         LOG_VERBOSE("{}", has_stream.error());
         co_return std::unexpected{make_error(Error::kConnectRpcServerFailed)};
     }
+
+    // LOG_VERBOSE("Connect to {}", server_addr_);
 
     // Disable Nagle
     auto has_disable_nagle = has_stream.value().set_nodelay(true);
@@ -164,7 +164,7 @@ auto foskv::rpc::RpcConsumer::connect() -> kosio::async::Task<Result<void>> {
 
     stream_ = std::move(has_stream.value());
 
-    this->run();
+    co_await this->run();
 
     co_return Result<void>{};
 }
@@ -174,7 +174,7 @@ auto foskv::rpc::RpcConsumer::produce_callbacks() -> kosio::async::Task<> {
     while (true) {
         auto has_task = co_await tasks_.pop();
         if (!has_task) {
-            LOG_ERROR("{}", has_task.error());
+            LOG_VERBOSE("{}", has_task.error());
             break;
         }
         auto task = std::move(has_task.value());
@@ -224,7 +224,7 @@ auto foskv::rpc::RpcConsumer::consume_callbacks() -> kosio::async::Task<> {
         auto request_id = be64toh(fixed_header.request_id);
         auto payload_size = be32toh(fixed_header.payload_size);
         if (payload_size > detail::MAX_RPC_MESSAGE_SIZE) [[unlikely]] {
-            LOG_ERROR("Response header too large, payload_size : {}.", payload_size);
+            LOG_ERROR("Response header too large, request_id : {}, payload_size : {}.", request_id, payload_size);
             callbacks_.erase(request_id);
             break;
         }

@@ -39,7 +39,6 @@ auto foskv::client::KVClient::Put(std::string key, std::string value) const -> k
                 auto redirect = response.header().redirect();
                 auto host = redirect.host();
                 auto port = redirect.port();
-                LOG_INFO("Redirecting to {}:{}", host, port);
                 if (auto ret = co_await consumer_->redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }

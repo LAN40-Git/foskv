@@ -30,7 +30,8 @@ void foskv::raft::detail::StateMachine::produce_apply_task(ApplyTask &&task) {
 }
 
 auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index) -> kosio::async::Task<> {
-    while (last_applied < commit_index && !tasks_.empty()) {
+    LOG_VERBOSE("Appling log entry...");
+    while (last_applied++ < commit_index && !tasks_.empty()) {
         auto apply_task = std::move(tasks_.front());
         tasks_.pop();
         auto session_id = apply_task.session_id_;
@@ -58,12 +59,12 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
             }
             default: {
                 LOG_ERROR("Unknown command from session {}, request_id {}", session_id, apply_task.request_id_);
-                continue;
+                break;
             }
         }
         invoke_task.request_id_ = apply_task.request_id_;
+        LOG_VERBOSE("Push a invoke task with request_id {}", apply_task.request_id_);
         co_await session->tasks.push(std::move(invoke_task));
-        last_applied++;
     }
 }
 
@@ -75,6 +76,8 @@ const -> rpc::detail::InvokeTask {
         if (!status.ok()) {
             LOG_ERROR("Failed to put : {}", status.ToString());
             co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
+        } else {
+            LOG_VERBOSE("Put : {}", status.ToString());
         }
         co_return produce_kv_put_response(resp_payload);
     });
@@ -90,6 +93,8 @@ const -> rpc::detail::InvokeTask {
         if (!status.ok()) {
             LOG_ERROR("Failed to get : {}", status.ToString());
             co_return produce_kv_get_response(resp_payload, false, rpc::RpcError::kKVGetFailed);
+        } else {
+            LOG_VERBOSE("Get : {}", status.ToString());
         }
         co_return produce_kv_get_response(resp_payload, true, rpc::RpcError::kNoError, kv);
     });
@@ -103,6 +108,8 @@ const -> rpc::detail::InvokeTask {
             if (!status.ok()) {
                 LOG_ERROR("Failed to put : {}", status.ToString());
                 co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
+            } else {
+                LOG_VERBOSE("Delete : {}", status.ToString());
             }
             co_return produce_kv_delete_response(resp_payload);
         });

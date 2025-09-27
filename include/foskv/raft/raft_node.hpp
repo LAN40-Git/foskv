@@ -86,6 +86,7 @@ private:
     enum Role { kLeader, kFollower, kCandidate };
 
     kosio::sync::Mutex      mutex_;
+    kosio::sync::Latch      latch_{2};
     std::atomic<bool>       is_shutdown_{false};
     std::atomic<uint64_t>   last_reset_time_{0};
     detail::Transport       transport_;

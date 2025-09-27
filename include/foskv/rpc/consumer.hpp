@@ -9,7 +9,6 @@ public:
     explicit RpcConsumer(const kosio::net::SocketAddr& server_addr, kosio::net::TcpStream stream)
         : server_addr_(server_addr), stream_(std::move(stream)) {
         callbacks_.rehash(detail::DEFAULT_CALLBACKS_HASH_SIZE);
-        this->run();
     }
 
     // Delete copy
@@ -73,7 +72,7 @@ public:
     auto redirect_to(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>>;
 
 private:
-    void run();
+    auto run() -> kosio::async::Task<>;
     [[REMEMBER_CO_AWAIT]]
     auto connect() -> kosio::async::Task<Result<void>>;
     auto produce_callbacks() -> kosio::async::Task<>;

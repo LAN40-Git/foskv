@@ -12,7 +12,7 @@ auto process() -> kosio::async::Task<> {
     auto client = std::move(has_kv_client.value());
     while (true) {
         co_await kosio::time::sleep(1000);
-        co_await client.Put("shit", "ass");
+        co_await client.Get("shit");
     }
 }
 
@@ -22,5 +22,6 @@ auto main_loop() -> kosio::async::Task<> {
 }
 
 auto main() -> int {
+    SET_LOG_LEVEL(kosio::log::LogLevel::Verbose);
     kosio::runtime::MultiThreadBuilder::default_create().block_on(main_loop());
 }

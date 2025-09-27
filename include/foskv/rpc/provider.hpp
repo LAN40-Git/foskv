@@ -43,7 +43,6 @@ private:
     kosio::net::TcpListener listener_;
     kosio::sync::Mutex      mutex_;
     std::atomic<bool>       is_shutdown_{false};
-    std::atomic<bool>       is_running_{false};
     detail::InvokeMap       invokes_;
     detail::SessionManager  session_manager_;
 };

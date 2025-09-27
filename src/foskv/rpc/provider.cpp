@@ -14,19 +14,20 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
     {
         co_await mutex_.lock();
         std::lock_guard lock(mutex_, std::adopt_lock);
-        is_running_.store(true, std::memory_order_relaxed);
+        if (is_shutdown_.load(std::memory_order_relaxed)) {
+            co_return std::unexpected{make_error(Error::kProviderShutdown)};
+        }
     }
     LOG_VERBOSE("Listening on {}...", addr_);
     while (true) {
         auto has_stream = co_await listener_.accept();
         if (!has_stream) [[unlikely]] {
             LOG_VERBOSE("{}", has_stream.error());
-            is_running_.store(false, std::memory_order_relaxed);
             co_return std::unexpected{make_error(Error::kTcpListenerAcceptFailed)};
         }
         auto& [stream, peer_addr] = has_stream.value();
         auto session = session_manager_.assign(std::move(stream), peer_addr);
-        // LOG_INFO("Accept connection from {}, session {}", peer_addr, session->session_id);
+        // LOG_VERBOSE("Accept connection from {}, session {}", peer_addr, session->session_id);
         kosio::spawn(produce_invoke_tasks(session));
         kosio::spawn(consume_invoke_tasks(session));
     }
@@ -35,18 +36,13 @@ auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
 auto foskv::rpc::RpcProvider::shutdown() -> kosio::async::Task<void> {
     co_await mutex_.lock();
     std::lock_guard lock(mutex_, std::adopt_lock);
-    if (auto ret = co_await listener_.close(); !ret) {
-        LOG_ERROR("{}", ret.error());
-        co_return;
-    }
-
     // Close all sessions
     co_await session_manager_.shutdown();
 
-    // while (is_running_.load(std::memory_order_relaxed)) {
-    //     LOG_VERBOSE("Still listening on {}...", addr_);
-    //     co_await kosio::time::sleep(50); // sleep for 50ms
-    // }
+    if (auto ret = co_await listener_.close(); !ret) {
+        LOG_ERROR("{}", ret.error());
+    }
+
     is_shutdown_.store(true, std::memory_order_relaxed);
 }
 
@@ -129,7 +125,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(std::shared_ptr<detail::Sessi
     while (true) {
         auto has_task = co_await tasks.pop();
         if (!has_task) [[unlikely]] {
-            LOG_ERROR("{}", has_task.error());
+            LOG_VERBOSE("{}", has_task.error());
             break;
         }
         auto task = std::move(has_task.value());

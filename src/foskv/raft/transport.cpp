@@ -18,8 +18,12 @@ auto foskv::raft::detail::Transport::run() const -> kosio::async::Task<Result<vo
     co_return co_await provider_->run();
 }
 
+auto foskv::raft::detail::Transport::shutdown() const -> kosio::async::Task<> {
+    co_await provider_->shutdown();
+}
+
 auto foskv::raft::detail::Transport::single_append_entries_request(uint64_t to_member_id, AppendEntriesRequest request,
-    Peer::RpcCallback callback) -> kosio::async::Task<> {
+                                                                   Peer::RpcCallback callback) -> kosio::async::Task<> {
     if (to_member_id == this->member_id()) [[unlikely]] {
         co_return;
     }

@@ -95,6 +95,12 @@ auto foskv::raft::RaftNode::run() -> kosio::async::Task<Result<void>> {
     co_return co_await transport_.run();
 }
 
+auto foskv::raft::RaftNode::shutdown() -> kosio::async::Task<> {
+    is_shutdown_.store(true, std::memory_order_release);
+    co_await transport_.shutdown();
+    co_await latch_.wait();
+}
+
 auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
     kosio::util::FastRand fast_rand;
     while (!is_shutdown_.load(std::memory_order_relaxed)) {
@@ -127,6 +133,7 @@ auto foskv::raft::RaftNode::start_election_timeout() -> kosio::async::Task<> {
                 co_await this->handle_request_vote_response(resp_payload);
         }));
     }
+    latch_.count_down();
 }
 
 auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
@@ -152,6 +159,7 @@ auto foskv::raft::RaftNode::start_heartbeat_timeout() -> kosio::async::Task<> {
                 co_await this->handle_heartbeat_response(resp_payload);
         }));
     }
+    latch_.count_down();
 }
 
 void foskv::raft::RaftNode::increase_term_to(uint64_t term) {
