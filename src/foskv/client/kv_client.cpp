@@ -79,7 +79,7 @@ auto foskv::client::KVClient::Get(std::string key) const -> kosio::async::Task<>
             } else {
                 LOG_ERROR("{}", rpc::RpcError{static_cast<int>(response.header().error_code())}.message());
             }
-            LOG_ERROR("{}", rpc::RpcError{static_cast<int>(response.header().error_code())}.message());
+            LOG_VERBOSE("{}", rpc::RpcError{static_cast<int>(response.header().error_code())}.message());
         }
     });
 }
