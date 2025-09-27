@@ -9,6 +9,8 @@ class Error {
 public:
     enum ErrorCode {
         kUnknown = 8000,
+        kProviderShutdown,
+        kConsumerShutdown,
         kEmptySPSCQueue,
         kRepeatedPeer,
         kPeerNotFound,
@@ -20,7 +22,8 @@ public:
         kInvalidDataDirectory,
         kInvalidLogIndex,
         kTcpListenerBindFailed,
-        kTcpStreamAcceptFailed,
+        kTcpListenerAcceptFailed,
+        kTcpStreamCloseFailed,
         kFirstLogIndexPutFailed,
         kLastLogIndexPutFailed,
         kLogIndexToUllFailed,
@@ -55,6 +58,7 @@ public:
         kKVDeleteRequestSerializeFailed,
         kKVDeleteResponseParseFailed,
         kKVDeleteResponseSerializeFailed,
+        kConnectionEffective,
         kConnectRpcServerFailed,
         kRaftConfigFileOpenFailed,
         kRaftConfigFileReadFailed,
@@ -81,6 +85,10 @@ public:
         switch (error_code_) {
             case kUnknown:
                 return "Unknown error.";
+            case kProviderShutdown:
+                return "Provider has been shutdown.";
+            case kConsumerShutdown:
+                return "Consumer has been shutdown.";
             case kEmptySPSCQueue:
                 return "Empty spsc queue.";
             case kRepeatedPeer:
@@ -103,8 +111,10 @@ public:
                 return "Invalid first or last log index.";
             case kTcpListenerBindFailed:
                 return "Tcp listener bind failed.";
-            case kTcpStreamAcceptFailed:
-                return "Tcp stream accept failed.";
+            case kTcpListenerAcceptFailed:
+                return "Tcp listener accept failed.";
+            case kTcpStreamCloseFailed:
+                return "Tcp stream close failed.";
             case kFirstLogIndexPutFailed:
                 return "First log index put failed.";
             case kLastLogIndexPutFailed:
@@ -173,6 +183,8 @@ public:
                 return "KVDelete response parse failed.";
             case kKVDeleteResponseSerializeFailed:
                 return "KVDelete response serialize failed.";
+            case kConnectionEffective:
+                return "Failed to connect to rpc server, connection is effective.";
             case kConnectRpcServerFailed:
                 return "Failed to connect to rpc server.";
             case kRaftConfigFileOpenFailed:

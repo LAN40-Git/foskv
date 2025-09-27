@@ -44,6 +44,13 @@ public:
         cv_.notify_all();
     }
 
+    [[REMEMBER_CO_AWAIT]]
+    auto run() -> kosio::async::Task<> {
+        co_await mutex_.lock();
+        std::unique_lock lock{mutex_, std::adopt_lock};
+        is_shutdown_.store(false, std::memory_order_relaxed);
+    }
+
 private:
     std::queue<T>                  queue_;
     kosio::sync::Mutex             mutex_;

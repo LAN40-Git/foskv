@@ -10,15 +10,18 @@ class Transport {
     friend class foskv::raft::RaftNode;
     friend class StateMachine;
 public:
-    explicit Transport(RaftConfig&& config);
+    explicit Transport(RaftConfig&& config, std::unique_ptr<rpc::RpcProvider> provider);
 
     // Delete copy
     Transport(const Transport&) = delete;
     auto operator=(const Transport&) -> Transport& = delete;
 
-    // Delete move
-    Transport(Transport &&other) = delete;
-    auto operator=(Transport &&other) -> Transport & = delete;
+    Transport(Transport&&) = default;
+    auto operator=(Transport&&) -> Transport& = default;
+
+public:
+    [[REMEMBER_CO_AWAIT]]
+    static auto create(RaftConfig&& config) -> kosio::async::Task<Result<Transport>>;
 
 public:
     [[nodiscard]]
@@ -31,7 +34,7 @@ public:
     auto peer_count() const noexcept -> std::size_t { return config_.peers_.size(); }
 
 public:
-    auto run() -> kosio::async::Task<Result<void>>;
+    auto run() const -> kosio::async::Task<Result<void>>;
 
 public:
     [[REMEMBER_CO_AWAIT]]
@@ -43,7 +46,7 @@ public:
     auto broadcast_install_snapshot_request(InstallSnapshotRequest request, Peer::RpcCallback callback) -> kosio::async::Task<>;
 
 private:
-    RaftConfig       config_;
-    rpc::RpcProvider provider_;
+    RaftConfig                        config_;
+    std::unique_ptr<rpc::RpcProvider> provider_;
 };
 } // namespace foskv::raft::detail

@@ -2,12 +2,20 @@
 
 #include <ranges>
 
-foskv::raft::detail::Transport::Transport(RaftConfig&& config)
+foskv::raft::detail::Transport::Transport(RaftConfig&& config, std::unique_ptr<rpc::RpcProvider> provider)
     : config_(std::move(config))
-    , provider_(config_.addr_) {}
+    , provider_(std::move(provider)) {}
 
-auto foskv::raft::detail::Transport::run() -> kosio::async::Task<Result<void>> {
-    co_return co_await provider_.run();
+auto foskv::raft::detail::Transport::create(RaftConfig &&config) -> kosio::async::Task<Result<Transport>> {
+    auto has_provider = co_await rpc::RpcProvider::create(config.addr_);
+    if (!has_provider) {
+        co_return std::unexpected{has_provider.error()};
+    }
+    co_return Transport{std::move(config), std::move(has_provider.value())};
+}
+
+auto foskv::raft::detail::Transport::run() const -> kosio::async::Task<Result<void>> {
+    co_return co_await provider_->run();
 }
 
 auto foskv::raft::detail::Transport::single_append_entries_request(uint64_t to_member_id, AppendEntriesRequest request,

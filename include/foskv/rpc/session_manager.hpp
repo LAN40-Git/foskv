@@ -8,10 +8,11 @@ class RpcProvider;
 
 namespace foskv::rpc::detail {
 struct Session {
-    explicit Session(uint64_t session_id, const kosio::net::SocketAddr& addr)
-        : session_id(session_id), addr(addr) {}
+    explicit Session(uint64_t session_id, kosio::net::TcpStream stream, const kosio::net::SocketAddr& addr)
+        : session_id(session_id), stream(std::move(stream)), addr(addr) {}
 
     uint64_t                    session_id;
+    kosio::net::TcpStream       stream;
     kosio::net::SocketAddr      addr;
     util::SPSCQueue<InvokeTask> tasks;
 };
@@ -35,9 +36,11 @@ public:
     /// @return A shared_ptr of session
     /// @note Keep the cite and remove the session when
     /// session closed, thread-safe
-    auto assign(const kosio::net::SocketAddr& addr) -> std::shared_ptr<Session>;
+    auto assign(kosio::net::TcpStream stream, const kosio::net::SocketAddr& addr) -> std::shared_ptr<Session>;
     /// @brief Remove a session
     void remove(uint64_t session_id);
+    [[REMEMBER_CO_AWAIT]]
+    auto shutdown() -> kosio::async::Task<void>;
 
 private:
     uint64_t   session_id_{0};

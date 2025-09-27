@@ -1,26 +1,53 @@
 #include "foskv/rpc/provider.hpp"
 
-auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
-    auto has_listener = kosio::net::TcpListener::bind(addr_);
+auto foskv::rpc::RpcProvider::create(const kosio::net::SocketAddr& addr)
+-> kosio::async::Task<Result<std::unique_ptr<RpcProvider>>> {
+    auto has_listener = kosio::net::TcpListener::bind(addr);
     if (!has_listener) [[unlikely]] {
         LOG_ERROR("{}", has_listener.error());
         co_return std::unexpected{make_error(Error::kTcpListenerBindFailed)};
     }
-    auto listener = std::move(has_listener.value());
+    co_return std::make_unique<RpcProvider>(addr, std::move(has_listener.value()));
+}
+
+auto foskv::rpc::RpcProvider::run() -> kosio::async::Task<Result<void>> {
+    {
+        co_await mutex_.lock();
+        std::lock_guard lock(mutex_, std::adopt_lock);
+        is_running_.store(true, std::memory_order_relaxed);
+    }
     LOG_VERBOSE("Listening on {}...", addr_);
     while (true) {
-        auto has_stream = co_await listener.accept();
+        auto has_stream = co_await listener_.accept();
         if (!has_stream) [[unlikely]] {
-            LOG_ERROR("{}", has_stream.error());
-            co_return std::unexpected{make_error(Error::kTcpStreamAcceptFailed)};
+            LOG_VERBOSE("{}", has_stream.error());
+            is_running_.store(false, std::memory_order_relaxed);
+            co_return std::unexpected{make_error(Error::kTcpListenerAcceptFailed)};
         }
         auto& [stream, peer_addr] = has_stream.value();
-        auto session = session_manager_.assign(peer_addr);
+        auto session = session_manager_.assign(std::move(stream), peer_addr);
         // LOG_INFO("Accept connection from {}, session {}", peer_addr, session->session_id);
-        auto [owned_reader, owned_writer] = stream.into_split();
-        kosio::spawn(produce_invoke_tasks(std::move(owned_reader), session));
-        kosio::spawn(consume_invoke_tasks(std::move(owned_writer), session));
+        kosio::spawn(produce_invoke_tasks(session));
+        kosio::spawn(consume_invoke_tasks(session));
     }
+}
+
+auto foskv::rpc::RpcProvider::shutdown() -> kosio::async::Task<void> {
+    co_await mutex_.lock();
+    std::lock_guard lock(mutex_, std::adopt_lock);
+    if (auto ret = co_await listener_.close(); !ret) {
+        LOG_ERROR("{}", ret.error());
+        co_return;
+    }
+
+    // Close all sessions
+    co_await session_manager_.shutdown();
+
+    // while (is_running_.load(std::memory_order_relaxed)) {
+    //     LOG_VERBOSE("Still listening on {}...", addr_);
+    //     co_await kosio::time::sleep(50); // sleep for 50ms
+    // }
+    is_shutdown_.store(true, std::memory_order_relaxed);
 }
 
 void foskv::rpc::RpcProvider::register_invoke(
@@ -38,15 +65,15 @@ auto foskv::rpc::RpcProvider::session_at(uint64_t session_id) const -> std::shar
     return nullptr;
 }
 
-auto foskv::rpc::RpcProvider::produce_invoke_tasks(
-    kosio::net::OwnedTcpStreamReader reader, std::shared_ptr<detail::Session> session)
+auto foskv::rpc::RpcProvider::produce_invoke_tasks(std::shared_ptr<detail::Session> session)
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
+    auto& stream = session->stream;
     std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         // Recv fixed request header
         detail::FixedRequestHeader fixed_header;
-        auto ret = co_await reader.read_exact(
+        auto ret = co_await stream.read_exact(
             {reinterpret_cast<char*>(&fixed_header), sizeof(fixed_header)});
         if (!ret) [[unlikely]] {
             LOG_VERBOSE("{}", ret.error());
@@ -63,7 +90,7 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
         }
 
         // Recv req_payload
-        ret = co_await reader.read_exact({buffer.data(), payload_size});
+        ret = co_await stream.read_exact({buffer.data(), payload_size});
         if (!ret) [[unlikely]] {
             LOG_VERBOSE("{}", ret.error());
             break;
@@ -94,10 +121,10 @@ auto foskv::rpc::RpcProvider::produce_invoke_tasks(
     LOG_VERBOSE("Session {} from {} : reader closed", session->session_id, session->addr);
 }
 
-auto foskv::rpc::RpcProvider::consume_invoke_tasks(
-    kosio::net::OwnedTcpStreamWriter writer, std::shared_ptr<detail::Session> session)
+auto foskv::rpc::RpcProvider::consume_invoke_tasks(std::shared_ptr<detail::Session> session)
 -> kosio::async::Task<> {
     auto& tasks = session->tasks;
+    auto& stream = session->stream;
     std::vector<char> buffer(detail::MAX_RPC_MESSAGE_SIZE);
     while (true) {
         auto has_task = co_await tasks.pop();
@@ -128,7 +155,7 @@ auto foskv::rpc::RpcProvider::consume_invoke_tasks(
         fixed_header.payload_size = htobe32(resp_payload_size);
 
         // Send [rpc header size -> rpc header -> resp_payload]
-        auto ret = co_await writer.write_vectored(
+        auto ret = co_await stream.write_vectored(
             std::span<const char>(reinterpret_cast<char*>(&fixed_header), sizeof(detail::FixedResponseHeader)),
             std::span<const char>(buffer.data(), resp_payload_size)
         );

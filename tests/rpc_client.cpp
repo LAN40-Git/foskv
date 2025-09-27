@@ -11,7 +11,7 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
     put_request.set_value("value");
     using foskv::rpc::ServiceType;
     using foskv::rpc::MethodType;
-    co_await consumer->call(ServiceType::kKv, MethodType::kKvPut, put_request.SerializeAsString(),
+    auto ret = co_await consumer->call(ServiceType::kKv, MethodType::kKvPut, put_request.SerializeAsString(),
     [](std::string_view resp_payload) -> kosio::async::Task<> {
         foskv::kv::PutResponse response;
         if (!response.ParseFromArray(resp_payload.data(), resp_payload.size())) {
@@ -20,11 +20,13 @@ auto kv_put(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {
         }
 
         if (response.header().success()) {
-            // LOG_INFO("Put succesful");
         } else {
             LOG_ERROR("{}", RpcError{static_cast<int>(response.header().error_code())}.message());
         }
     });
+    if (!ret) {
+        LOG_ERROR("Failed to call kv_put {}", ret.error());
+    }
 }
 
 auto kv_get(std::unique_ptr<RpcConsumer>& consumer) -> kosio::async::Task<> {

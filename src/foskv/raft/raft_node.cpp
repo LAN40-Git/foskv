@@ -2,11 +2,11 @@
 #include "kosio/common/util/random.hpp"
 
 foskv::raft::RaftNode::RaftNode(
-    RaftConfig&& config,
+    detail::Transport&& transport,
     detail::StateMachine&& state_machine,
     PersistState&& state,
     detail::RaftLog&& logs)
-    : transport_(std::move(config))
+    : transport_(std::move(transport))
     , state_machine_(std::move(state_machine))
     , logs_(std::move(logs)) {
     LOG_VERBOSE("[{}] : Successfully recover state : current_term : {}, voted_for : {}", transport_.name(), state.current_term(), state.voted_for());
@@ -18,32 +18,32 @@ foskv::raft::RaftNode::RaftNode(
     using rpc::ServiceType;
     using rpc::MethodType;
     // RequestVote
-    transport_.provider_.register_invoke(ServiceType::kRaft, MethodType::kRaftRequestVote,
+    transport_.provider_->register_invoke(ServiceType::kRaft, MethodType::kRaftRequestVote,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>>  {
         co_return co_await this->handle_request_vote_request(req_payload, resp_payload);
     });
     // AppendEntries
-    transport_.provider_.register_invoke(ServiceType::kRaft, MethodType::kRaftAppendEntries,
+    transport_.provider_->register_invoke(ServiceType::kRaft, MethodType::kRaftAppendEntries,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_append_entries_request(req_payload, resp_payload);
     });
     // InstallSnapshot
-    transport_.provider_.register_invoke(ServiceType::kRaft, MethodType::kRaftInstallSnapshot,
+    transport_.provider_->register_invoke(ServiceType::kRaft, MethodType::kRaftInstallSnapshot,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_install_snapshot_request(req_payload, resp_payload);
     });
     // KVPut
-    transport_.provider_.register_invoke(ServiceType::kKv, MethodType::kKvPut,
+    transport_.provider_->register_invoke(ServiceType::kKv, MethodType::kKvPut,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_kv_put_request(req_payload, resp_payload, session_id, request_id);
     });
     // KVGet
-    transport_.provider_.register_invoke(ServiceType::kKv, MethodType::kKvGet,
+    transport_.provider_->register_invoke(ServiceType::kKv, MethodType::kKvGet,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_kv_get_request(req_payload, resp_payload, session_id, request_id);
     });
     // KVDelete
-    transport_.provider_.register_invoke(ServiceType::kKv, MethodType::kKvDelete,
+    transport_.provider_->register_invoke(ServiceType::kKv, MethodType::kKvDelete,
         [this](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
         co_return co_await this->handle_kv_delete_request(req_payload, resp_payload, session_id, request_id);
     });
@@ -55,6 +55,12 @@ auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_vie
     auto has_config = co_await RaftConfig::load(config_path);
     if (!has_config) {
         co_return std::unexpected{has_config.error()};
+    }
+
+    // Create transport
+    auto has_transport = co_await detail::Transport::create(std::move(has_config.value()));
+    if (!has_transport) {
+        co_return std::unexpected{has_transport.error()};
     }
 
     // Create state machine
@@ -76,7 +82,7 @@ auto foskv::raft::RaftNode::create(std::string_view config_path, std::string_vie
 
     // Return a valid raftnode
     co_return std::make_unique<RaftNode>(
-        std::move(has_config.value()),        // Config
+        std::move(has_transport.value()),     // Transport
         std::move(has_state_machine.value()), // StateMachine
         std::move(has_state.value()),         // PersistState
         std::move(has_logs.value())           // Logs

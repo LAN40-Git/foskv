@@ -1,3 +1,5 @@
+#include <kosio/signal/signal.hpp>
+
 #include "foskv/rpc.hpp"
 #include "foskv/raft/util.hpp"
 #include "foskv/storage/storage.hpp"
@@ -7,6 +9,14 @@ using namespace foskv::rpc;
 std::chrono::steady_clock::time_point start;
 std::chrono::steady_clock::time_point end;
 std::atomic<uint64_t> counter{1};
+
+auto process(std::unique_ptr<RpcProvider>& provider) -> kosio::async::Task<void> {
+    auto ret = co_await provider->run();
+    if (!ret) {
+        LOG_VERBOSE("{}", ret.error());
+        co_return;
+    }
+}
 
 auto main_loop() -> kosio::async::Task<> {
     rocksdb::Options options;
@@ -27,8 +37,14 @@ auto main_loop() -> kosio::async::Task<> {
         co_return;
     }
 
-    RpcProvider provider(has_addr.value());
-    provider.register_invoke(ServiceType::kKv, MethodType::kKvPut,
+    auto has_provider = co_await RpcProvider::create(has_addr.value());
+    if (!has_provider) {
+        LOG_ERROR("{}", has_provider.error());
+        co_return;
+    }
+
+    auto provider = std::move(has_provider.value());
+    provider->register_invoke(ServiceType::kKv, MethodType::kKvPut,
         [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
             kv::PutRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
@@ -41,7 +57,6 @@ auto main_loop() -> kosio::async::Task<> {
                 LOG_ERROR("{}", status.ToString());
                 co_return raft::detail::produce_kv_put_response(resp_payload, false, RpcError::kKVPutFailed);
             }
-            // LOG_INFO("Handle put request {}-{}", session_id, request_id);
             if (auto ret = counter.fetch_add(1, std::memory_order_relaxed); ret % 100000 == 0) {
                 end = std::chrono::steady_clock::now();
                 kosio::log::console.info("Handle 10w kv put request, take {} ms, counter : {}",
@@ -50,7 +65,7 @@ auto main_loop() -> kosio::async::Task<> {
             }
             co_return raft::detail::produce_kv_put_response(resp_payload);
     });
-    provider.register_invoke(ServiceType::kKv, MethodType::kKvGet,
+    provider->register_invoke(ServiceType::kKv, MethodType::kKvGet,
         [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
             kv::GetRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
@@ -66,7 +81,7 @@ auto main_loop() -> kosio::async::Task<> {
             }
             co_return raft::detail::produce_kv_get_response(resp_payload, true, rpc::RpcError::kNoError, std::move(kv));
     });
-    provider.register_invoke(ServiceType::kKv, MethodType::kKvDelete,
+    provider->register_invoke(ServiceType::kKv, MethodType::kKvDelete,
         [&st](std::string_view req_payload, std::span<char> resp_payload, uint64_t, uint64_t) -> kosio::async::Task<Result<std::size_t>> {
             kv::DeleteRequest request;
             if (!request.ParseFromArray(req_payload.data(), req_payload.size())) {
@@ -80,7 +95,9 @@ auto main_loop() -> kosio::async::Task<> {
             }
             co_return raft::detail::produce_kv_delete_response(resp_payload);
     });
-    co_await provider.run();
+    kosio::spawn(process(provider));
+    co_await kosio::signal::ctrl_c();
+    co_await provider->shutdown();
 }
 
 auto main() -> int {

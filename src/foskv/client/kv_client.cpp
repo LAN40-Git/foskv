@@ -40,7 +40,7 @@ auto foskv::client::KVClient::Put(std::string key, std::string value) const -> k
                 auto host = redirect.host();
                 auto port = redirect.port();
                 LOG_INFO("Redirecting to {}:{}", host, port);
-                if (auto ret = consumer_->redirect(host, port); !ret) {
+                if (auto ret = co_await consumer_->redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }
                 co_await this->Put(key, value);
@@ -73,7 +73,7 @@ auto foskv::client::KVClient::Get(std::string key) const -> kosio::async::Task<>
                 auto host = redirect.host();
                 auto port = redirect.port();
                 LOG_INFO("Redirecting to {}:{}", host, port);
-                if (auto ret = consumer_->redirect(host, port); !ret) {
+                if (auto ret = co_await consumer_->redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }
                 co_await this->Get(key);
@@ -107,7 +107,7 @@ auto foskv::client::KVClient::Delete(std::string key) const -> kosio::async::Tas
                 auto host = redirect.host();
                 auto port = redirect.port();
                 LOG_INFO("Redirecting to {}:{}", host, port);
-                if (auto ret = consumer_->redirect(host, port); !ret) {
+                if (auto ret = co_await consumer_->redirect_to(host, port); !ret) {
                     LOG_ERROR("Failed to redirect : {}", ret.error());
                 }
                 co_await this->Delete(key);

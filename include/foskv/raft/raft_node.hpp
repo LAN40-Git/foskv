@@ -6,7 +6,7 @@ namespace foskv::raft {
 class RaftNode {
     friend class detail::StateMachine;
 public:
-    explicit RaftNode(RaftConfig&& config, detail::StateMachine&& state_machine,
+    explicit RaftNode(detail::Transport&& transport, detail::StateMachine&& state_machine,
         PersistState&& state, detail::RaftLog&& logs);
 
 public:

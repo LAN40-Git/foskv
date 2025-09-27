@@ -35,7 +35,7 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
         tasks_.pop();
         auto session_id = apply_task.session_id_;
         auto request = std::move(apply_task.request_);
-        auto session = transport.provider_.session_at(session_id);
+        auto session = transport.provider_->session_at(session_id);
         if (!session) {
             LOG_ERROR("Failed to apply : Session at {} not exist", session_id);
             continue;
