@@ -1288,6 +1288,8 @@ class AppendEntriesResponse final :
 
   enum : int {
     kHeaderFieldNumber = 1,
+    kLastLogIndexFieldNumber = 3,
+    kConflictIndexFieldNumber = 4,
     kSuccessFieldNumber = 2,
   };
   // .foskv.raft.ResponseHeader header = 1;
@@ -1308,6 +1310,24 @@ class AppendEntriesResponse final :
       ::foskv::raft::ResponseHeader* header);
   ::foskv::raft::ResponseHeader* unsafe_arena_release_header();
 
+  // uint64 last_log_index = 3;
+  void clear_last_log_index();
+  uint64_t last_log_index() const;
+  void set_last_log_index(uint64_t value);
+  private:
+  uint64_t _internal_last_log_index() const;
+  void _internal_set_last_log_index(uint64_t value);
+  public:
+
+  // uint64 conflict_index = 4;
+  void clear_conflict_index();
+  uint64_t conflict_index() const;
+  void set_conflict_index(uint64_t value);
+  private:
+  uint64_t _internal_conflict_index() const;
+  void _internal_set_conflict_index(uint64_t value);
+  public:
+
   // bool success = 2;
   void clear_success();
   bool success() const;
@@ -1326,6 +1346,8 @@ class AppendEntriesResponse final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::foskv::raft::ResponseHeader* header_;
+    uint64_t last_log_index_;
+    uint64_t conflict_index_;
     bool success_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -2597,6 +2619,46 @@ inline void AppendEntriesResponse::_internal_set_success(bool value) {
 inline void AppendEntriesResponse::set_success(bool value) {
   _internal_set_success(value);
   // @@protoc_insertion_point(field_set:foskv.raft.AppendEntriesResponse.success)
+}
+
+// uint64 last_log_index = 3;
+inline void AppendEntriesResponse::clear_last_log_index() {
+  _impl_.last_log_index_ = uint64_t{0u};
+}
+inline uint64_t AppendEntriesResponse::_internal_last_log_index() const {
+  return _impl_.last_log_index_;
+}
+inline uint64_t AppendEntriesResponse::last_log_index() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.AppendEntriesResponse.last_log_index)
+  return _internal_last_log_index();
+}
+inline void AppendEntriesResponse::_internal_set_last_log_index(uint64_t value) {
+  
+  _impl_.last_log_index_ = value;
+}
+inline void AppendEntriesResponse::set_last_log_index(uint64_t value) {
+  _internal_set_last_log_index(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.AppendEntriesResponse.last_log_index)
+}
+
+// uint64 conflict_index = 4;
+inline void AppendEntriesResponse::clear_conflict_index() {
+  _impl_.conflict_index_ = uint64_t{0u};
+}
+inline uint64_t AppendEntriesResponse::_internal_conflict_index() const {
+  return _impl_.conflict_index_;
+}
+inline uint64_t AppendEntriesResponse::conflict_index() const {
+  // @@protoc_insertion_point(field_get:foskv.raft.AppendEntriesResponse.conflict_index)
+  return _internal_conflict_index();
+}
+inline void AppendEntriesResponse::_internal_set_conflict_index(uint64_t value) {
+  
+  _impl_.conflict_index_ = value;
+}
+inline void AppendEntriesResponse::set_conflict_index(uint64_t value) {
+  _internal_set_conflict_index(value);
+  // @@protoc_insertion_point(field_set:foskv.raft.AppendEntriesResponse.conflict_index)
 }
 
 // -------------------------------------------------------------------

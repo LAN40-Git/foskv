@@ -4,8 +4,10 @@
 
 auto process(std::unique_ptr<foskv::client::KVClient>& client) -> kosio::async::Task<> {
     while (true) {
-        co_await kosio::time::sleep(5);
-        co_await client->Put("SHIT", "ASS");
+        co_await kosio::time::sleep(1);
+        for (int i = 0; i < 20; i++) {
+            co_await client->Put("SHIT", "ASS");
+        }
     }
 }
 

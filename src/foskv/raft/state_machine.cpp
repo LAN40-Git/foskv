@@ -78,12 +78,53 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
     }
 }
 
+void foskv::raft::detail::StateMachine::apply(std::span<const LogEntry> entries, uint64_t &last_applied) const {
+    for (auto& entry : entries) {
+        auto last_last_applied = last_applied++;
+        // Parse internal raft request from command
+        InternalRaftRequest request;
+        if (!request.ParseFromString(entry.command())) {
+            LOG_ERROR("Failed to parse request from string {}", entry.command());
+            continue;
+        }
+
+        switch (request.cmd_case()) {
+            case InternalRaftRequest::kKvPut: {
+                auto& put_request = request.kv_put();
+                if (!st_.Put(put_request.key(), put_request.value()).ok()) [[unlikely]] {
+                    LOG_ERROR("Failed to handle kv_put request, key : {}, value {}.", put_request.key(), put_request.value());
+                }
+                break;
+            }
+            case InternalRaftRequest::kKvGet: {
+                std::string value;
+                auto& get_request = request.kv_get();
+                if (!st_.Get(get_request.key(), &value).ok()) [[unlikely]] {
+                    LOG_ERROR("Failed to handle kv_get request, key : {}.", get_request.key());
+                }
+                break;
+            }
+            case InternalRaftRequest::kKvDelete: {
+                auto& delete_request = request.kv_delete();
+                if (!st_.Delete(delete_request.key()).ok()) [[unlikely]] {
+                    LOG_ERROR("Failed to handle kv_delete request, key : {}.", delete_request.key());
+                }
+                break;
+            }
+            default: {
+                LOG_ERROR("Unknown command at {}.", last_last_applied);
+                break;
+            }
+        }
+    }
+}
+
 auto foskv::raft::detail::StateMachine::apply_kv_put(const kv::PutRequest &request)
 const -> rpc::detail::InvokeTask {
     auto status = st_.Put(request.key(), request.value());
     return rpc::detail::InvokeTask(
         [status](std::string_view, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
-            LOG_VERBOSE("Handle request {} from session {}.", session_id, request_id);
+            LOG_VERBOSE("Handle request {} from session {}.", request_id, session_id);
             if (!status.ok()) {
                 LOG_ERROR("Failed to put : {}", status.ToString());
                 co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);
@@ -99,7 +140,7 @@ const -> rpc::detail::InvokeTask {
     auto kv = produce_kv(request.key(), std::move(value));
     return rpc::detail::InvokeTask(
         [status, kv = std::move(kv)](std::string_view, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
-            LOG_VERBOSE("Handle request {} from session {}.", session_id, request_id);
+            LOG_VERBOSE("Handle request {} from session {}.", request_id, session_id);
             if (!status.ok()) {
                 LOG_ERROR("Failed to get : {}", status.ToString());
                 co_return produce_kv_get_response(resp_payload, false, rpc::RpcError::kKVGetFailed);
@@ -115,7 +156,7 @@ const -> rpc::detail::InvokeTask {
     auto status = st_.Delete(request.key());
     return rpc::detail::InvokeTask(
         [status](std::string_view, std::span<char> resp_payload, uint64_t session_id, uint64_t request_id) -> kosio::async::Task<Result<std::size_t>> {
-            LOG_VERBOSE("Handle request {} from session {}.", session_id, request_id);
+            LOG_VERBOSE("Handle request {} from session {}.", request_id, session_id);
             if (!status.ok()) {
                 LOG_ERROR("Failed to put : {}", status.ToString());
                 co_return produce_kv_put_response(resp_payload, false, rpc::RpcError::kKVPutFailed);

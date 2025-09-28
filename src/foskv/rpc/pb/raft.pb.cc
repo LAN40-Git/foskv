@@ -118,6 +118,8 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORIT
 PROTOBUF_CONSTEXPR AppendEntriesResponse::AppendEntriesResponse(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.header_)*/nullptr
+  , /*decltype(_impl_.last_log_index_)*/uint64_t{0u}
+  , /*decltype(_impl_.conflict_index_)*/uint64_t{0u}
   , /*decltype(_impl_.success_)*/false
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct AppendEntriesResponseDefaultTypeInternal {
@@ -248,6 +250,8 @@ const uint32_t TableStruct_raft_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::foskv::raft::AppendEntriesResponse, _impl_.header_),
   PROTOBUF_FIELD_OFFSET(::foskv::raft::AppendEntriesResponse, _impl_.success_),
+  PROTOBUF_FIELD_OFFSET(::foskv::raft::AppendEntriesResponse, _impl_.last_log_index_),
+  PROTOBUF_FIELD_OFFSET(::foskv::raft::AppendEntriesResponse, _impl_.conflict_index_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::foskv::raft::InstallSnapshotRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -287,9 +291,9 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 37, -1, -1, sizeof(::foskv::raft::LogEntry)},
   { 46, -1, -1, sizeof(::foskv::raft::AppendEntriesRequest)},
   { 58, -1, -1, sizeof(::foskv::raft::AppendEntriesResponse)},
-  { 66, -1, -1, sizeof(::foskv::raft::InstallSnapshotRequest)},
-  { 79, -1, -1, sizeof(::foskv::raft::InstallSnapshotResponse)},
-  { 86, -1, -1, sizeof(::foskv::raft::InternalRaftRequest)},
+  { 68, -1, -1, sizeof(::foskv::raft::InstallSnapshotRequest)},
+  { 81, -1, -1, sizeof(::foskv::raft::InstallSnapshotResponse)},
+  { 88, -1, -1, sizeof(::foskv::raft::InternalRaftRequest)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -321,26 +325,27 @@ const char descriptor_table_protodef_raft_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "er_id\030\002 \001(\004\022\026\n\016prev_log_index\030\003 \001(\004\022\025\n\rp"
   "rev_log_term\030\004 \001(\004\022%\n\007entries\030\005 \003(\0132\024.fo"
   "skv.raft.LogEntry\022\025\n\rleader_commit\030\006 \001(\004"
-  "\"T\n\025AppendEntriesResponse\022*\n\006header\030\001 \001("
-  "\0132\032.foskv.raft.ResponseHeader\022\017\n\007success"
-  "\030\002 \001(\010\"\236\001\n\026InstallSnapshotRequest\022\014\n\004ter"
-  "m\030\001 \001(\004\022\021\n\tleader_id\030\002 \001(\004\022\033\n\023last_inclu"
-  "ded_index\030\003 \001(\004\022\032\n\022last_included_term\030\004 "
-  "\001(\004\022\016\n\006offset\030\005 \001(\004\022\014\n\004data\030\006 \001(\014\022\014\n\004don"
-  "e\030\007 \001(\010\"E\n\027InstallSnapshotResponse\022*\n\006he"
-  "ader\030\001 \001(\0132\032.foskv.raft.ResponseHeader\"\232"
-  "\001\n\023InternalRaftRequest\022&\n\006kv_put\030\001 \001(\0132\024"
-  ".foskv.kv.PutRequestH\000\022&\n\006kv_get\030\002 \001(\0132\024"
-  ".foskv.kv.GetRequestH\000\022,\n\tkv_delete\030\003 \001("
-  "\0132\027.foskv.kv.DeleteRequestH\000B\005\n\003cmdb\006pro"
-  "to3"
+  "\"\204\001\n\025AppendEntriesResponse\022*\n\006header\030\001 \001"
+  "(\0132\032.foskv.raft.ResponseHeader\022\017\n\007succes"
+  "s\030\002 \001(\010\022\026\n\016last_log_index\030\003 \001(\004\022\026\n\016confl"
+  "ict_index\030\004 \001(\004\"\236\001\n\026InstallSnapshotReque"
+  "st\022\014\n\004term\030\001 \001(\004\022\021\n\tleader_id\030\002 \001(\004\022\033\n\023l"
+  "ast_included_index\030\003 \001(\004\022\032\n\022last_include"
+  "d_term\030\004 \001(\004\022\016\n\006offset\030\005 \001(\004\022\014\n\004data\030\006 \001"
+  "(\014\022\014\n\004done\030\007 \001(\010\"E\n\027InstallSnapshotRespo"
+  "nse\022*\n\006header\030\001 \001(\0132\032.foskv.raft.Respons"
+  "eHeader\"\232\001\n\023InternalRaftRequest\022&\n\006kv_pu"
+  "t\030\001 \001(\0132\024.foskv.kv.PutRequestH\000\022&\n\006kv_ge"
+  "t\030\002 \001(\0132\024.foskv.kv.GetRequestH\000\022,\n\tkv_de"
+  "lete\030\003 \001(\0132\027.foskv.kv.DeleteRequestH\000B\005\n"
+  "\003cmdb\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_raft_2eproto_deps[1] = {
   &::descriptor_table_kv_2eproto,
 };
 static ::_pbi::once_flag descriptor_table_raft_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_raft_2eproto = {
-    false, false, 1083, descriptor_table_protodef_raft_2eproto,
+    false, false, 1132, descriptor_table_protodef_raft_2eproto,
     "raft.proto",
     &descriptor_table_raft_2eproto_once, descriptor_table_raft_2eproto_deps, 1, 10,
     schemas, file_default_instances, TableStruct_raft_2eproto::offsets,
@@ -1893,6 +1898,8 @@ AppendEntriesResponse::AppendEntriesResponse(const AppendEntriesResponse& from)
   AppendEntriesResponse* const _this = this; (void)_this;
   new (&_impl_) Impl_{
       decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.last_log_index_){}
+    , decltype(_impl_.conflict_index_){}
     , decltype(_impl_.success_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -1900,7 +1907,9 @@ AppendEntriesResponse::AppendEntriesResponse(const AppendEntriesResponse& from)
   if (from._internal_has_header()) {
     _this->_impl_.header_ = new ::foskv::raft::ResponseHeader(*from._impl_.header_);
   }
-  _this->_impl_.success_ = from._impl_.success_;
+  ::memcpy(&_impl_.last_log_index_, &from._impl_.last_log_index_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.success_) -
+    reinterpret_cast<char*>(&_impl_.last_log_index_)) + sizeof(_impl_.success_));
   // @@protoc_insertion_point(copy_constructor:foskv.raft.AppendEntriesResponse)
 }
 
@@ -1910,6 +1919,8 @@ inline void AppendEntriesResponse::SharedCtor(
   (void)is_message_owned;
   new (&_impl_) Impl_{
       decltype(_impl_.header_){nullptr}
+    , decltype(_impl_.last_log_index_){uint64_t{0u}}
+    , decltype(_impl_.conflict_index_){uint64_t{0u}}
     , decltype(_impl_.success_){false}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -1943,7 +1954,9 @@ void AppendEntriesResponse::Clear() {
     delete _impl_.header_;
   }
   _impl_.header_ = nullptr;
-  _impl_.success_ = false;
+  ::memset(&_impl_.last_log_index_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.success_) -
+      reinterpret_cast<char*>(&_impl_.last_log_index_)) + sizeof(_impl_.success_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1965,6 +1978,22 @@ const char* AppendEntriesResponse::_InternalParse(const char* ptr, ::_pbi::Parse
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _impl_.success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 last_log_index = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.last_log_index_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 conflict_index = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.conflict_index_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -2011,6 +2040,18 @@ uint8_t* AppendEntriesResponse::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteBoolToArray(2, this->_internal_success(), target);
   }
 
+  // uint64 last_log_index = 3;
+  if (this->_internal_last_log_index() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_last_log_index(), target);
+  }
+
+  // uint64 conflict_index = 4;
+  if (this->_internal_conflict_index() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(4, this->_internal_conflict_index(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2032,6 +2073,16 @@ size_t AppendEntriesResponse::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *_impl_.header_);
+  }
+
+  // uint64 last_log_index = 3;
+  if (this->_internal_last_log_index() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_last_log_index());
+  }
+
+  // uint64 conflict_index = 4;
+  if (this->_internal_conflict_index() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_conflict_index());
   }
 
   // bool success = 2;
@@ -2060,6 +2111,12 @@ void AppendEntriesResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, 
   if (from._internal_has_header()) {
     _this->_internal_mutable_header()->::foskv::raft::ResponseHeader::MergeFrom(
         from._internal_header());
+  }
+  if (from._internal_last_log_index() != 0) {
+    _this->_internal_set_last_log_index(from._internal_last_log_index());
+  }
+  if (from._internal_conflict_index() != 0) {
+    _this->_internal_set_conflict_index(from._internal_conflict_index());
   }
   if (from._internal_success() != 0) {
     _this->_internal_set_success(from._internal_success());

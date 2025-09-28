@@ -66,6 +66,13 @@ const noexcept -> Result<LogEntry> {
     return entries_[index-first_index_];
 }
 
+auto foskv::raft::detail::RaftLog::entries_view(uint64_t start_index, uint64_t end_index) const noexcept -> Result<std::span<const LogEntry>> {
+    if (start_index < first_index_ || start_index > last_log_index() || end_index > last_log_index()) {
+        return std::unexpected{make_error(Error::kInvalidLogIndex)};
+    }
+    return std::span<const LogEntry>{entries_.data() + start_index - first_index_, end_index - start_index + 1};
+}
+
 auto foskv::raft::detail::RaftLog::term_at(uint64_t index)
 const noexcept -> uint64_t {
     if (index < first_index_ || index > last_log_index()) {

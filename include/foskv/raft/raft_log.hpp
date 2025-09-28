@@ -1,5 +1,6 @@
 #pragma once
 #include "foskv/raft/persister.hpp"
+#include "foskv/raft/proposer.hpp"
 
 namespace foskv::raft {
 class RaftNode;
@@ -26,27 +27,11 @@ public:
     [[nodiscard]] auto prev_log_index() const noexcept -> uint64_t;
     [[nodiscard]] auto prev_log_term() const noexcept -> uint64_t;
     [[nodiscard]] auto entry_at(uint64_t index) const noexcept -> Result<LogEntry>;
+    [[nodiscard]] auto entries_view(uint64_t start_index, uint64_t end_index) const noexcept -> Result<std::span<const LogEntry>>;
     [[nodiscard]] auto term_at(uint64_t index) const noexcept -> uint64_t;
     [[nodiscard]] auto append_entry(LogEntry&& entry) -> Result<void>;
     [[nodiscard]] auto append_entries(std::vector<LogEntry>&& entries) -> Result<void>;
     void truncate_entries(uint64_t start_index);
-
-public:
-    // For test
-    auto recover_state_test() const -> Result<PersistState> {
-        return persister_.recover_state();
-    }
-
-    void persist_state_test(uint64_t current_term, std::optional<uint64_t> voted_for) {
-        auto ret = persister_.persist(current_term, voted_for);
-        if (!ret) {
-            LOG_ERROR("{}", ret.error());
-        }
-    }
-
-    auto entries_test() const noexcept -> std::vector<LogEntry> {
-        return entries_;
-    }
 
 private:
     uint64_t              first_index_;
