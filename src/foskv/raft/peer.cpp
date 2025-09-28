@@ -33,7 +33,7 @@ const -> kosio::async::Task<> {
     auto ret = co_await consumer_->call(
         ServiceType::kRaft, MethodType::kRaftRequestVote, req_payload, callback);
     if (!ret) [[unlikely]] {
-        LOG_VERBOSE("Failed to call rpc `RequestVote`");
+        //LOG_VERBOSE("Failed to call rpc `RequestVote`");
     }
 }
 
@@ -44,7 +44,7 @@ const -> kosio::async::Task<> {
     auto ret = co_await consumer_->call(
         ServiceType::kRaft, MethodType::kRaftAppendEntries, req_payload, callback);
     if (!ret) [[unlikely]] {
-        LOG_VERBOSE("Failed to call rpc `AppendEntries`");
+        //LOG_VERBOSE("Failed to call rpc `AppendEntries`");
     }
 }
 
@@ -55,7 +55,7 @@ const -> kosio::async::Task<> {
     auto ret = co_await consumer_->call(
         ServiceType::kRaft, MethodType::kRaftInstallSnapshot, req_payload, callback);
     if (!ret) [[unlikely]] {
-        LOG_VERBOSE("Failed to call rpc `InstallSnapshot`");
+        //LOG_VERBOSE("Failed to call rpc `InstallSnapshot`");
     }
 }
 
@@ -66,7 +66,7 @@ const -> kosio::async::Task<> {
     auto ret = co_await consumer_->call(
         ServiceType::kRaft, MethodType::kRaftRequestVote, std::move(req_payload), callback);
     if (!ret) [[unlikely]] {
-        LOG_VERBOSE("Failed to call rpc `RequestVote`");
+        //LOG_VERBOSE("Failed to call rpc `RequestVote`");
     }
 }
 
@@ -77,7 +77,7 @@ const -> kosio::async::Task<> {
     auto ret = co_await consumer_->call(
         ServiceType::kRaft, MethodType::kRaftAppendEntries, std::move(req_payload), callback);
     if (!ret) [[unlikely]] {
-        LOG_VERBOSE("Failed to call rpc `AppendEntries`");
+        //LOG_VERBOSE("Failed to call rpc `AppendEntries`");
     }
 }
 
@@ -88,6 +88,6 @@ const -> kosio::async::Task<> {
     auto ret = co_await consumer_->call(
         ServiceType::kRaft, MethodType::kRaftInstallSnapshot, std::move(req_payload), callback);
     if (!ret) [[unlikely]] {
-        LOG_VERBOSE("Failed to call rpc `InstallSnapshot`");
+        //LOG_VERBOSE("Failed to call rpc `InstallSnapshot`");
     }
 }

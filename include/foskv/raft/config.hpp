@@ -14,7 +14,7 @@ constexpr std::string_view USER_DATA_PATH{"member/snap/db"};
 
 constexpr std::string_view RAFT_LOG_PATH{"member/rocksdb/raft_logs"};
 
-constexpr std::size_t HEARTBEAT_INTERVAL{50};
+constexpr std::size_t HEARTBEAT_INTERVAL{100};
 
 constexpr std::size_t COMMIT_INTERVAL{50};
 

@@ -5,8 +5,8 @@
 namespace foskv::raft::detail {
 class ApplyTask {
 public:
-    explicit ApplyTask(uint64_t last_applied, uint64_t session_id, uint64_t request_id, InternalRaftRequest&& request)
-        : last_applied_(last_applied)
+    explicit ApplyTask(uint64_t index, uint64_t session_id, uint64_t request_id, InternalRaftRequest&& request)
+        : index_(index)
         , session_id_(session_id)
         , request_id_(request_id)
         , request_(std::move(request)) {}
@@ -20,7 +20,7 @@ public:
     auto operator=(ApplyTask&&) -> ApplyTask& = default;
 
 public:
-    uint64_t            last_applied_;
+    uint64_t            index_;
     uint64_t            session_id_;
     uint64_t            request_id_;
     InternalRaftRequest request_;

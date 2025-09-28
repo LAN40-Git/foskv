@@ -29,15 +29,10 @@ void foskv::raft::detail::StateMachine::produce_apply_task(ApplyTask task) {
     tasks_.push(std::move(task));
 }
 
-auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64_t& last_applied, uint64_t commit_index) -> kosio::async::Task<> {
-    while (last_applied < commit_index && !tasks_.empty()) {
-        auto last_last_applied = last_applied++;
+auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64_t commit_index) -> kosio::async::Task<> {
+    while (!tasks_.empty() && tasks_.front().index_ <= commit_index) {
         auto apply_task = std::move(tasks_.front());
         tasks_.pop();
-        if (apply_task.last_applied_ != last_last_applied) {
-            LOG_ERROR("[{}]: Invalid last_applied.", transport.name());
-            continue;
-        }
         auto session_id = apply_task.session_id_;
         auto request = std::move(apply_task.request_);
         auto session = transport.provider_->session_at(session_id);
@@ -69,18 +64,17 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
             invoke_task.request_id_ = apply_task.request_id_;
             co_await session->tasks.push(std::move(invoke_task));
         }
-
-        if (last_last_applied % 6400 == 0) {
-            end_ = std::chrono::system_clock::now();
-            kosio::log::console.info("6400 requests, take {}.", std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_));
-            start_ = std::chrono::system_clock::now();
-        }
+    }
+    if (commit_index % 10000 == 0) {
+        end_ = std::chrono::system_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_);
+        kosio::log::console.info("10000 requests, take {}, qps {}.", duration, 10'000'000.0 / static_cast<double>(duration.count()));
+        start_ = std::chrono::system_clock::now();
     }
 }
 
-void foskv::raft::detail::StateMachine::apply(std::span<const LogEntry> entries, uint64_t &last_applied) const {
+void foskv::raft::detail::StateMachine::apply(std::span<const LogEntry> entries) {
     for (auto& entry : entries) {
-        auto last_last_applied = last_applied++;
         // Parse internal raft request from command
         InternalRaftRequest request;
         if (!request.ParseFromString(entry.command())) {
@@ -112,9 +106,16 @@ void foskv::raft::detail::StateMachine::apply(std::span<const LogEntry> entries,
                 break;
             }
             default: {
-                LOG_ERROR("Unknown command at {}.", last_last_applied);
+                LOG_ERROR("Unknown command..");
                 break;
             }
+        }
+
+        if (entry.index() % 10000 == 0) {
+            end_ = std::chrono::system_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_);
+            kosio::log::console.info("10000 requests, take {}, qps {}.", duration, 10'000'000.0 / static_cast<double>(duration.count()));
+            start_ = std::chrono::system_clock::now();
         }
     }
 }

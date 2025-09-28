@@ -42,6 +42,7 @@ auto foskv::rpc::RpcConsumer::call(
 
     if (!ret) {
         LOG_ERROR("{}", ret.error());
+        co_await stream_.close();
         co_return std::unexpected{make_error(Error::kCallRpcFailed)};
     }
 
@@ -80,6 +81,7 @@ auto foskv::rpc::RpcConsumer::call(
 
     if (!ret) {
         LOG_ERROR("{}", ret.error());
+        co_await stream_.close();
         co_return std::unexpected{make_error(Error::kCallRpcFailed)};
     }
 
