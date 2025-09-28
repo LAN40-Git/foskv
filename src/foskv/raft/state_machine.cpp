@@ -33,6 +33,13 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
     while (!tasks_.empty() && tasks_.front().index_ <= commit_index) {
         auto apply_task = std::move(tasks_.front());
         tasks_.pop();
+        auto index = apply_task.index_;
+        if (index % 10000 == 0) {
+            end_ = std::chrono::system_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_);
+            kosio::log::console.info("10000 requests, take {}, qps {}.", duration, 10'000'000.0 / static_cast<double>(duration.count()));
+            start_ = std::chrono::system_clock::now();
+        }
         auto session_id = apply_task.session_id_;
         auto request = std::move(apply_task.request_);
         auto session = transport.provider_->session_at(session_id);
@@ -64,12 +71,6 @@ auto foskv::raft::detail::StateMachine::apply(const Transport& transport, uint64
             invoke_task.request_id_ = apply_task.request_id_;
             co_await session->tasks.push(std::move(invoke_task));
         }
-    }
-    if (commit_index % 10000 == 0) {
-        end_ = std::chrono::system_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_);
-        kosio::log::console.info("10000 requests, take {}, qps {}.", duration, 10'000'000.0 / static_cast<double>(duration.count()));
-        start_ = std::chrono::system_clock::now();
     }
 }
 
@@ -109,13 +110,6 @@ void foskv::raft::detail::StateMachine::apply(std::span<const LogEntry> entries)
                 LOG_ERROR("Unknown command..");
                 break;
             }
-        }
-
-        if (entry.index() % 10000 == 0) {
-            end_ = std::chrono::system_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_ - start_);
-            kosio::log::console.info("10000 requests, take {}, qps {}.", duration, 10'000'000.0 / static_cast<double>(duration.count()));
-            start_ = std::chrono::system_clock::now();
         }
     }
 }

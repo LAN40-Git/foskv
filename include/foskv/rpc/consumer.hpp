@@ -55,6 +55,8 @@ public:
     [[REMEMBER_CO_AWAIT]]
     auto shutdown() -> kosio::async::Task<>;
 
+    auto redirect_to(std::string_view host, uint16_t port) -> kosio::async::Task<Result<void>>;
+
 private:
     void run();
     [[REMEMBER_CO_AWAIT]]

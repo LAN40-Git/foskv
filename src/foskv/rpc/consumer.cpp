@@ -98,15 +98,16 @@ auto foskv::rpc::RpcConsumer::shutdown() -> kosio::async::Task<> {
     is_shutdown_.store(true, std::memory_order_relaxed);
 
     if (stream_.is_valid()) {
+        while (auto ret = co_await kosio::io::cancel(stream_.fd(), IORING_ASYNC_CANCEL_FD)) {}
         if (auto ret = co_await stream_.close(); !ret) {
             LOG_ERROR("{}", ret.error());
         }
     }
 
-    // while (is_running_.load(std::memory_order_relaxed)) {
-    //     LOG_VERBOSE("Still running, wating for 50ms...");
-    //     co_await kosio::time::sleep(50);
-    // }
+    while (is_running_.load(std::memory_order_relaxed)) {
+        // LOG_VERBOSE("Still running, wating for 50ms...");
+        co_await kosio::time::sleep(50);
+    }
 }
 
 void foskv::rpc::RpcConsumer::run() {
