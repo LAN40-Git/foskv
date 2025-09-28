@@ -75,3 +75,5 @@ add_subdirectory(src/foskv)
 
 # ====== TEST ======
 add_subdirectory(tests)
+# ====== EXAMPLE ======
+add_subdirectory(examples)
