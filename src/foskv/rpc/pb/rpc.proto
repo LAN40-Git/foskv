@@ -1,0 +1,13 @@
+syntax = "proto3";
+package foskv.rpc;
+
+message Redirect {
+  bytes host = 1;
+  uint32 port = 2;
+}
+
+message ResponseHeader {
+  bool success = 1;
+  uint32 error_code = 2;
+  optional Redirect redirect = 3;
+}

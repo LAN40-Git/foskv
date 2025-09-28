@@ -1,0 +1,37 @@
+#pragma once
+#include "foskv/raft/transport.hpp"
+#include "foskv/storage/storage.hpp"
+
+namespace foskv::raft::detail {
+class StateMachine {
+private:
+    explicit StateMachine(storage::Storage&& st);
+
+public:
+    StateMachine(StateMachine&& other) noexcept;
+    auto operator=(StateMachine&& other) noexcept -> StateMachine&;
+
+public:
+    static auto create(std::string_view data_dir) -> Result<StateMachine>;
+
+public:
+    void produce_apply_task(ApplyTask task);
+    auto apply(const Transport& transport, uint64_t commit_index) -> kosio::async::Task<>;
+    void apply(std::span<const LogEntry> entries);
+
+private:
+    /* apply kv */
+    [[nodiscard]]
+    auto apply_kv_put(const kv::PutRequest& request) const -> rpc::detail::InvokeTask;
+    [[nodiscard]]
+    auto apply_kv_get(const kv::GetRequest& request) const -> rpc::detail::InvokeTask;
+    [[nodiscard]]
+    auto apply_kv_delete(const kv::DeleteRequest& request) const -> rpc::detail::InvokeTask;
+
+private:
+    std::chrono::system_clock::time_point start_;
+    std::chrono::system_clock::time_point end_;
+    storage::Storage      st_;
+    std::queue<ApplyTask> tasks_; // Only use by leader
+};
+} // namespace foskv::raft::detail
